@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ProgressPage(),
+    );
+  }
+}
+
+class ProgressPage extends StatelessWidget {
+  const ProgressPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final dataMap = <String, double>{
+      "No Category": 4,
+      "Routine": 5,
+      "Home": 2,
+    };
+
+    final colorList = <Color>[
+      Color(0xFF2F5496),  // Deep blue for "No Category"
+      Color(0xFFA5BBE3), // Light blue for "Routine"
+      Color(0xFF3C6ABE), // Light blue for "Home"
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Progress"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Color(0xFFF6F6F6),  // Very light grey for the rectangle background
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                blurRadius: 5,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Today", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildTaskCard("Complete Task", "3"),
+                  _buildTaskCard("Pending Task", "5"),
+                ],
+              ),
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: dataMap.keys.map((key) => _buildLegend(key, colorList[dataMap.keys.toList().indexOf(key)])).toList(),
+                    ),
+                  ),
+                  PieChart(
+                    dataMap: dataMap,
+                    animationDuration: const Duration(milliseconds: 800),
+                    chartLegendSpacing: 32,
+                    chartRadius: MediaQuery.of(context).size.width / 3.7,
+                    colorList: colorList,
+                    initialAngleInDegree: 0,
+                    chartType: ChartType.ring,
+                    ringStrokeWidth: 32,
+                    centerText: "",
+                    legendOptions: LegendOptions(
+                      showLegends: false, // Hide default legends as we are custom rendering on the left
+                    ),
+                    chartValuesOptions: ChartValuesOptions(
+                      showChartValues: false,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskCard(String title, String count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Color(0xFFD1D1D1),  // Light grey for task card
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 1,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(count, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend(String key, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.circle, color: color, size: 16),  // Circle color indicator
+        SizedBox(width: 5),  // Space between circle and text
+        Text(key, style: TextStyle(fontSize: 14)),
+      ],
+    );
+  }
+}
