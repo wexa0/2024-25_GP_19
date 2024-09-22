@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';  // For formatting the date
 
 void main() {
   runApp(const MyApp());
@@ -34,6 +35,9 @@ class ProgressPage extends StatelessWidget {
       Color(0xFF3C6ABE),  // Light blue for "Home"
     ];
 
+    // Get the current date in the desired format
+    final currentDate = DateFormat('EEE, dd/MM/yyyy').format(DateTime.now());
+
     // Apply the Google font to the entire page
     return Theme(
       data: ThemeData(
@@ -43,18 +47,19 @@ class ProgressPage extends StatelessWidget {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Progress"),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: SingleChildScrollView(
+        body: SingleChildScrollView(  // تم إضافة SingleChildScrollView لجعل الصفحة قابلة للتمرير
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Today", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text("Progress", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 1),
+              Text(currentDate, style: TextStyle(fontSize: 16, color: Colors.grey)),  // Display the current date in gray
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -70,31 +75,37 @@ class ProgressPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: dataMap.keys.map((key) => _buildLegend(key, colorList[dataMap.keys.toList().indexOf(key)])).toList(),
-                      ),
-                    ),
-                    PieChart(
-                      dataMap: dataMap,
-                      animationDuration: const Duration(milliseconds: 800),
-                      chartLegendSpacing: 32,
-                      chartRadius: MediaQuery.of(context).size.width / 3.7,
-                      colorList: colorList,
-                      initialAngleInDegree: 0,
-                      chartType: ChartType.ring,
-                      ringStrokeWidth: 29,
-                      centerText: "",
-                      legendOptions: LegendOptions(
-                        showLegends: false, // Hide default legends as we are custom rendering on the left
-                      ),
-                      chartValuesOptions: ChartValuesOptions(
-                        showChartValues: false,
-                      ),
+                    const Text("Today", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),  // 'Today' inside the rectangle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: dataMap.keys.map((key) => _buildLegend(key, colorList[dataMap.keys.toList().indexOf(key)])).toList(),
+                          ),
+                        ),
+                        PieChart(
+                          dataMap: dataMap,
+                          animationDuration: const Duration(milliseconds: 800),
+                          chartLegendSpacing: 32,
+                          chartRadius: MediaQuery.of(context).size.width / 3.7,
+                          colorList: colorList,
+                          initialAngleInDegree: 0,
+                          chartType: ChartType.ring,
+                          ringStrokeWidth: 29,
+                          centerText: "",
+                          legendOptions: LegendOptions(
+                            showLegends: false, // Hide default legends as we are custom rendering on the left
+                          ),
+                          chartValuesOptions: ChartValuesOptions(
+                            showChartValues: false,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

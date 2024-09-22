@@ -67,10 +67,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  fonts:
-    - family: AbyssinicaSIL
-      fonts:
-        - asset: assets/fonts/AbyssinicaSIL-Regular.ttf
 
 
   # To add assets to your application, add an assets section, like this:
