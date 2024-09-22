@@ -30,9 +30,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  charts_flutter: ^0.11.0
-  percent_indicator: ^4.0.1
+  google_fonts: ^6.2.1
+  charts_flutter: ^0.12.0
+  flutter_charts: ^0.5.2
+  fl_chart: ^0.69.0
   pie_chart: ^5.4.0 
+  percent_indicator: ^4.2.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -41,6 +44,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+
+    
   
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -54,12 +60,18 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
+flutter:
   uses-material-design: true
+
+  fonts:
+    - family: AbyssinicaSIL
+      fonts:
+        - asset: assets/fonts/AbyssinicaSIL-Regular.ttf
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -91,3 +103,5 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+

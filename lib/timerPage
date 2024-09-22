@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class TimerPage extends StatefulWidget {
+  @override
+  _TimerPageState createState() => _TimerPageState();
+}
+
+class _TimerPageState extends State<TimerPage> {
+  double percent = 0.75;
+
+  @override
+  Widget build(BuildContext context) {
+    // Apply the Google font to the entire page
+    return Theme(
+      data: ThemeData(
+        textTheme: GoogleFonts.abyssinicaSilTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Countdown Timer'),
+          centerTitle: false,
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              
+              padding: EdgeInsets.symmetric(horizontal: 40),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: percent,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  minHeight: 10,
+                ),
+              ),
+            ),
+            SizedBox(height: 90),
+            CircularPercentIndicator(
+              radius: 150.0,
+              lineWidth: 15.0,
+              animation: true,
+              percent: percent,
+              center: Text(
+                "12:33",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 35.0),
+              ),
+              circularStrokeCap: CircularStrokeCap.round,
+              progressColor: Colors.blue,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Text(
+                "Keep going, you are getting there!",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17.0, color: Colors.green),
+              ),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  _buildCircleButton(Icons.cancel, "Cancel", 'cancelButton'),
+                  _buildCircleButton(Icons.pause, "Pause", 'pauseButton'),
+                  _buildCircleButton(Icons.check, "Done", 'doneButton'),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+ Widget _buildCircleButton(IconData icon, String label, String heroTag) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: heroTag, // Unique tag for each FloatingActionButton
+          onPressed: () {}, // No functionality
+          child: Icon(icon, color: Colors.white), // Set icon color to white
+          backgroundColor: Color(0xFF919191), // Set button color
+          shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(25), // تستطيع تغيير هذا الرقم للتحكم بدرجة الدائرية
+  ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(label),
+        ),
+      ],
+    );
+}
+}
