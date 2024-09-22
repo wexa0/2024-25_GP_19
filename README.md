@@ -1,16 +1,6 @@
-# AttentionLens
+# AttentionLens Application
 
 ## IT496: Graduation Project Proposal
-
-**Prepared by:**
-- Wiam Ahmed Baalahtar (ID: 443200416)
-- Tarfah Amin AlAteeq (ID: 443200800)
-- Ghaina Zuhair Alhassnan (ID: 443200495)
-- Munira Abdullah Almogren (ID: 443200856)
-
-**Supervised by:**
-- Dr. Nouf Alrumaih
-
 ---
 
 ## 1. Introduction
