@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 // Make sure this import path is correct
 import 'package:flutter_application/progress_page';
-import 'package:flutter_application/timerPage';
 void main() {
   runApp(const MyApp());
 }
