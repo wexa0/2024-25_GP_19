@@ -1,6 +1,4 @@
 # AttentionLens Application
-
-## IT496: Graduation Project Proposal
 ---
 
 ## 1. Introduction
