@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "806322652007",
+    "project_id": "attensionlens-db",
+    "storage_bucket": "attensionlens-db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806322652007:android:f5504c7d27be9651a7a5c2",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbLKfKyxdcxkBzsBYvnpXc_cM_TABCw3A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
