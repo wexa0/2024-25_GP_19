@@ -1,7 +1,10 @@
+
+![image](https://github.com/user-attachments/assets/0f29716c-bcf8-4408-91c3-e3ad104a67fb)
+
 # AttentionLens Application
 ---
 
-## 1. Introduction
+## Introduction
 AttentionLens is an Android mobile application designed to assist adults with Attention Deficit Hyperactivity Disorder (ADHD) in managing their symptoms. By leveraging AI-powered chatbot technology and user-friendly task management tools, the app aims to simplify daily routines, improve focus, and boost productivity.
 
 ### Goals:
@@ -11,7 +14,7 @@ AttentionLens is an Android mobile application designed to assist adults with At
 
 ---
 
-## 2. Technology Stack
+##  Technology Stack
 - **Programming Language:** Dart (via Flutter)
 - **Framework:** Flutter (cross-platform development)
 - **Database:** Firebase
@@ -23,6 +26,6 @@ AttentionLens is an Android mobile application designed to assist adults with At
 
 ---
 
-## 3. Launching Instructions
+##  Launching Instructions
 TBD
 
