@@ -36,7 +36,10 @@ dependencies:
   fl_chart: ^0.69.0
   pie_chart: ^5.4.0 
   percent_indicator: ^4.2.3
+  firebase_core: ^3.5.0
+  firebase_auth: ^5.3.0
   cloud_firestore: ^5.4.2
+  flutter_native_splash: ^2.4.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -59,7 +62,14 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+flutter_native_splash:
+  color: "#dde7ee"
+  android_12:
+    image: assets/logo/logo.png
+    icon_background_color: "#dde7ee"
+    branding: assets/logo/AttentionLens.png
 
+  web: false
 # The following section is specific to Flutter packages.
 
   # The following line ensures that the Material Icons font is
@@ -67,6 +77,12 @@ dev_dependencies:
   # the material Icons class.
 flutter:
   uses-material-design: true
+  assets:
+    - assets/logo/logo.png
+    - assets/logo/AttentionLens.png
+    - assets/images/welcome_page.png
+    - assets/images/login.png
+    - assets/images/signup.png
 
 
 

@@ -1,9 +1,16 @@
-
 import 'package:flutter/material.dart';
-// Make sure this import path is correct
-import 'package:flutter_application/TimerPage';
+import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
+import 'package:flutter_application/TimerPage'; // Make sure this import path is correct
+import 'package:flutter_application/welcome_page.dart';
 
-void main() {
+void main() async {
+  // Ensure widget binding is initialized before Firebase is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase before the app starts
+  await Firebase.initializeApp();
+
+  // Run the app after Firebase is initialized
   runApp(const MyApp());
 }
 
@@ -18,7 +25,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home:const WelcomePage(),
     );
   }
 }
@@ -57,14 +64,14 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-       ElevatedButton(
-  onPressed: () {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) =>  TimerPage()),
-    );
-  },
-  child: const Text('Enter Progress Page'),
-),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => TimerPage()),
+                );
+              },
+              child: const Text('Enter Progress Page'),
+            ),
           ],
         ),
       ),
