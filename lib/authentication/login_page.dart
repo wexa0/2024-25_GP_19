@@ -13,8 +13,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   // Function to handle the login process
-  void _handleLogin() async {
-  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+// Function to handle the login process
+void _handleLogin() async {
+  String email = _emailController.text;
+  String password = _passwordController.text;
+
+  if (email.isEmpty || password.isEmpty) {
     // Show Snackbar if fields are empty
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -22,55 +26,58 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.red, // Customize the background color
       ),
     );
-  } else {
-    try {
-      // Attempt to sign in the user with email and password
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+    return;
+  }
 
-      // If successful, navigate to the Welcome Page or the next screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => WelcomePage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      // Handle different error codes
-      if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No user found for that email.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Wrong password provided.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to sign in: ${e.message}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+  try {
+    // Attempt to sign in the user with Firebase Authentication
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // If login is successful, navigate to the next page (e.g., HomePage)
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => WelcomePage()), // Change this to your next page
+    );
+
+    // Optionally show a success Snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Login Successful!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } catch (e) {
+    // Handle different types of errors (e.g., wrong password, no user found)
+    String errorMessage;
+
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found for that email.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Wrong password provided.';
+          break;
+        default:
+          errorMessage = 'Login failed. Please try again.';
       }
-    } catch (e) {
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An unexpected error occurred. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } else {
+      errorMessage = 'An unknown error occurred.';
     }
+
+    // Show error Snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorMessage),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 }
+
 
   @override
   Widget build(BuildContext context) {
