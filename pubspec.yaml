@@ -83,6 +83,7 @@ flutter:
     - assets/images/welcome_page.png
     - assets/images/login.png
     - assets/images/signup.png
+    - assets/images/success.png
 
 
 

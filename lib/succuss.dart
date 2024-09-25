@@ -14,16 +14,8 @@ class HomePage extends StatelessWidget {
             height: double.infinity,
           ),
           // Content Overlay
-          Center(
-            child: Text(
-              'Welcome to the Home Page!',
-              style: TextStyle(
-                fontSize: 32,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+         
+          
         ],
       ),
     );
