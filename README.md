@@ -1,7 +1,9 @@
 
-<div>
-  <img src="https://github.com/user-attachments/assets/ec3b0e50-de4c-44ae-9b74-9eba18cea4c7" alt="AttentionLens Diagram" width="390" height="250">
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/ec3b0e50-de4c-44ae-9b74-9eba18cea4c7" alt="AttentionLens Diagram" width="500" height="300">
 </div>
+
+---
 
 # AttentionLens Application
 ---
