@@ -294,12 +294,16 @@ class _SignUpPageState extends State<SignUpPage> {
                         color: Color(0xFF3b7292),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password is required';
-                      }
-                      return null;
-                    },
+                   validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    } else if (value.length < 8) {
+      return 'Password must be at least 8 characters long';
+    } else if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$').hasMatch(value)) {
+      return 'Password must contain upper, lower, number, and symbol';
+    }
+    return null;
+  },
                   ),
                   SizedBox(height: 24),
                   // Sign Up Button
