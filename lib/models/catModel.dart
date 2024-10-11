@@ -21,7 +21,7 @@ class catModel {
       catModel(
       name:'Go for a walk with friend',
       time:'9:00-10:00 am',
-      boxColor: Color.fromARGB(255, 253, 239, 239)
+      boxColor: const Color.fromARGB(255, 253, 239, 239)
       )
      );
 
@@ -29,7 +29,7 @@ class catModel {
       catModel(
       name:'Class in gym',
       time:'10:00-12:00 am',
-      boxColor: Color.fromARGB(255, 237, 244, 254)
+      boxColor: const Color.fromARGB(255, 237, 244, 254)
       )
      );
 
@@ -38,7 +38,7 @@ class catModel {
       catModel(
       name:'',
       time:'',
-      boxColor: Color.fromARGB(0,0,0,0)
+      boxColor: const Color.fromARGB(0,0,0,0)
       )); 
       
       
@@ -46,7 +46,7 @@ class catModel {
       catModel(
       name:' Call with client',
       time:'2:00-3:00 am',
-      boxColor: Color.fromARGB(255, 255, 247, 236)
+      boxColor: const Color.fromARGB(255, 255, 247, 236)
       )
      );
 

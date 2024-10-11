@@ -37,7 +37,7 @@ class WelcomePage extends StatelessWidget {
                           // Navigate to sign-up page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignUpPage()),
+                            MaterialPageRoute(builder: (context) => const SignUpPage()),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -66,7 +66,7 @@ class WelcomePage extends StatelessWidget {
                           // Navigate to log-in page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+                            MaterialPageRoute(builder: (context) => const LoginPage()), // Navigate to LoginPage
                           );
                         },
                         style: OutlinedButton.styleFrom(

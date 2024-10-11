@@ -18,12 +18,14 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      home: AddTaskWidget(), // Set the AddTaskWidget as the home
+      home: const AddTaskWidget(), // Set the AddTaskWidget as the home
     );
   }
 }
 
 class AddTaskWidget extends StatelessWidget {
+  const AddTaskWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold( // Use Scaffold for the layout
@@ -36,29 +38,29 @@ class AddTaskWidget extends StatelessWidget {
             // Add your onTap functionality here
           },
           child: Container(
-            margin: EdgeInsets.all(10),
+            margin: const EdgeInsets.all(10),
             alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xffF7F8F8),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Image.asset(
               'assets/icons/left-arrow.png',
               height: 20,
               width: 20,
-            ),
-            decoration: BoxDecoration(
-              color: Color(0xffF7F8F8),
-              borderRadius: BorderRadius.circular(10),
             ),
           ),
         ),
       ),
       body: SingleChildScrollView(
         // Allows the content to be scrollable
-        child: Container(
+        child: SizedBox(
           width: 362,
           child: Column( // Use Column instead of Stack
             children: <Widget>[
               // "Add task" at the top
-              Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 20),
                 child: Text(
                   'Add task',
                   textAlign: TextAlign.center,
@@ -73,7 +75,7 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // Task name input field
-              Container(
+              const SizedBox(
                 width: 350,
                 height: 52,
                 child: TextField(
@@ -92,7 +94,7 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // "+ Add subtasks" with icon
-              Row(
+              const Row(
                 children: [
                   Icon(
                     Icons.add, // Add icon
@@ -115,8 +117,8 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // "Category" title
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
                 child: Text(
                   'Category',
                   textAlign: TextAlign.left,
@@ -141,9 +143,9 @@ class AddTaskWidget extends StatelessWidget {
                 child: DropdownButton<String>(
                   isExpanded: true, // Makes the dropdown occupy the full width
                   value: selectedCategory,
-                  hint: Text("Select category"),
-                  icon: Icon(Icons.arrow_drop_down),
-                  underline: SizedBox(), // Removes the default underline
+                  hint: const Text("Select category"),
+                  icon: const Icon(Icons.arrow_drop_down),
+                  underline: const SizedBox(), // Removes the default underline
                   onChanged: (String? newValue) {
                     selectedCategory = newValue; // No need for `!` as it might be null
                   },
@@ -162,8 +164,8 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // Date
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
                 child: Row(
                   children: [
                     Icon(
@@ -188,8 +190,8 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // Priority
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
                 child: Row(
                   children: [
                     Icon(
@@ -214,8 +216,8 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // Reminder
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
                 child: Row(
                   children: [
                     Icon(
@@ -240,8 +242,8 @@ class AddTaskWidget extends StatelessWidget {
               ),
 
               // "+ Add timer" with icon
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
                 child: Row(
                   children: [
                     Icon(
@@ -273,13 +275,13 @@ class AddTaskWidget extends StatelessWidget {
                   height: 162,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color.fromRGBO(33, 150, 243, 0.1),
+                    color: const Color.fromRGBO(33, 150, 243, 0.1),
                     border: Border.all(
-                      color: Color.fromRGBO(33, 150, 243, 1),
+                      color: const Color.fromRGBO(33, 150, 243, 1),
                       width: 1,
                     ),
                   ),
-                  child: TextField(
+                  child: const TextField(
                     maxLines: 5, // Allow for multiple lines in the description
                     decoration: InputDecoration(
                       border: InputBorder.none, // No border to match design
@@ -306,8 +308,8 @@ class AddTaskWidget extends StatelessWidget {
                     onPressed: () {
                       // Action to perform when the button is pressed
                     },
-                    backgroundColor: Color.fromRGBO(33, 150, 243, 1),
-                    child: Icon(
+                    backgroundColor: const Color.fromRGBO(33, 150, 243, 1),
+                    child: const Icon(
                       Icons.check,
                       color: Colors.white,
                     ),

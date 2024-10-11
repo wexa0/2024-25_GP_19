@@ -5,6 +5,8 @@ import 'package:flutter_application/succuss.dart'; // Import the welcome page
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -18,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
     // Show Snackbar if fields are empty
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Please fill in both fields'),
         backgroundColor: Colors.red, // Customize the background color
       ),
@@ -41,14 +43,14 @@ class _LoginPageState extends State<LoginPage> {
       // Handle different error codes
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('No user found for that email.'),
             backgroundColor: Colors.red,
           ),
         );
       } else if (e.code == 'wrong-password') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Wrong password provided.'),
             backgroundColor: Colors.red,
           ),
@@ -64,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('An unexpected error occurred. Please try again.'),
           backgroundColor: Colors.red,
         ),
@@ -90,11 +92,11 @@ class _LoginPageState extends State<LoginPage> {
             top: 40, // Adjust position as needed
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => WelcomePage()), // Change this to your welcome page
+                  MaterialPageRoute(builder: (context) => const WelcomePage()), // Change this to your welcome page
                 );
               },
             ),
@@ -106,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 // Email TextField
                 TextField(
                   controller: _emailController,
@@ -117,23 +119,23 @@ class _LoginPageState extends State<LoginPage> {
                     // Set the enabled border color
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Color(0xFFE6EBEF), // Use your desired color here
                       ),
                     ),
                     // Set the focused border color
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Color(0xFF3b7292), // Use your desired focused color here
                       ),
                     ),
-                    floatingLabelStyle: TextStyle(
+                    floatingLabelStyle: const TextStyle(
                       color: Color(0xFF3b7292), // Color of label when focused, matching the border
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 // Password TextField
                 TextField(
                   controller: _passwordController,
@@ -145,36 +147,36 @@ class _LoginPageState extends State<LoginPage> {
                     // Set the enabled border color
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Color(0xFFE6EBEF), // Use your desired color here
                       ),
                     ),
                     // Set the focused border color
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: Color(0xFF3b7292), // Use your desired focused color here
                       ),
                     ),
-                    floatingLabelStyle: TextStyle(
+                    floatingLabelStyle: const TextStyle(
                       color: Color(0xFF3b7292), // Color of label when focused, matching the border
                     ),
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 // Log In Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _handleLogin, // Use the login handler
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF3B7292), // Button color
+                      backgroundColor: const Color(0xFF3B7292), // Button color
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                        padding: EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Log In',
                       style: TextStyle(
                         color: Colors.white, // Font color
@@ -184,12 +186,12 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 // Sign Up prompt
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       "Don't have an account?",
                       style: TextStyle(color: Color(0xFF737373)), // Corrected color code
                     ),
@@ -200,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialPageRoute(builder: (context) => SignUpPage()),
                         );
                       },
-                      child: Text(
+                      child: const Text(
                         'Sign Up',
                         style: TextStyle(
                           color: Color(0xFF3B7292),

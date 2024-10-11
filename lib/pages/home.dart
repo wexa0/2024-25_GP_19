@@ -42,7 +42,7 @@ String? selectedItem='TimeLine';
       //       ),),),
         // SizedBox(height:7)  , 
      SizedBox(height: 1, child: Container(
-     decoration: BoxDecoration(
+     decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
@@ -50,7 +50,7 @@ String? selectedItem='TimeLine';
                     color: Color.fromARGB(114, 220, 213, 213)
                   ),)
    ),
-   SizedBox(height:12)  , 
+   const SizedBox(height:12)  , 
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -58,8 +58,8 @@ String? selectedItem='TimeLine';
                children: [
            TableRow(
             children: <Widget>[
-           Padding(
-            padding: const EdgeInsets.only(left:20),
+           const Padding(
+            padding: EdgeInsets.only(left:20),
            child: Text("Tasks",
             style: TextStyle(
               color: Colors.black, 
@@ -67,13 +67,13 @@ String? selectedItem='TimeLine';
               fontWeight: FontWeight.w800,
             ),)
            ), Container(
-            margin: EdgeInsets.only(left:110,right:40),
+            margin: const EdgeInsets.only(left:110,right:40),
             child: DropdownButton<String>(
               value: selectedItem,
               items: drop
               .map((item) => DropdownMenuItem<String>(
               value: item,
-              child: Text(item, style:TextStyle(fontSize:12)),
+              child: Text(item, style:const TextStyle(fontSize:12)),
             )
           ).toList(),
           onChanged: (item){
@@ -98,7 +98,7 @@ String? selectedItem='TimeLine';
           //  SizedBox(height:15,),
       
           Table(
-            columnWidths: {0: FractionColumnWidth(0.23),1: FractionColumnWidth(0.77)},
+            columnWidths: const {0: const FractionColumnWidth(0.23),1: const FractionColumnWidth(0.77)},
             children: [
            TableRow(
                 children: [
@@ -107,46 +107,46 @@ String? selectedItem='TimeLine';
                         TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 10,
           width: 10,
-          margin: EdgeInsets.only(left: 12, bottom:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 12, bottom:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 229, 147, 153)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
                   Container(
-                    child: Text("9:00 am", style: TextStyle(fontSize: 12.2),),
-          height: 15,
+                    height: 15,
           width: 60,
-          margin: EdgeInsets.only(left: 8,bottom: 0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 8,bottom: 0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(0, 229, 147, 153)
-                  ),),
+                  ),
+                    child: Text("9:00 am", style: TextStyle(fontSize: 12.2),),),
                   Container( 
-          child: Text(" "),
           height: 18,
           width: 18,
-          margin: EdgeInsets.only(left:0 , bottom:0),
+          margin: const EdgeInsets.only(left:0 , bottom:0),
           decoration: BoxDecoration(
             border: Border.all(
       width: 2,
-      color: Color.fromARGB(255, 200, 97, 104)
+      color: const Color.fromARGB(255, 200, 97, 104)
     ),
-                   borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
+                   borderRadius: const BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
-                    color: Color.fromARGB(255, 255, 255, 255)
-                  ),
+                    color: const Color.fromARGB(255, 255, 255, 255)
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -155,17 +155,17 @@ children: <Widget>[
                       TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 80,
           width: 2.5,
-          margin: EdgeInsets.only(left: 16,top:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 16,top:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 229, 147, 153)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -174,46 +174,46 @@ children: <Widget>[
        TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 10,
           width: 10,
-          margin: EdgeInsets.only(left: 12, bottom:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 12, bottom:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 194, 213, 245)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
                   Container(
-                    child: Text("10:00 am", style: TextStyle(fontSize: 12.2),),
-          height: 15,
+                    height: 15,
           width: 60,
-          margin: EdgeInsets.only(left: 8,bottom: 0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 8,bottom: 0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(0, 194, 213, 245)
-                  ),),
+                  ),
+                    child: Text("10:00 am", style: TextStyle(fontSize: 12.2),),),
                   Container( 
-          child: Text(" "),
           height: 18,
           width: 18,
-          margin: EdgeInsets.only(left:0 , bottom:0, top:8),
+          margin: const EdgeInsets.only(left:0 , bottom:0, top:8),
           decoration: BoxDecoration(
             border: Border.all(
       width: 2,
-      color: Color.fromARGB(255, 103, 131, 178)
+      color: const Color.fromARGB(255, 103, 131, 178)
     ),
-                   borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
+                   borderRadius: const BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
-                    color: Color.fromARGB(255, 255, 255, 255)
-                  ),
+                    color: const Color.fromARGB(255, 255, 255, 255)
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -222,17 +222,17 @@ children: <Widget>[
        TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 80,
           width: 2.5,
-          margin: EdgeInsets.only(left: 16,top:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 16,top:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255,194, 213, 245)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -242,30 +242,30 @@ children: <Widget>[
       TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 10,
           width: 10,
-          margin: EdgeInsets.only(left: 12, bottom:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 12, bottom:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 194, 213, 245)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
                   Container(
-                    child: Text("11:00 am", style: TextStyle(fontSize: 12.2),),
-          height: 15,
+                    height: 15,
           width: 60,
-          margin: EdgeInsets.only(left: 8,bottom: 0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 8,bottom: 0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(0, 194, 213, 245)
-                  ),),
+                  ),
+                    child: Text("11:00 am", style: TextStyle(fontSize: 12.2),),),
         Container(),
 
       ],),
@@ -273,17 +273,17 @@ children: <Widget>[
       TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 55,
           width: 2.5,
-          margin: EdgeInsets.only(left: 16,top:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 16,top:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(171, 209, 211, 204)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -293,30 +293,30 @@ children: <Widget>[
        TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 10,
           width: 10,
-          margin: EdgeInsets.only(left: 12, bottom:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 12, bottom:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(171, 209, 211, 204)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
                   Container(
-                    child: Text("12:00 pm", style: TextStyle(fontSize: 12.2, color: Color.fromARGB(230, 209, 211, 204)),),
-          height: 15,
+                    height: 15,
           width: 55,
-          margin: EdgeInsets.only(left: 8,bottom: 0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 8,bottom: 0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(0, 194, 213, 245)
-                  ),),
+                  ),
+                    child: Text("12:00 pm", style: TextStyle(fontSize: 12.2, color: Color.fromARGB(230, 209, 211, 204)),),),
         Container(),
 
       ],),
@@ -325,17 +325,17 @@ children: <Widget>[
        TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 50,
           width: 2.5,
-          margin: EdgeInsets.only(left: 16,top:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 16,top:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(171, 209, 211, 204)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -345,46 +345,46 @@ children: <Widget>[
        TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 10,
           width: 10,
-          margin: EdgeInsets.only(left: 12, bottom:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 12, bottom:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 247, 229, 193)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
                   Container(
-                    child: Text("1:00 pm", style: TextStyle(fontSize: 12.2),),
-          height: 15,
+                    height: 15,
           width: 60,
-          margin: EdgeInsets.only(left: 8,bottom: 0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 8,bottom: 0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(0, 194, 213, 245)
-                  ),),
+                  ),
+                    child: Text("1:00 pm", style: TextStyle(fontSize: 12.2),),),
                     Container( 
-          child: Text(" "),
           height: 18,
           width: 18,
-          margin: EdgeInsets.only(left:0 , bottom:0),
+          margin: const EdgeInsets.only(left:0 , bottom:0),
           decoration: BoxDecoration(
             border: Border.all(
       width: 2,
-      color: Color.fromARGB(255, 169, 149, 108)
+      color: const Color.fromARGB(255, 169, 149, 108)
     ),
-                   borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
+                   borderRadius: const BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
-                    color: Color.fromARGB(255, 255, 255, 255)
-                  ),
+                    color: const Color.fromARGB(255, 255, 255, 255)
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -394,17 +394,17 @@ children: <Widget>[
       TableRow(
 children: <Widget>[
   Row(   children: <Widget>[     Container( 
-          child: Text(" "),
           height: 40,
           width: 2.5,
-          margin: EdgeInsets.only(left: 16,top:0),
-          decoration: BoxDecoration(
+          margin: const EdgeInsets.only(left: 16,top:0),
+          decoration: const BoxDecoration(
                    borderRadius: BorderRadius.only(topLeft:Radius.circular(20),
                                                   topRight:Radius.circular(20),
                                                   bottomRight:Radius.circular(20),
                                                   bottomLeft:Radius.circular(20)),
                     color: Color.fromARGB(255, 247, 229, 193)
-                  ),
+                  ), 
+          child: Text(" "),
                   ),
         Container(),
 
@@ -445,7 +445,7 @@ children: <Widget>[
       ]),
                       Column(
             children: [
-           Container(
+           SizedBox(
             height: 399,
             child: ListView.builder(
               itemCount: category.length,
@@ -453,9 +453,9 @@ children: <Widget>[
                 return Container(
                   height: 90,
                   width: 130,
-                  margin:EdgeInsets.only(left:15, right:10, top:10, bottom: 10) ,
+                  margin:const EdgeInsets.only(left:15, right:10, top:10, bottom: 10) ,
                    decoration: BoxDecoration(
-                   borderRadius: BorderRadius.only(topLeft:Radius.circular(0),
+                   borderRadius: const BorderRadius.only(topLeft:Radius.circular(0),
                                                   topRight:Radius.circular(15),
                                                   bottomRight:Radius.circular(15),
                                                   bottomLeft:Radius.circular(15)),
@@ -465,13 +465,13 @@ children: <Widget>[
                   child: Column(
                     children: [
     
-                      Container(
+                      SizedBox(
                         
                         width: 600,
                         child: Padding(
                           padding: const EdgeInsets.only( left:10.0, top:8.8 ),
                           child:   Text( category[index].name,
-                   style: TextStyle(
+                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Colors.black,
                     fontSize: 16
@@ -482,14 +482,14 @@ children: <Widget>[
                           
 
                       ), 
-                      Container (
+                      SizedBox (
                         width:600,
                         child: Padding(
                           padding: const EdgeInsets.only( left:15.0, top:1.5 ),
                           child:   Text( category[index].time,
-                   style: TextStyle(
+                   style: const TextStyle(
                     fontWeight: FontWeight.w300,
-                    color: const Color.fromARGB(255, 81, 81, 81),
+                    color: Color.fromARGB(255, 81, 81, 81),
                     fontSize: 14.6
                    ),
                    
@@ -544,8 +544,8 @@ children: <Widget>[
       ],
      ),
     
-   bottomNavigationBar: GNav(
-    tabs: const [
+   bottomNavigationBar: const GNav(
+    tabs: [
               GButton(icon: Icons.home, text:'Home'),
         GButton(icon: Icons.sms, text:'Chatbot'),
         GButton(icon: Icons.calendar_today, text:'Calendar'),
@@ -567,9 +567,9 @@ Container calendar(){
   lastDay: DateTime.utc(2030, 3, 14),
   focusedDay: DateTime.now(),
      calendarStyle: CalendarStyle(
-   defaultTextStyle:TextStyle(color: const Color.fromARGB(255, 178, 183, 188)),
-   weekNumberTextStyle:TextStyle(color: const Color.fromARGB(255, 197, 189, 189)),
-   weekendTextStyle:TextStyle(color: const Color.fromARGB(255, 193, 184, 187)),
+   defaultTextStyle:const TextStyle(color: Color.fromARGB(255, 178, 183, 188)),
+   weekNumberTextStyle:const TextStyle(color: Color.fromARGB(255, 197, 189, 189)),
+   weekendTextStyle:const TextStyle(color: Color.fromARGB(255, 193, 184, 187)),
    todayDecoration: BoxDecoration(color: const Color.fromARGB(255, 226, 226, 226), borderRadius: BorderRadius.circular(30))
 
  ),
@@ -592,7 +592,7 @@ Container calendar(){
 
 AppBar appBar() {
 return AppBar(
-      title: Text(
+      title: const Text(
         'Today\'s task',
           style: TextStyle(
             color: Colors.black,
@@ -607,16 +607,16 @@ return AppBar(
             
           },
       child: Container(
-        margin: EdgeInsets.all(10),
+        margin: const EdgeInsets.all(10),
         alignment: Alignment.center,
-        child: Image.asset('assets/icons/left-arrow.png',
-        height: 20,
-        width: 20,),
         decoration: BoxDecoration(
-          color: Color(0xffF7F8F8),
+          color: const Color(0xffF7F8F8),
           borderRadius: BorderRadius.circular(10)
 
         ),
+        child: Image.asset('assets/icons/left-arrow.png',
+        height: 20,
+        width: 20,),
       ),),
       actions: [
         GestureDetector(
@@ -624,17 +624,17 @@ return AppBar(
 
           },
           child: Container(
-        margin: EdgeInsets.all(10),
+        margin: const EdgeInsets.all(10),
         alignment: Alignment.center,
         width: 37,
-        child: Image.asset('assets/icons/dots.png',
-        height: 20,
-        width: 20,),
         decoration: BoxDecoration(
-          color: Color(0xffF7F8F8),
+          color: const Color(0xffF7F8F8),
           borderRadius: BorderRadius.circular(10)
 
         ),
+        child: Image.asset('assets/icons/dots.png',
+        height: 20,
+        width: 20,),
       ),
       ) ],
 
@@ -643,6 +643,6 @@ return AppBar(
 }
 
   void setState(String? item) {
-     this.selectedItem = item;
+     selectedItem = item;
   }
 }

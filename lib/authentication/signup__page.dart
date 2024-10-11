@@ -8,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 
 class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
@@ -31,9 +33,9 @@ class _SignUpPageState extends State<SignUpPage> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            primaryColor: Color(0xFF3b7292), // Header color
-            colorScheme: ColorScheme.light(primary: Color(0xFF3b7292)), // Selected date color
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary), // Button text color
+            primaryColor: const Color(0xFF3b7292), // Header color
+            colorScheme: const ColorScheme.light(primary: Color(0xFF3b7292)), // Selected date color
+            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary), // Button text color
           ),
           child: child ?? Container(),
         );
@@ -73,7 +75,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       // Notify success
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Account created successfully!')),
+        const SnackBar(content: Text('Account created successfully!')),
       );
 
       // Navigate to the login page  //// 
@@ -85,7 +87,7 @@ class _SignUpPageState extends State<SignUpPage> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('This email is already in use.')),
+          const SnackBar(content: Text('This email is already in use.')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
@@ -118,11 +120,11 @@ class _SignUpPageState extends State<SignUpPage> {
             top: 40, // Adjust position as needed
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => WelcomePage()), // Change this to your welcome page
+                  MaterialPageRoute(builder: (context) => const WelcomePage()), // Change this to your welcome page
                 );
               },
             ),
@@ -144,20 +146,20 @@ class _SignUpPageState extends State<SignUpPage> {
                           decoration: InputDecoration(
                             labelText: 'First Name *',
                             filled: true,
-                            fillColor: Color(0xFFE6EBEF), // Background color
+                            fillColor: const Color(0xFFE6EBEF), // Background color
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
+                              borderSide: const BorderSide(
                                 color: Color(0xFFE6EBEF),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
+                              borderSide: const BorderSide(
                                 color: Color(0xFF3b7292),
                               ),
                             ),
-                            floatingLabelStyle: TextStyle(
+                            floatingLabelStyle: const TextStyle(
                               color: Color(0xFF3b7292),
                             ),
                           ),
@@ -169,27 +171,27 @@ class _SignUpPageState extends State<SignUpPage> {
                           },
                         ),
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: TextFormField(
                           controller: _lastNameController,
                           decoration: InputDecoration(
                             labelText: 'Last Name *',
                             filled: true,
-                            fillColor: Color(0xFFE6EBEF), // Background color
+                            fillColor: const Color(0xFFE6EBEF), // Background color
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
+                              borderSide: const BorderSide(
                                 color: Color(0xFFE6EBEF),
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
-                              borderSide: BorderSide(
+                              borderSide: const BorderSide(
                                 color: Color(0xFF3b7292),
                               ),
                             ),
-                            floatingLabelStyle: TextStyle(
+                            floatingLabelStyle: const TextStyle(
                               color: Color(0xFF3b7292),
                             ),
                           ),
@@ -203,27 +205,27 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Email Field
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email *',
                       filled: true,
-                      fillColor: Color(0xFFE6EBEF),
+                      fillColor: const Color(0xFFE6EBEF),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFFE6EBEF),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFF3b7292),
                         ),
                       ),
-                      floatingLabelStyle: TextStyle(
+                      floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
                     ),
@@ -236,7 +238,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Date of Birth Field
                   TextFormField(
                     controller: _dobController,
@@ -245,20 +247,20 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: InputDecoration(
                       labelText: 'Date of Birth *',
                       filled: true,
-                      fillColor: Color(0xFFE6EBEF),
+                      fillColor: const Color(0xFFE6EBEF),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFFE6EBEF),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFF3b7292),
                         ),
                       ),
-                      floatingLabelStyle: TextStyle(
+                      floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
                     ),
@@ -269,7 +271,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Password Field
                   TextFormField(
                     controller: _passwordController,
@@ -277,20 +279,20 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: InputDecoration(
                       labelText: 'Password *',
                       filled: true,
-                      fillColor: Color(0xFFE6EBEF),
+                      fillColor: const Color(0xFFE6EBEF),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFFE6EBEF),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
-                        borderSide: BorderSide(
+                        borderSide: const BorderSide(
                           color: Color(0xFF3b7292),
                         ),
                       ),
-                      floatingLabelStyle: TextStyle(
+                      floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
                     ),
@@ -305,21 +307,21 @@ class _SignUpPageState extends State<SignUpPage> {
     return null;
   },
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   // Sign Up Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submitForm, // Submit form function
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF3B7292),
+                        backgroundColor: const Color(0xFF3B7292),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                         padding: EdgeInsets.symmetric(vertical: 14), // Increase vertical padding
-      minimumSize: Size(0, 40), // Optional: Set a minimum height
+                         padding: const EdgeInsets.symmetric(vertical: 14), // Increase vertical padding
+      minimumSize: const Size(0, 40), // Optional: Set a minimum height
                       ),
-                      child: Text(
+                      child: const Text(
                         'Sign Up',
                         style: TextStyle(
                           color: Colors.white,
@@ -329,12 +331,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16), // Space between button and text
+                  const SizedBox(height: 16), // Space between button and text
                   // Already Have an Account Text
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Already have an account? ',
                         style: TextStyle(
                           fontSize: 16,
@@ -349,7 +351,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             MaterialPageRoute(builder: (context) => LoginPage()),
                           );
                         },
-                        child: Text(
+                        child: const Text(
                           'Log in',
                           style: TextStyle(
                             fontSize: 16,

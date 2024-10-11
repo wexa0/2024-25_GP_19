@@ -11,13 +11,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: ChatbotpageWidget(),
     );
   }
 }
 
 class ChatbotpageWidget extends StatelessWidget {
+  const ChatbotpageWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width
@@ -26,7 +28,7 @@ class ChatbotpageWidget extends StatelessWidget {
     return Container(
         width: 360,
         height: 800,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Color.fromRGBO(255, 255, 255, 1),
         ),
         child: Stack(children: <Widget>[
@@ -34,20 +36,20 @@ class ChatbotpageWidget extends StatelessWidget {
               top: 39,
               left: 72,
               child: Container(
-                decoration: BoxDecoration(),
-                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                decoration: const BoxDecoration(),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
-                      decoration: BoxDecoration(),
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                      decoration: const BoxDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
                           Container(
-                            decoration: BoxDecoration(),
-                            padding: EdgeInsets.symmetric(
+                            decoration: const BoxDecoration(),
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 0),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -55,7 +57,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                 Container(
                                     width: 44,
                                     height: 44,
-                                    decoration: BoxDecoration(),
+                                    decoration: const BoxDecoration(),
                                     child: Stack(children: <Widget>[
                                       Positioned(
                                           top: 0,
@@ -63,7 +65,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                           child: Container(
                                               width: 44,
                                               height: 44,
-                                              decoration: BoxDecoration(
+                                              decoration: const BoxDecoration(
                                                 color: Color.fromRGBO(
                                                     242, 248, 255, 1),
                                                 borderRadius: BorderRadius.all(
@@ -75,7 +77,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                           child: Container(
                                               width: 24,
                                               height: 24,
-                                              decoration: BoxDecoration(),
+                                              decoration: const BoxDecoration(),
                                               child: Stack(children: <Widget>[
                                                 Positioned(
                                                     top: 1.4399999380111694,
@@ -86,15 +88,15 @@ class ChatbotpageWidget extends StatelessWidget {
                                                             'vector')),
                                               ]))),
                                     ])),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Container(
-                                  decoration: BoxDecoration(),
-                                  padding: EdgeInsets.symmetric(
+                                  decoration: const BoxDecoration(),
+                                  padding: const EdgeInsets.symmetric(
                                       horizontal: 0, vertical: 0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
-                                      Text(
+                                      const Text(
                                         'AtenaBot',
                                         textAlign: TextAlign.left,
                                         style: TextStyle(
@@ -107,10 +109,10 @@ class ChatbotpageWidget extends StatelessWidget {
                                             fontWeight: FontWeight.normal,
                                             height: 1.4285714285714286),
                                       ),
-                                      SizedBox(height: 2),
+                                      const SizedBox(height: 2),
                                       Container(
-                                        decoration: BoxDecoration(),
-                                        padding: EdgeInsets.symmetric(
+                                        decoration: const BoxDecoration(),
+                                        padding: const EdgeInsets.symmetric(
                                             horizontal: 0, vertical: 0),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -118,7 +120,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                             Container(
                                                 width: 8,
                                                 height: 8,
-                                                decoration: BoxDecoration(
+                                                decoration: const BoxDecoration(
                                                   color: Color.fromRGBO(
                                                       124, 222, 134, 1),
                                                   borderRadius:
@@ -126,8 +128,8 @@ class ChatbotpageWidget extends StatelessWidget {
                                                           Radius.elliptical(
                                                               8, 8)),
                                                 )),
-                                            SizedBox(width: 4),
-                                            Text(
+                                            const SizedBox(width: 4),
+                                            const Text(
                                               'Always active',
                                               textAlign: TextAlign.left,
                                               style: TextStyle(
@@ -159,18 +161,18 @@ class ChatbotpageWidget extends StatelessWidget {
               top: 133,
               left: 16,
               child: Container(
-                decoration: BoxDecoration(),
-                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                decoration: const BoxDecoration(),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
-                      decoration: BoxDecoration(),
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                      decoration: const BoxDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Text(
+                          const Text(
                             'Wed 8:21 AM',
                             textAlign: TextAlign.left,
                             style: TextStyle(
@@ -182,10 +184,10 @@ class ChatbotpageWidget extends StatelessWidget {
                                 fontWeight: FontWeight.normal,
                                 height: 1.3333333333333333),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Container(
-                            decoration: BoxDecoration(),
-                            padding: EdgeInsets.symmetric(
+                            decoration: const BoxDecoration(),
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 0, vertical: 0),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -193,7 +195,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                 Container(
                                     width: 32,
                                     height: 32,
-                                    decoration: BoxDecoration(),
+                                    decoration: const BoxDecoration(),
                                     child: Stack(children: <Widget>[
                                       Positioned(
                                           top: 0,
@@ -201,7 +203,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                           child: Container(
                                               width: 32,
                                               height: 32,
-                                              decoration: BoxDecoration(
+                                              decoration: const BoxDecoration(
                                                 color: Color.fromRGBO(
                                                     242, 248, 255, 1),
                                                 borderRadius: BorderRadius.all(
@@ -213,7 +215,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                           child: Container(
                                               width: 16,
                                               height: 16,
-                                              decoration: BoxDecoration(),
+                                              decoration: const BoxDecoration(),
                                               child: Stack(children: <Widget>[
                                                 Positioned(
                                                     top: 0.9599999785423279,
@@ -224,11 +226,11 @@ class ChatbotpageWidget extends StatelessWidget {
                                                             'vector')),
                                               ]))),
                                     ])),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Container(
                                   width: screenWidth *
                                       0.85, // Set width to 85% of screen width
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(0),
                                       topRight: Radius.circular(24),
@@ -237,9 +239,9 @@ class ChatbotpageWidget extends StatelessWidget {
                                     ),
                                     color: Color.fromRGBO(242, 243, 244, 1),
                                   ),
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 16),
-                                  child: Row(
+                                  child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
                                       Expanded(
@@ -277,21 +279,21 @@ class ChatbotpageWidget extends StatelessWidget {
               top: 377,
               left: 16,
               child: Container(
-                decoration: BoxDecoration(),
-                padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                decoration: const BoxDecoration(),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
-                      decoration: BoxDecoration(),
-                      padding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                      decoration: const BoxDecoration(),
+                      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
                           Container(
                               width: 32,
                               height: 32,
-                              decoration: BoxDecoration(),
+                              decoration: const BoxDecoration(),
                               child: Stack(children: <Widget>[
                                 Positioned(
                                     top: 0,
@@ -299,7 +301,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                     child: Container(
                                         width: 32,
                                         height: 32,
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           color:
                                               Color.fromRGBO(242, 248, 255, 1),
                                           borderRadius: BorderRadius.all(
@@ -311,7 +313,7 @@ class ChatbotpageWidget extends StatelessWidget {
                                     child: Container(
                                         width: 16,
                                         height: 16,
-                                        decoration: BoxDecoration(),
+                                        decoration: const BoxDecoration(),
                                         child: Stack(children: <Widget>[
                                           Positioned(
                                               top: 0.9599999785423279,
@@ -321,9 +323,9 @@ class ChatbotpageWidget extends StatelessWidget {
                                                   semanticsLabel: 'vector')),
                                         ]))),
                               ])),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(0),
                                 topRight: Radius.circular(24),
@@ -332,9 +334,9 @@ class ChatbotpageWidget extends StatelessWidget {
                               ),
                               color: Color.fromRGBO(242, 243, 244, 1),
                             ),
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 16),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 Text(
@@ -364,7 +366,7 @@ class ChatbotpageWidget extends StatelessWidget {
             //left: (MediaQuery.of(context).size.width - 200) / 2, // Center the button based on width
             child: Container(
               // Remove fixed width to allow the box to fit the text
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -373,8 +375,8 @@ class ChatbotpageWidget extends StatelessWidget {
                 ),
                 color: Color.fromRGBO(47, 84, 150, 1),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: const Row(
                   mainAxisSize: MainAxisSize.min, // Use min to fit the text
                   children: <Widget>[
                     Text(
@@ -395,7 +397,7 @@ class ChatbotpageWidget extends StatelessWidget {
           Positioned(
               top: 709,
               left: -8,
-              child: Container(
+              child: SizedBox(
                   width: 375,
                   height: 67,
                   child: Stack(children: <Widget>[
@@ -403,7 +405,7 @@ class ChatbotpageWidget extends StatelessWidget {
                         top: 0,
                         left: 0,
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(0),
                               topRight: Radius.circular(0),
@@ -419,36 +421,36 @@ class ChatbotpageWidget extends StatelessWidget {
                             ],
                             color: Color.fromRGBO(255, 255, 255, 1),
                           ),
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 32),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
                               Container(
-                                decoration: BoxDecoration(),
-                                padding: EdgeInsets.symmetric(
+                                decoration: const BoxDecoration(),
+                                padding: const EdgeInsets.symmetric(
                                     horizontal: 0, vertical: 0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: <Widget>[
                                     Container(
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.only(
+                                        borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(48),
                                           topRight: Radius.circular(48),
                                           bottomLeft: Radius.circular(48),
                                           bottomRight: Radius.circular(48),
                                         ),
-                                        color: Color.fromRGBO(255, 255, 255, 1),
+                                        color: const Color.fromRGBO(255, 255, 255, 1),
                                         border: Border.all(
                                           color:
-                                              Color.fromRGBO(151, 156, 158, 1),
+                                              const Color.fromRGBO(151, 156, 158, 1),
                                           width: 1.5,
                                         ),
                                       ),
-                                      padding: EdgeInsets.symmetric(
+                                      padding: const EdgeInsets.symmetric(
                                           horizontal: 20, vertical: 10),
-                                      child: Row(
+                                      child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: <Widget>[],
                                       ),
@@ -463,7 +465,7 @@ class ChatbotpageWidget extends StatelessWidget {
           Positioned(
               top: 43,
               left: 13,
-              child: Container(
+              child: SizedBox(
                   width: 27,
                   height: 42,
                   child: Stack(children: <Widget>[
@@ -479,7 +481,7 @@ class ChatbotpageWidget extends StatelessWidget {
               child: Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(),
+                  decoration: const BoxDecoration(),
                   child: Stack(children: <Widget>[
                     Positioned(
                         top: 0,
@@ -487,7 +489,7 @@ class ChatbotpageWidget extends StatelessWidget {
                         child: Container(
                             width: 44,
                             height: 44,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Color.fromRGBO(97, 98, 101, 1),
                               borderRadius:
                                   BorderRadius.all(Radius.elliptical(44, 44)),
@@ -498,7 +500,7 @@ class ChatbotpageWidget extends StatelessWidget {
                         child: Container(
                             width: 34,
                             height: 34,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               image: DecorationImage(
                                   image: AssetImage('assets/images/Menu.png'),
                                   fit: BoxFit.fitWidth),
@@ -510,7 +512,7 @@ class ChatbotpageWidget extends StatelessWidget {
               child: Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(),
+                  decoration: const BoxDecoration(),
                   child: Stack(children: <Widget>[
                     Positioned(
                         top: 0,
@@ -518,7 +520,7 @@ class ChatbotpageWidget extends StatelessWidget {
                         child: Container(
                             width: 44,
                             height: 44,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Color.fromRGBO(97, 98, 101, 1),
                               borderRadius:
                                   BorderRadius.all(Radius.elliptical(44, 44)),
@@ -529,7 +531,7 @@ class ChatbotpageWidget extends StatelessWidget {
                         child: Container(
                             width: 29,
                             height: 29,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               image: DecorationImage(
                                   image:
                                       AssetImage('assets/images/Emailsend.png'),

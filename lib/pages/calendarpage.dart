@@ -40,13 +40,13 @@ String? selectedItem='TimeLine';
       //         fontSize: 18,
       //         fontWeight: FontWeight.w800,
       //       ),),),
-        SizedBox(height:7)  , 
+        const SizedBox(height:7)  , 
       ],
       
      ),
       
-   bottomNavigationBar: GNav(
-    tabs: const [
+   bottomNavigationBar: const GNav(
+    tabs: [
         GButton(icon: Icons.sms, text:'Chatbot'),
         GButton(icon: Icons.calendar_today, text:'Calendar'),
         GButton(icon: Icons.home, text: 'Home',),
@@ -69,9 +69,9 @@ Container calendar(){
   lastDay: DateTime.utc(2030, 3, 14),
   focusedDay: DateTime.now(),
      calendarStyle: CalendarStyle(
-   defaultTextStyle:TextStyle(color: const Color.fromARGB(255, 111, 151, 191)),
-   weekNumberTextStyle:TextStyle(color: const Color.fromARGB(255, 111, 151, 191)),
-   weekendTextStyle:TextStyle(color: const Color.fromARGB(255, 111, 151, 191)),
+   defaultTextStyle:const TextStyle(color: Color.fromARGB(255, 111, 151, 191)),
+   weekNumberTextStyle:const TextStyle(color: Color.fromARGB(255, 111, 151, 191)),
+   weekendTextStyle:const TextStyle(color: Color.fromARGB(255, 111, 151, 191)),
    todayDecoration: BoxDecoration(color: const Color.fromARGB(255, 100, 86, 113), borderRadius: BorderRadius.circular(30))
 
  ),
@@ -94,7 +94,7 @@ Container calendar(){
 
 AppBar appBar() {
 return AppBar(
-      title: Text(
+      title: const Text(
         'Calendar',
           style: TextStyle(
             color: Colors.black,
@@ -109,16 +109,16 @@ return AppBar(
             
           },
       child: Container(
-        margin: EdgeInsets.all(10),
+        margin: const EdgeInsets.all(10),
         alignment: Alignment.center,
-        child: Image.asset('assets/icons/left-arrow.png',
-        height: 20,
-        width: 20,),
         decoration: BoxDecoration(
-          color: Color(0xffF7F8F8),
+          color: const Color(0xffF7F8F8),
           borderRadius: BorderRadius.circular(10)
 
         ),
+        child: Image.asset('assets/icons/left-arrow.png',
+        height: 20,
+        width: 20,),
       ),),
       actions: [
         GestureDetector(
@@ -126,17 +126,17 @@ return AppBar(
 
           },
           child: Container(
-        margin: EdgeInsets.all(10),
+        margin: const EdgeInsets.all(10),
         alignment: Alignment.center,
         width: 37,
-        child: Image.asset('assets/icons/dots.png',
-        height: 20,
-        width: 20,),
         decoration: BoxDecoration(
-          color: Color(0xffF7F8F8),
+          color: const Color(0xffF7F8F8),
           borderRadius: BorderRadius.circular(10)
 
         ),
+        child: Image.asset('assets/icons/dots.png',
+        height: 20,
+        width: 20,),
       ),
       ) ],
 
@@ -145,6 +145,6 @@ return AppBar(
 }
 
   void setState(String? item) {
-     this.selectedItem = item;
+     selectedItem = item;
   }
 }
