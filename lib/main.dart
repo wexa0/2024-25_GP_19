@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
-import 'package:flutter_application/TimerPage'; // Make sure this import path is correct
+import 'package:flutter_application/pages/timerPage'; // Make sure this import path is correct
 import 'package:flutter_application/welcome_page.dart';
 
 void main() async {
@@ -17,17 +17,17 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        theme: ThemeData(fontFamily: 'Poppins'),
-        useMaterial3: true,
-      ),
-      home:const WelcomePage(),
-    );
-  }
+ @override
+Widget build(BuildContext context) {
+  return MaterialApp(
+    title: 'Flutter Demo',
+    theme: ThemeData(
+      fontFamily: 'Poppins',  // Correct way to add the fontFamily
+      useMaterial3: true,
+    ),
+    home: const WelcomePage(),
+  );
+}
 }
 
 class MyHomePage extends StatefulWidget {

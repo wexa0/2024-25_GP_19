@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:gphomepage/main.dart';
-import 'package:gphomepage/models/catModel.dart';
+import 'package:flutter_application/main.dart';
+
+import 'package:flutter_application/models/catModel.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
