@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'package:flutter_application/succuss.dart'; // Import the welcome page
+import 'package:flutter_application/succuss.dart'; 
+import 'package:flutter_application/pages/home.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,63 +18,66 @@ class _LoginPageState extends State<LoginPage> {
 
   // Function to handle the login process
   void _handleLogin() async {
-  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-    // Show Snackbar if fields are empty
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please fill in both fields'),
-        backgroundColor: Colors.red, // Customize the background color
-      ),
-    );
-  } else {
-    try {
-      // Attempt to sign in the user with email and password
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      // Show Snackbar if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in both fields'),
+          backgroundColor: Colors.red, // Customize the background color
+        ),
       );
+    } else {
+      try {
+        // Attempt to sign in the user with email and password
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      // If successful, navigate to the Welcome Page or the next screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MyApp()),
-      );
-    } on FirebaseAuthException catch (e) {
-      // Handle different error codes
-      if (e.code == 'user-not-found') {
+        // Log success to see if this part is reached
+        print('User login successful, UID: ${userCredential.user!.uid}');
+
+        // Navigate to the Welcome Page or the next screen after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => addTask()), // Your next screen
+        );
+      } on FirebaseAuthException catch (e) {
+        // Handle different error codes
+        if (e.code == 'user-not-found') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No user found for that email.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else if (e.code == 'wrong-password') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Wrong password provided.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to sign in: ${e.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No user found for that email.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Wrong password provided.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to sign in: ${e.message}'),
+            content: Text('An unexpected error occurred. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An unexpected error occurred. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -174,14 +178,14 @@ class _LoginPageState extends State<LoginPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text(
                       'Log In',
                       style: TextStyle(
                         color: Colors.white, // Font color
                         fontWeight: FontWeight.bold, // Bold font
-                        fontSize: 20
+                        fontSize: 20,
                       ),
                     ),
                   ),

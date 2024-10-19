@@ -238,14 +238,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.2"
-  flutter_datetime_picker:
+  flutter_cupertino_datetime_picker:
     dependency: "direct main"
     description:
-      name: flutter_datetime_picker
-      sha256: "8e695c63c769350e541951227c2775190ec73ceda774a315b1dc9a99d5facfe5"
+      name: flutter_cupertino_datetime_picker
+      sha256: "631fbd3abed4d1151888e053d2153d905663a3b33ff24bdfa64afbcf750682cb"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.1"
+    version: "3.0.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -408,6 +408,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.15.0"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -512,6 +520,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: c8a055ee5ce3fd98d6fc872478b03823ffdb448699c6ebdbbc71d59b596fd48c
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.2"
   rational:
     dependency: transitive
     description:

@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
-import 'package:flutter_application/pages/timerPage'; // Make sure this import path is correct
-import 'package:flutter_application/welcome_page.dart';
+import 'package:flutter_application/welcome_page.dart'; 
 
 void main() async {
-  // Ensure widget binding is initialized before Firebase is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase before the app starts
-  await Firebase.initializeApp();
-
-  // Run the app after Firebase is initialized
-  runApp(const MyApp());
+  // Ensure Firebase is initialized before your app runs.
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyDmLYRShTksz7xniQH8Qks8TxhBQKhzFSk",
+        authDomain: "attensionlens-db.firebaseapp.com",
+        projectId: "attensionlens-db",
+        storageBucket: "attensionlens-db.appspot.com",
+        messagingSenderId: "806322652007",
+        appId: "1:806322652007:web:a283d85295ec4affa7a5c2",
+      ),
+    );
+    print("Firebase initialized successfully");
+  } catch (e) {
+    print("Firebase initialization error: $e");
+  }
+  
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -19,67 +30,12 @@ class MyApp extends StatelessWidget {
 
  @override
 Widget build(BuildContext context) {
-  return MaterialApp(
-    title: 'Flutter Demo',
-    theme: ThemeData(
-      fontFamily: 'Poppins',  // Correct way to add the fontFamily
-      useMaterial3: true,
-    ),
-    home: const WelcomePage(),
-  );
-}
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => TimerPage()),
-                );
-              },
-              child: const Text('Enter Progress Page'),
-            ),
-          ],
+      return MaterialApp(
+        title: 'Your App',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+        home: const WelcomePage(), // Your initial page
+      );
+}
 }

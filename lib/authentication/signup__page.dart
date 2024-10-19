@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/login_page.dart';
 import 'package:flutter_application/succuss.dart'; 
+import 'package:flutter_application/pages/home.dart'; 
+
 import 'package:flutter_application/welcome_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,7 +83,7 @@ class _SignUpPageState extends State<SignUpPage> {
       // Navigate to the login page  //// 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MyApp()),
+        MaterialPageRoute(builder: (context) => HomePage()),
       );
 
     } on FirebaseAuthException catch (e) {
@@ -95,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
         );
       }
     } catch (e) {
-      print(e);
+       print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred. Please try again.')),
       );
