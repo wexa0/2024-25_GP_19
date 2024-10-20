@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/login_page.dart';
-import 'package:flutter_application/succuss.dart'; 
-import 'package:flutter_application/pages/home.dart'; 
+
+import 'package:flutter_application/pages/home.dart';
 
 import 'package:flutter_application/welcome_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -36,8 +34,10 @@ class _SignUpPageState extends State<SignUpPage> {
         return Theme(
           data: ThemeData.light().copyWith(
             primaryColor: const Color(0xFF3b7292), // Header color
-            colorScheme: const ColorScheme.light(primary: Color(0xFF3b7292)), // Selected date color
-            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary), // Button text color
+            colorScheme: const ColorScheme.light(
+                primary: Color(0xFF3b7292)), // Selected date color
+            buttonTheme: const ButtonThemeData(
+                textTheme: ButtonTextTheme.primary), // Button text color
           ),
           child: child ?? Container(),
         );
@@ -47,63 +47,62 @@ class _SignUpPageState extends State<SignUpPage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _dobController.text = "${picked.day}/${picked.month}/${picked.year}"; // Format as DD/MM/YYYY
+        _dobController.text =
+            "${picked.day}/${picked.month}/${picked.year}"; // Format as DD/MM/YYYY
       });
     }
   }
 
   // This is the function handling form submission and Firebase registration
- void _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      // Create a new user in Firebase Authentication
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      // Add the user details to Firestore 'User' collection
-      await FirebaseFirestore.instance
-          .collection('User')
-          .doc(userCredential.user!.uid)
-          .set({
-        'firstName': _firstNameController.text.trim(),
-        'lastName': _lastNameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'dateOfBirth': _dobController.text.trim(),
-        'password': _passwordController.text.trim(), // Not recommended to store raw passwords
-      });
-
-      // Notify success
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
-      );
-
-      // Navigate to the login page  //// 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This email is already in use.')),
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        // Create a new user in Firebase Authentication
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
-      } else {
+
+        // Add the user details to Firestore 'User' collection
+        await FirebaseFirestore.instance
+            .collection('User')
+            .doc(userCredential.user!.uid)
+            .set({
+          'firstName': _firstNameController.text.trim(),
+          'lastName': _lastNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'dateOfBirth': _dobController.text.trim(),
+        });
+
+        // Notify success
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to sign up: ${e.message}')),
+          const SnackBar(content: Text('Account created successfully!')),
+        );
+
+        // Navigate to the login page  ////
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This email is already in use.')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to sign up: ${e.message}')),
+          );
+        }
+      } catch (e) {
+        print('Error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
         );
       }
-    } catch (e) {
-       print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
-      );
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -112,21 +111,22 @@ class _SignUpPageState extends State<SignUpPage> {
         children: [
           // Background image
           Image.asset(
-            'assets/images/signup.png', // Update to your actual image path
+            'assets/images/signup.png',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
           ),
-           // Back Button
+          // Back Button
           Positioned(
-            top: 40, // Adjust position as needed
+            top: 40,
             left: 20,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
+              icon: const Icon(Icons.arrow_back,
+                  color: Color(0xFF104A73), size: 55),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const WelcomePage()), // Change this to your welcome page
+                  MaterialPageRoute(builder: (context) => const WelcomePage()),
                 );
               },
             ),
@@ -148,7 +148,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           decoration: InputDecoration(
                             labelText: 'First Name *',
                             filled: true,
-                            fillColor: const Color(0xFFE6EBEF), // Background color
+                            fillColor: const Color(0xFFE6EBEF),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: const BorderSide(
@@ -180,7 +180,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           decoration: InputDecoration(
                             labelText: 'Last Name *',
                             filled: true,
-                            fillColor: const Color(0xFFE6EBEF), // Background color
+                            fillColor: const Color(0xFFE6EBEF),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: const BorderSide(
@@ -234,7 +234,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Email is required';
-                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
                         return 'Enter a valid email';
                       }
                       return null;
@@ -244,7 +245,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   // Date of Birth Field
                   TextFormField(
                     controller: _dobController,
-                    readOnly: true, // Prevent keyboard from appearing
+                    readOnly: true,
                     onTap: () => _selectDate(context),
                     decoration: InputDecoration(
                       labelText: 'Date of Birth *',
@@ -298,42 +299,43 @@ class _SignUpPageState extends State<SignUpPage> {
                         color: Color(0xFF3b7292),
                       ),
                     ),
-                   validator: (value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    } else if (value.length < 8) {
-      return 'Password must be at least 8 characters long';
-    } else if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$').hasMatch(value)) {
-      return 'Password must contain upper, lower, number, and symbol';
-    }
-    return null;
-  },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password is required';
+                      } else if (value.length < 8) {
+                        return 'Password must be at least 8 characters long';
+                      } else if (!RegExp(
+                              r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$')
+                          .hasMatch(value)) {
+                        return 'Password must contain upper, lower, number, and symbol';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 24),
                   // Sign Up Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _submitForm, // Submit form function
+                      onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B7292),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                         padding: const EdgeInsets.symmetric(vertical: 14), // Increase vertical padding
-      minimumSize: const Size(0, 40), // Optional: Set a minimum height
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(0, 40),
                       ),
                       child: const Text(
                         'Sign Up',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20
-                        ),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16), // Space between button and text
+                  const SizedBox(height: 16),
                   // Already Have an Account Text
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -350,14 +352,15 @@ class _SignUpPageState extends State<SignUpPage> {
                           // Navigate to login page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => LoginPage()),
+                            MaterialPageRoute(
+                                builder: (context) => LoginPage()),
                           );
                         },
                         child: const Text(
                           'Log in',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Color(0xFF3b7292), // Link color
+                            color: Color(0xFF3b7292),
                             fontWeight: FontWeight.bold,
                           ),
                         ),

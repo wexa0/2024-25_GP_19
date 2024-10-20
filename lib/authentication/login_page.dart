@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'package:flutter_application/succuss.dart'; 
-import 'package:flutter_application/pages/home.dart'; 
+import 'package:flutter_application/succuss.dart';
+import 'package:flutter_application/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -19,43 +19,36 @@ class _LoginPageState extends State<LoginPage> {
   // Function to handle the login process
   void _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      // Show Snackbar if fields are empty
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in both fields'),
-          backgroundColor: Colors.red, // Customize the background color
+          backgroundColor: Colors.red,
         ),
       );
     } else {
       try {
-        // Attempt to sign in the user with email and password
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Log success to see if this part is reached
         print('User login successful, UID: ${userCredential.user!.uid}');
 
-        // Navigate to the Welcome Page or the next screen after successful login
+        // Navigate to the next screen after login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => addTask()), // Your next screen
+          MaterialPageRoute(builder: (context) => addTask()),
         );
       } on FirebaseAuthException catch (e) {
-        // Handle different error codes
-        if (e.code == 'user-not-found') {
+        // Print the exception code to debug
+        print('FirebaseAuthException Code: ${e.code}');
+
+        if (e.code == 'invalid-credential') {
+          // Provide a generic message to prevent email enumeration attacks
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No user found for that email.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        } else if (e.code == 'wrong-password') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Wrong password provided.'),
+              content: Text('Invalid email or password. Please try again.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -66,15 +59,8 @@ class _LoginPageState extends State<LoginPage> {
               backgroundColor: Colors.red,
             ),
           );
+          print('Failed to sign in: ${e.message}');
         }
-      } catch (e) {
-        print('Error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An unexpected error occurred. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -86,21 +72,22 @@ class _LoginPageState extends State<LoginPage> {
         children: [
           // Background image
           Image.asset(
-            'assets/images/login.png', // Update to your actual image path
+            'assets/images/login.png',
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
           ),
           // Back Button
           Positioned(
-            top: 40, // Adjust position as needed
+            top: 40,
             left: 20,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF104A73), size:55), // Arrow icon
+              icon: const Icon(Icons.arrow_back,
+                  color: Color(0xFF104A73), size: 55),
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const WelcomePage()), // Change this to your welcome page
+                  MaterialPageRoute(builder: (context) => const WelcomePage()),
                 );
               },
             ),
@@ -124,18 +111,18 @@ class _LoginPageState extends State<LoginPage> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       borderSide: const BorderSide(
-                        color: Color(0xFFE6EBEF), // Use your desired color here
+                        color: Color(0xFFE6EBEF),
                       ),
                     ),
                     // Set the focused border color
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       borderSide: const BorderSide(
-                        color: Color(0xFF3b7292), // Use your desired focused color here
+                        color: Color(0xFF3b7292),
                       ),
                     ),
                     floatingLabelStyle: const TextStyle(
-                      color: Color(0xFF3b7292), // Color of label when focused, matching the border
+                      color: Color(0xFF3b7292),
                     ),
                   ),
                 ),
@@ -143,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                 // Password TextField
                 TextField(
                   controller: _passwordController,
-                  obscureText: true, // To hide the password text
+                  obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
                     filled: true,
@@ -152,18 +139,18 @@ class _LoginPageState extends State<LoginPage> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       borderSide: const BorderSide(
-                        color: Color(0xFFE6EBEF), // Use your desired color here
+                        color: Color(0xFFE6EBEF),
                       ),
                     ),
                     // Set the focused border color
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       borderSide: const BorderSide(
-                        color: Color(0xFF3b7292), // Use your desired focused color here
+                        color: Color(0xFF3b7292),
                       ),
                     ),
                     floatingLabelStyle: const TextStyle(
-                      color: Color(0xFF3b7292), // Color of label when focused, matching the border
+                      color: Color(0xFF3b7292),
                     ),
                   ),
                 ),
@@ -172,9 +159,9 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _handleLogin, // Use the login handler
+                    onPressed: _handleLogin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B7292), // Button color
+                      backgroundColor: const Color(0xFF3B7292),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -197,7 +184,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     const Text(
                       "Don't have an account?",
-                      style: TextStyle(color: Color(0xFF737373)), // Corrected color code
+                      style: TextStyle(
+                          color: Color(0xFF737373)), // Corrected color code
                     ),
                     TextButton(
                       onPressed: () {
