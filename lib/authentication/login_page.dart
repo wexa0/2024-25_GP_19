@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'package:flutter_application/addTaskForm.dart';
+import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:flutter_application/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    labelText: 'Email *',
                     filled: true,
                     fillColor: Colors.white70,
                     // Set the enabled border color
@@ -132,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: 'Password *',
                     filled: true,
                     fillColor: Colors.white70,
                     // Set the enabled border color

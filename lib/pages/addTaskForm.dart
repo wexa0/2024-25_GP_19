@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application/pages/editTask.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,9 +35,11 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage> {
   User? _user =
-      FirebaseAuth.instance.currentUser; // Get the current logged-in user
+      FirebaseAuth.instance.currentUser; 
 
-  String selectedCategory = 'Home';
+  String? _currentTaskID;
+
+  String selectedCategory = '';
   String? selectedPriority;
   Color priorityIconColor = Color(0xFF3B7292);
   DateTime selectedDate = DateTime.now();
@@ -62,7 +65,10 @@ class _TaskPageState extends State<TaskPage> {
   Color lightGray = Color(0xFFF5F7F8);
   Color darkGray = Color(0xFF545454);
 
-  // Method to show the Time Picker
+  bool _isTitleMissing = false;
+  bool _isDateMissing = false;
+  bool _isTimeMissing = false;
+
   void _pickTime(BuildContext context) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -108,9 +114,11 @@ class _TaskPageState extends State<TaskPage> {
 
       List<String> fetchedCategories = [];
 
-      // Add user-created categories to the list
       for (var doc in categorySnapshot.docs) {
-        fetchedCategories.add(doc['categoryName']);
+        String categoryName = doc['categoryName'] ?? '';
+        if (categoryName.isNotEmpty) {
+          fetchedCategories.add(categoryName);
+        }
       }
 
       List<String> combinedCategories = [
@@ -140,50 +148,39 @@ class _TaskPageState extends State<TaskPage> {
     return _user;
   }
 
-  // Method to add category and return its reference
-  Future<DocumentReference> _addCategoryAndReturnReference(
-      String categoryName) async {
-    User? currentUser = await _getCurrentUser();
-    if (currentUser == null) throw Exception("No user found");
-
-    // Check if the category already exists for the user
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('categoryName', isEqualTo: categoryName)
-        .where('userID', isEqualTo: currentUser.uid)
-        .get();
-
-    if (querySnapshot.docs.isEmpty) {
-      // If the category doesn't exist, create it
-      DocumentReference categoryRef =
-          FirebaseFirestore.instance.collection('Category').doc();
-      await categoryRef.set({
-        'categoryName': categoryName,
-        'userID': currentUser.uid,
-      });
-      return categoryRef;
-    } else {
-      // If it exists, return the existing category reference
-      return querySnapshot.docs.first.reference;
-    }
-  }
-
-  // Add and link category to the task
   Future<void> _saveCategoryAndLinkToTask(
       String categoryName, DocumentReference taskRef) async {
     try {
-      DocumentReference categoryRef =
-          await _addCategoryAndReturnReference(categoryName);
-      await FirebaseFirestore.instance.collection('CategoryTask').add({
-        'categoryID': categoryRef,
-        'taskID': taskRef,
-      });
+      User? currentUser = await _getCurrentUser();
+      if (currentUser == null) return;
+
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('categoryName', isEqualTo: categoryName)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        DocumentReference categoryRef = querySnapshot.docs.first.reference;
+
+        await categoryRef.update({
+          'taskIDs': FieldValue.arrayUnion(
+              [taskRef.id]) 
+        });
+      } else {
+        DocumentReference categoryRef =
+            FirebaseFirestore.instance.collection('Category').doc();
+        await categoryRef.set({
+          'categoryName': categoryName,
+          'userID': currentUser.uid,
+          'taskIDs': [taskRef.id], 
+        });
+      }
     } catch (e) {
       print('Failed to save category or link to task: $e');
     }
   }
 
-  // Add a task to Firebase Firestore
   Future<void> _saveTaskToFirebase() async {
     try {
       User? currentUser = await _getCurrentUser();
@@ -200,32 +197,36 @@ class _TaskPageState extends State<TaskPage> {
       DocumentReference taskRef =
           FirebaseFirestore.instance.collection('Task').doc();
 
-      // Add the task to the "Task" collection in Firestore
       await taskRef.set({
-        'notes': notesController.text,
+        'completionStatus': '0',
+        'date': Timestamp.fromDate(taskDateTime),
+        'note': notesController.text,
         'priority': _getPriorityValue(),
-        'startDate': Timestamp.fromDate(taskDateTime),
-        'status': '',
-        'taskTitle': taskNameController.text,
-        'timer': '0',
-        'timeSpent': '',
-        'userID': FirebaseFirestore.instance
-            .collection('User')
-            .doc(_user!.uid), // Reference to the logged-in user
+        'reminder': '',
+        'timer': '',
+        'title': taskNameController.text,
+        'userID': FirebaseFirestore.instance.collection('User').doc(_user!.uid),
       });
 
-      await _saveCategoryAndLinkToTask(selectedCategory, taskRef);
+      String taskID = taskRef.id;
 
-      // Save each subtask to the "SubTask" collection
+      if (selectedCategory.isNotEmpty) {
+        await _saveCategoryAndLinkToTask(selectedCategory, taskRef);
+      }
       for (String subtask in subtasks) {
         await FirebaseFirestore.instance.collection('SubTask').add({
-          'status': '',
-          'subTaskTitle': subtask,
+          'completionStatus': '0',
           'taskID': taskRef,
+          'timer': '',
+          'title': subtask,
         });
       }
 
-      // Show a confirmation
+      setState(() {
+        _currentTaskID = taskID;
+      });
+
+      // Show confirmation
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Task saved successfully!'),
       ));
@@ -250,28 +251,29 @@ class _TaskPageState extends State<TaskPage> {
     }
   }
 
-  void _saveTask() {
-    List<String> missingFields = [];
+  Future<void> _saveTask() async {
+    setState(() {
+      _isTitleMissing = taskNameController.text.isEmpty;
+      _isDateMissing = formattedDate == 'Select Date';
+      _isTimeMissing = formattedTime == 'Select Time';
+    });
 
-    if (taskNameController.text.isEmpty) {
-      missingFields.add("Task Title");
-    }
-    if (formattedDate == 'Select Date') {
-      missingFields.add("Date");
-    }
-    if (formattedTime == 'Select Time') {
-      missingFields.add("Time");
-    }
-
-    // If there are any missing fields, show a single error message
-    if (missingFields.isNotEmpty) {
+    if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
+      try {
+        await _saveTaskToFirebase();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Task saved successfully!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save task: $e')),
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please Choose a: ${missingFields.join(', ')}')),
+        SnackBar(content: Text('Please fill in all mandatory fields.')),
       );
-      return;
     }
-
-    _saveTaskToFirebase();
   }
 
   @override
@@ -306,7 +308,7 @@ class _TaskPageState extends State<TaskPage> {
               TextField(
                 controller: taskNameController,
                 decoration: InputDecoration(
-                  labelText: 'Task name',
+                  labelText: 'Task name *',
                   labelStyle: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 16,
@@ -323,6 +325,9 @@ class _TaskPageState extends State<TaskPage> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: darkBlue),
                   ),
+                  errorText: _isTitleMissing
+                      ? 'Task Name is required'
+                      : null, // Red underline when missing
                   floatingLabelBehavior: FloatingLabelBehavior.auto,
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 15, horizontal: 20),
@@ -341,6 +346,8 @@ class _TaskPageState extends State<TaskPage> {
 
               _buildPrioritySection(),
               SizedBox(height: 20),
+
+              _buildReminderTimerSection(),
 
               TextField(
                 controller: notesController,
@@ -383,9 +390,19 @@ class _TaskPageState extends State<TaskPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saveTask,
+                  onPressed: () async {
+                    await _saveTask();
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              EditTaskPage(taskId: 'IVGolOFAlbH6uS8Ihdst')),
+                    );
+                  },
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(darkBlue),
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(mediumBlue),
                   ),
                   child: Text('Save', style: TextStyle(color: Colors.white)),
                 ),
@@ -481,20 +498,23 @@ class _TaskPageState extends State<TaskPage> {
         Wrap(
           spacing: 8.0,
           children: categories.map((category) {
-            bool isNewCategory = _newlyAddedCategories.contains(category);
+            bool isHardcoded = hardcodedCategories.contains(category);
 
-            return isEditingCategory && isNewCategory
+            return isEditingCategory &&
+                    !isHardcoded 
                 ? Chip(
-                    label: Text(category),
+                    label: GestureDetector(
+                      onTap: () {
+                        if (!isHardcoded) {
+                          _showRenameCategoryDialog(category);
+                        }
+                      },
+                      child: Text(category),
+                    ),
                     deleteIcon: Icon(Icons.close,
                         color: const Color.fromARGB(255, 1, 39, 71)),
                     onDeleted: () {
-                      setState(() {
-                        categories
-                            .remove(category); // Remove from categories list
-                        _newlyAddedCategories.remove(
-                            category); // Remove from newly added categories
-                      });
+                      _showDeleteCategoryConfirmation(category);
                     },
                     backgroundColor: lightestBlue,
                   )
@@ -526,6 +546,195 @@ class _TaskPageState extends State<TaskPage> {
           ),
       ],
     );
+  }
+
+  void _addCategory(String text) async {
+    if (text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Category name cannot be empty.')),
+      );
+      return;
+    }
+
+    if (_newlyAddedCategories.length + categories.length >= 7) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You can only create up to 7 categories.')),
+      );
+      return;
+    }
+
+    setState(() {
+      categories.add(text.trim()); 
+      _newlyAddedCategories.add(text.trim()); 
+      categoryController.clear();
+    });
+
+    await _saveCategoryToDatabase(text.trim());
+  }
+
+  void _showDeleteCategoryConfirmation(String category) {
+    showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Category',
+            style: TextStyle(
+              color: Colors.black, 
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete the category "$category"? This action cannot be undone.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              color: Colors.grey[800], 
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pop(false); 
+              },
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    Color(0xFF3B7292), 
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteCategory(category, isNew: true);
+                Navigator.of(context).pop(true); 
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, 
+              ),
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          backgroundColor:
+              Color(0xFFF5F7F8), 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        );
+      },
+    );
+  }
+
+  void _deleteCategory(String category, {required bool isNew}) async {
+    setState(() {
+      categories.remove(category);
+      if (isNew) {
+        _newlyAddedCategories.remove(category);
+      }
+    });
+
+    await _deleteCategoryFromDatabase(category);
+  }
+
+// Rename a category and update the database
+  void _showRenameCategoryDialog(String oldCategory) {
+    TextEditingController renameController =
+        TextEditingController(text: oldCategory);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Rename Category'),
+          content: TextField(
+            controller: renameController,
+            decoration: InputDecoration(
+              labelText: 'New Category Name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); 
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                String newCategoryName = renameController.text.trim();
+                if (newCategoryName.isNotEmpty &&
+                    newCategoryName != oldCategory) {
+                  setState(() {
+                    int index = categories.indexOf(oldCategory);
+                    if (index != -1) {
+                      categories[index] = newCategoryName; 
+                    }
+                  });
+                  await _renameCategoryInDatabase(oldCategory, newCategoryName);
+                }
+                Navigator.of(context).pop(); 
+              },
+              child: Text('Rename'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _renameCategoryInDatabase(
+      String oldCategory, String newCategory) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('categoryName', isEqualTo: oldCategory)
+        .where('userID', isEqualTo: currentUser.uid)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      DocumentReference categoryRef = snapshot.docs.first.reference;
+      await categoryRef.update({'categoryName': newCategory});
+    }
+  }
+
+// Save a category to the database
+  Future<void> _saveCategoryToDatabase(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    await FirebaseFirestore.instance.collection('Category').add({
+      'categoryName': categoryName,
+      'userID': currentUser.uid,
+    });
+  }
+
+  Future<void> _deleteCategoryFromDatabase(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('categoryName', isEqualTo: categoryName)
+        .where('userID', isEqualTo: currentUser.uid)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      await snapshot.docs.first.reference.delete();
+    }
   }
 
   // Field for adding a new category
@@ -562,21 +771,21 @@ class _TaskPageState extends State<TaskPage> {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime(2000),
+      firstDate: DateTime(1990),
       lastDate: DateTime(2101),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            primaryColor: darkBlue, // Header background color
+            primaryColor: darkBlue,
             colorScheme: ColorScheme.light(
-              primary: darkBlue, // Primary color for header
-              onPrimary: Color(0xFFF5F7F8), // Text color on header
-              surface: Color(0xFFF5F7F8), // Dialog background color
-              onSurface: darkGray, // Text color for dates
-              secondary: lightBlue, // Selected date color
+              primary: darkBlue,
+              onPrimary: Color(0xFFF5F7F8),
+              surface: Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
             ),
             dialogBackgroundColor:
-                Color(0xFFF5F7F8), // Background color for the date picker
+                Color(0xFFF5F7F8), 
           ),
           child: child!,
         );
@@ -590,20 +799,13 @@ class _TaskPageState extends State<TaskPage> {
     }
   }
 
-  // Priority Section with colored flags
   Widget _buildPrioritySection() {
     return Column(
       children: [
-        // Top Divider (invisible)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Divider(
-            color: Colors.transparent,
-            thickness: 1.5,
-          ),
         ),
 
-        // The ExpansionTile
         Theme(
           data: Theme.of(context).copyWith(
             dividerColor: Colors.transparent,
@@ -615,11 +817,11 @@ class _TaskPageState extends State<TaskPage> {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontFamily: 'Poppins',
+                fontSize: 14,
                 color: darkGray,
               ),
             ),
             children: [
-              // Priority options
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -635,16 +837,11 @@ class _TaskPageState extends State<TaskPage> {
 
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Divider(
-            color: Colors.transparent,
-            thickness: 1.5,
-          ),
         ),
       ],
     );
   }
 
-  // Method to show colored flags for each priority
   Widget _priorityFlag(String label, Color color) {
     return Column(
       children: [
@@ -661,7 +858,7 @@ class _TaskPageState extends State<TaskPage> {
           label,
           style: TextStyle(
             fontFamily: 'Poppins',
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
             color: darkGray,
           ),
@@ -670,20 +867,24 @@ class _TaskPageState extends State<TaskPage> {
     );
   }
 
-  // Build the Date and Time Picker Section
   Widget _buildDateTimePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
-          leading: Icon(Icons.calendar_today, color: Color(0xFF3B7292)),
+          leading: Icon(Icons.calendar_today,
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : Color(0xFF3B7292)),
           title: Text(
-            'Date',
+            'Date *',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: darkGray,
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
             ),
           ),
           trailing: Text(
@@ -691,21 +892,28 @@ class _TaskPageState extends State<TaskPage> {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontFamily: 'Poppins',
-              color: darkGray,
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
             ),
           ),
           onTap: () => _pickDate(context),
         ),
         SizedBox(height: 16),
         ListTile(
-          leading: Icon(Icons.access_time, color: Color(0xFF3B7292)),
+          leading: Icon(Icons.access_time,
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : Color(0xFF3B7292)),
           title: Text(
-            'Time',
+            'Time *',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: darkGray,
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
             ),
           ),
           trailing: Text(
@@ -713,11 +921,51 @@ class _TaskPageState extends State<TaskPage> {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontFamily: 'Poppins',
-              color: darkGray,
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
             ),
           ),
           onTap: () => _pickTime(context),
         ),
+      ],
+    );
+  }
+
+  Widget _buildReminderTimerSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: Icon(Icons.notifications,
+              color: Color(0xFF3B7292)), 
+          title: Text(
+            'Set Reminder',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: darkGray,
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
+
+        // Timer Section
+        ListTile(
+          leading:
+              Icon(Icons.timer, color: Color(0xFF3B7292)), 
+          title: Text(
+            'Set Timer',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: darkGray,
+            ),
+          ),
+        ),
+        SizedBox(height: 20),
       ],
     );
   }
@@ -727,17 +975,6 @@ class _TaskPageState extends State<TaskPage> {
       setState(() {
         subtasks.add(text);
         subtaskController.clear();
-      });
-    }
-  }
-
-  // Add category when user presses Enter
-  void _addCategory(String text) {
-    if (text.isNotEmpty) {
-      setState(() {
-        categories.add(text);
-        _newlyAddedCategories.add(text); // Track new category
-        categoryController.clear();
       });
     }
   }
