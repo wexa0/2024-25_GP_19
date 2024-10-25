@@ -1,0 +1,256 @@
+import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';  // For formatting the date
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ProgressPage(),
+    );
+  }
+}
+
+class ProgressPage extends StatelessWidget {
+  const ProgressPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final dataMap = <String, double>{
+      "No Category": 3,
+      "Routine": 3,
+      "Home": 2,
+    };
+
+    final colorList = <Color>[
+      Color(0xFF2F5496),  // Deep blue for "No Category"
+      Color(0xFFA5BBE3),  // Light blue for "Routine"
+      Color(0xFF3C6ABE),  // Light blue for "Home"
+    ];
+
+    // Get the current date in the desired format
+    final currentDate = DateFormat('EEE, dd/MM/yyyy').format(DateTime.now());
+
+    // Apply the Google font to the entire page
+    return Theme(
+      data: ThemeData(
+        textTheme: GoogleFonts.abyssinicaSilTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        body: SingleChildScrollView(  // تم إضافة SingleChildScrollView لجعل الصفحة قابلة للتمرير
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Progress", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 1),
+              Text(currentDate, style: TextStyle(fontSize: 16, color: Colors.grey)),  // Display the current date in gray
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildTaskCard("Complete Task", "3"),
+                  _buildTaskCard("Pending Task", "5"),
+                ],
+              ),
+              const SizedBox(height: 40),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Today", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),  // 'Today' inside the rectangle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: dataMap.keys.map((key) => _buildLegend(key, colorList[dataMap.keys.toList().indexOf(key)])).toList(),
+                          ),
+                        ),
+                        PieChart(
+                          dataMap: dataMap,
+                          animationDuration: const Duration(milliseconds: 800),
+                          chartLegendSpacing: 32,
+                          chartRadius: MediaQuery.of(context).size.width / 3.7,
+                          colorList: colorList,
+                          initialAngleInDegree: 0,
+                          chartType: ChartType.ring,
+                          ringStrokeWidth: 29,
+                          centerText: "",
+                          legendOptions: LegendOptions(
+                            showLegends: false, // Hide default legends as we are custom rendering on the left
+                          ),
+                          chartValuesOptions: ChartValuesOptions(
+                            showChartValues: false,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 60), // Move the bar chart further down
+              _buildBarChart(),  // Static bar chart added here
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskCard(String title, String count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Color(0xFFD1D1D1),  // Light grey for task card
+        borderRadius: BorderRadius.circular(15),  // More rounded corners
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 1,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(count, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend(String key, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.circle, color: color, size: 14),  // Circle color indicator
+        SizedBox(width: 5),  // Space between circle and text
+        Text(key, style: TextStyle(fontSize: 15)),
+      ],
+    );
+  }
+
+  // Static bar chart layout with grey lines for each hour
+  Widget _buildBarChart() {
+    return Stack(
+      children: [
+        // Grey lines behind the bars
+        Column(
+          children: [
+            for (var i = 0; i < 5; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Divider(
+                  color: Colors.grey[400],
+                  thickness: 1,
+                  indent: 50, // Space from the left side
+                  endIndent: 30, // Space from the right side
+                ),
+              ),
+          ],
+        ),
+        Column(
+          children: [
+            // Y-Axis labels (Hours)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("8hr", style: TextStyle(color: Colors.grey)),
+                    SizedBox(height: 30),
+                    Text("6hr", style: TextStyle(color: Colors.grey)),
+                    SizedBox(height: 30),
+                    Text("4hr", style: TextStyle(color: Colors.grey)),
+                    SizedBox(height: 30),
+                    Text("2hr", style: TextStyle(color: Colors.grey)),
+                    SizedBox(height: 20),
+                    Text("0   ", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+                SizedBox(width: 0), // Add space between labels and bars
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildBar("Sat", 0.9),
+                      _buildBar("Sun", 0.20),
+                      _buildBar("Mon", 0.88),
+                      _buildBar("Tue", 0.47),
+                      _buildBar("Wed", 0.12),
+                      _buildBar("Thu", 0.56),
+                      _buildBar("Fri", 0.44),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Padding(
+                padding: const EdgeInsets.only(left: 33.0), // Adjust the right padding
+                child: Text("Sat"),
+              ),
+                Text("Sun"),
+                Text("Mon"),
+                Text("Tue"),
+                Text("Wed"),
+                Text("Thu"),
+                Text("Fri"),
+              ],
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Individual static bar widget
+  Widget _buildBar(String label, double heightFactor) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 120), // Add more space from the top to move the bars down
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            height: 100 * heightFactor, // Adjust height to simulate bar value
+            width: 20,
+            decoration: BoxDecoration(
+              color: Color(0xFF2F5496),  // Color of the bars changed to deep blue
+              borderRadius: BorderRadius.circular(9),  // Rounded edges for the bars
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

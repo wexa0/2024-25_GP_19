@@ -1,0 +1,141 @@
+//updated 27/3/1446
+import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+// Import pages for navigation
+import 'progress_page.dart'; 
+import 'edit_profile_page.dart'; 
+import 'logout_page.dart'; // Edit the name to what Munira names her page
+import 'contact_us_page.dart'; // Import the new Contact Us page
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        textTheme: GoogleFonts.abyssinicaSilTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
+      home: ProfilePage(),
+    );
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(47, 84, 150, 1),
+        title: Text('Profile'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Profile Picture
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(100), 
+                  child: Image(image: AssetImage('assets/images/profile_pic.png'))
+                ),
+              ),
+              // Name
+              Text(
+                'Loluah',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 40),
+              // Buttons: My Progress, Edit Profile, Contact Us, and Logout
+              buildButton('My Progress', context, ProgressPage()),
+              buildButton('Edit Profile', context, EditProfilePage()),
+              buildButton('Contact Us', context, ContactUsPage()), 
+              buildButton('Logout', context, LogoutPage()),
+              SizedBox(height: 40),
+              // Bottom Icons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  buildIcon('assets/images/Barchart.png'),
+                  SizedBox(width: 20),
+                  buildIcon('assets/images/Edit.png'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable button widget
+  Widget buildButton(String text, BuildContext context, Widget page) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color.fromRGBO(47, 84, 150, 1),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 15.0),
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 18, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Reusable icon widget
+  Widget buildIcon(String assetPath) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(assetPath),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+}
+
+// Placeholder for Contact Us page
+class ContactUsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Contact Us'),
+      ),
+      body: Center(
+        child: Text('Contact Us Page'), // You can customize this page further
+      ),
+    );
+  }
+}
