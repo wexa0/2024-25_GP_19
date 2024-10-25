@@ -35,8 +35,11 @@ class _HomePageState extends State<HomePage> {
   var formatter =DateFormat.yMMMMd('en_US'); //format date as specified
   
   final List<String> imgList = [
-    'assets/images/signedHome.png',
-    'assets/images/signedAllFeatures.gif',
+    'assets/images/mainCrousel.png',
+    'assets/images/managaTasksCrousel.png',
+    'assets/images/setRemindersCrousel.png',
+    'assets/images/chatCrousel.png',
+
   ]; //carousel list
 
 
@@ -76,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                         child: Text("",
                         style: TextStyle(
                           color: Colors.black, 
-                          fontSize: 17,
+                          fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),)
                       ),
@@ -115,8 +118,8 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       CarouselSlider(
                         options: CarouselOptions(
-                          autoPlay: _currentIndex == 1,
-                          autoPlayInterval: Duration(milliseconds: 10500),
+                          // autoPlay: _currentIndex == 1,
+                          // autoPlayInterval: Duration(milliseconds: 10500),
                           enlargeCenterPage: true,
                           aspectRatio: 16.3/ 8.5,
                           viewportFraction: 0.9,
@@ -180,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                                 TableRow(
                                   children: <Widget>[
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 10, top:10, right:4),
+                                      padding: const EdgeInsets.only(left: 17, top:10, right:6),
                                       child: GestureDetector(
                                       onTap: () {
                                         /////////////////////////////////// Today's Task Page ////////////////////////////////
@@ -249,7 +252,7 @@ class _HomePageState extends State<HomePage> {
                                 ),) ), 
 
                               Padding(
-                                padding: const EdgeInsets.only(left: 4, top:10, right:8),
+                                padding: const EdgeInsets.only(left: 6, top:10, right:17),
                                 child: GestureDetector(
                                 onTap: () {
                                   /////////////////////////////////// Add Task Page ////////////////////////////////
@@ -322,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                             children: <Widget>[
                               Padding(
                                 
-                                padding: const EdgeInsets.only(left: 10, top:10, right:4),
+                                padding: const EdgeInsets.only(left: 17, top:10, right:6),
                                 child:GestureDetector(
                                 onTap: () {
                                   /////////////////////////////////// Progress Page ////////////////////////////////
@@ -392,7 +395,7 @@ class _HomePageState extends State<HomePage> {
         ), ),
         ) ), 
          Padding(
-           padding: const EdgeInsets.only(left: 4, top:10, right:8),
+           padding: const EdgeInsets.only(left: 6, top:10, right:17),
            child: GestureDetector(
            onTap: () {
                   /////////////////////////////////// Attena (chatbot) Page ////////////////////////////////

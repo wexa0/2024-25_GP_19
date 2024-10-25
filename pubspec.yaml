@@ -109,6 +109,10 @@ flutter:
     - assets/images/signedAllFeatures.gif
     - assets/images/signedHome.png
     - assets/images/signUpForFeatures.png
+    - assets/images/mainCrousel.png
+    - assets/images/managaTasksCrousel.png
+    - assets/images/setRemindersCrousel.png
+    - assets/images/chatCrousel.png
 
 
 
