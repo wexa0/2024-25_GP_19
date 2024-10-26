@@ -276,10 +276,10 @@ class _HomePageState extends State<GuestHomePage> {
                                 child: GestureDetector(
                 onTap: () {
                   /////////////////////////////////// Add Task Page ////////////////////////////////
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => addTask()),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => SecondPage()),
+                  // );
                 },
                 child:Container( 
                                   

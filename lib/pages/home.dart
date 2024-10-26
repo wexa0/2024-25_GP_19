@@ -88,9 +88,10 @@ class _HomePageState extends State<HomePage> {
                       child: FutureBuilder(
                        future: _fetch(),
                        builder:(context, snapshot){
-                        if (snapshot.connectionState != ConnectionState.done)
+                        //onyl run(load) once 
+                        if (snapshot.connectionState != ConnectionState.done && fName== null)
                           return Text("Loading data ... Please wait");
-                          
+
                         return Text ("$fName $lName",
                         style: TextStyle(
                           color: Colors.black, 
@@ -510,7 +511,8 @@ return AppBar(
         child: FutureBuilder(
       future: _fetchImage(), // Call the method to fetch the image URL
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        //onyl run(load) once 
+        if ( imageUrl==null &&( snapshot.connectionState == ConnectionState.waiting)) {
           return CircularProgressIndicator(); // Show a loader while fetching
         } else if (snapshot.hasError) {
           return Image.network(
