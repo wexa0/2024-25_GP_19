@@ -20,6 +20,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  
 
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation

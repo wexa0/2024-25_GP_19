@@ -38,7 +38,7 @@ dependencies:
   percent_indicator: ^4.2.3
   firebase_core: ^3.5.0
   firebase_auth: ^5.3.0
-
+  firebase_storage: ^12.3.4
   cloud_firestore: ^5.4.2
   flutter_native_splash: ^2.4.1
   google_nav_bar: ^5.0.6 
@@ -46,6 +46,7 @@ dependencies:
   flutter_cupertino_datetime_picker: ^3.0.0
   intl: ^0.17.0
   provider: ^6.0.3
+  carousel_slider: ^5.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -95,6 +96,23 @@ flutter:
     - assets/icons/bin.png
     - assets/icons/dots.png
     - assets/icons/edit-text.png
+    - assets/logo/profilePIC.png
+    - assets/images/chatWith.gif
+    - assets/images/setReminders.gif
+    - assets/images/signToGet.gif
+    - assets/images/manageTasks.gif
+    - assets/images/allFeaturesShower.gif
+    - assets/images/chatWithAttena.png
+    - assets/images/addTask.png
+    - assets/images/viewProgress.png
+    - assets/images/todayTask.png
+    - assets/images/signedAllFeatures.gif
+    - assets/images/signedHome.png
+    - assets/images/signUpForFeatures.png
+    - assets/images/mainCrousel.png
+    - assets/images/managaTasksCrousel.png
+    - assets/images/setRemindersCrousel.png
+    - assets/images/chatCrousel.png
 
 
 
