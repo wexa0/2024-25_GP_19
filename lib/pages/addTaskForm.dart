@@ -280,7 +280,7 @@ class _TaskPageState extends State<TaskPage> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  EditTaskPage(taskId: 'YF3394Pf0xFX3YEKv3dj'),
+                  EditTaskPage(taskId: ''),
             ),
           );
         }

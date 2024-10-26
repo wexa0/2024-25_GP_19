@@ -446,11 +446,11 @@ Future<void> _getCategories() async {
         await _saveChangesToFirebase();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task saved successfully!')),
+          SnackBar(content: Text('Task updated successfully!')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save task: $e')),
+          SnackBar(content: Text('Failed to update task: $e')),
         );
       }
     } else {
