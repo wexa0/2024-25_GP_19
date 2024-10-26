@@ -12,6 +12,10 @@ class SignUpPage extends StatefulWidget {
 
   @override
   _SignUpPageState createState() => _SignUpPageState();
+<<<<<<< HEAD
+=======
+
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
 }
 
 class _SignUpPageState extends State<SignUpPage> {
@@ -20,6 +24,10 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+<<<<<<< HEAD
+=======
+  
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
 
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/welcome_page.dart';
+<<<<<<< HEAD
 import 'package:flutter_application/addTaskForm.dart';
+=======
+import 'package:flutter_application/pages/addTaskForm.dart';
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
 import 'package:flutter_application/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -38,7 +42,11 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to the next screen after login
         Navigator.pushReplacement(
           context,
+<<<<<<< HEAD
           MaterialPageRoute(builder: (context) => addTask()),
+=======
+          MaterialPageRoute(builder: (context) => HomePage()),
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
         );
       } on FirebaseAuthException catch (e) {
         // Print the exception code to debug
@@ -104,7 +112,11 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
+<<<<<<< HEAD
                     labelText: 'Email',
+=======
+                    labelText: 'Email *',
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
                     filled: true,
                     fillColor: Colors.white70,
                     // Set the enabled border color
@@ -132,7 +144,11 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
+<<<<<<< HEAD
                     labelText: 'Password',
+=======
+                    labelText: 'Password *',
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
                     filled: true,
                     fillColor: Colors.white70,
                     // Set the enabled border color

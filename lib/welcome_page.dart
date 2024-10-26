@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
+<<<<<<< HEAD
 import 'package:flutter_application/authentication/login_page.dart'; 
+=======
+import 'package:flutter_application/authentication/login_page.dart';
+import 'package:flutter_application/pages/guest_home.dart'; 
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -89,6 +94,49 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
                     ),
+<<<<<<< HEAD
+=======
+                     const SizedBox(height: 12), // Space between buttons
+
+                    // Log In Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          // Navigate to attentionlens
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => GuestHomePage()), // Navigate to LoginPage
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 17,
+                            decoration: TextDecoration.underline,
+                            color: Color.fromARGB(255, 85, 93, 97),
+                          ),
+                          children: [
+                            const TextSpan(text: 'Navigate AttentionLens as '),
+                            TextSpan(
+                              text: 'Guest', 
+                              style: const TextStyle(color: Color(0xFF3b7292),
+                               decoration: TextDecoration.underline,
+                                decorationColor: Color(0xFF3b7292),
+                              ),
+                             
+                            ),
+                          ],
+                        ),
+                      ),)
+                    ),
+>>>>>>> 40c024b6aa0f3812a741458929487d182c99554a
                   ],
                 ),
               ),
