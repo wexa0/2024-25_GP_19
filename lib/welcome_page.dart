@@ -97,7 +97,7 @@ class WelcomePage extends StatelessWidget {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () {
-                          // Navigate to log-in page
+                          // Navigate to attentionlens
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => GuestHomePage()), // Navigate to LoginPage
