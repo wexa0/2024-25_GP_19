@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -89,6 +90,7 @@ class _HomePageState extends State<HomePage> {
                        builder:(context, snapshot){
                         if (snapshot.connectionState != ConnectionState.done)
                           return Text("Loading data ... Please wait");
+                          
                         return Text ("$fName $lName",
                         style: TextStyle(
                           color: Colors.black, 
@@ -478,44 +480,7 @@ class _HomePageState extends State<HomePage> {
             ),
             
          //navigation bar    
-        bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(bottom: 5.0, left:2, right:2), 
-        height: 70,decoration: BoxDecoration(
-          color: Colors.transparent, // Keep the container color transparent
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2), // add Shadow color for affect
-              blurRadius: 8.0, // Softness of the shadow 
-              spreadRadius: 7.0, // Spread of the shadow
-              offset: Offset(0, 8), // Position of the shadow
-            ),
-          ],),
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(25.0),
-            topRight: Radius.circular(25.0),
-            bottomLeft: Radius.circular(25.0),
-            bottomRight: Radius.circular(25.0),
-          ),
-          child: BottomAppBar(
-            color: const Color.fromARGB(255, 226, 231, 234),
-            child: GNav(
-              color: const Color.fromARGB(255, 94, 129, 145),
-              activeColor: const Color.fromARGB(255, 0, 0, 0),
-              onTabChange: _onTabChange, // call method to navigate through pages
-              iconSize: 26.0,
-              tabs: const [
-                GButton(icon: Icons.home, text: 'Home'),
-                GButton(icon: Icons.task, text: 'Tasks'),
-                GButton(icon: Icons.sms, text: 'Chatbot'),
-                GButton(icon: Icons.poll, text: 'Progress'),
-                GButton(icon: Icons.person, text: 'Profile'),
-              ],
-              padding: const EdgeInsets.only(left: 4, right: 4),
-            ),
-          ),
-        ),
-      ),
+        bottomNavigationBar: const CustomBottomNavigationBar(),
           ) ;
         }
   
@@ -542,16 +507,32 @@ return AppBar(
       child: Container(
          margin: EdgeInsets.only( left:6 ),
         alignment: Alignment.center,
-        child:
-          Image.asset('assets/logo/profilePIC.png',
-          // $imageUrl
-        height: 45,
-        width: 45,),
-        decoration: BoxDecoration(
-          color: Color.fromARGB(83, 255, 255, 255),
-          borderRadius: BorderRadius.circular(100)
+        child: FutureBuilder(
+      future: _fetchImage(), // Call the method to fetch the image URL
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show a loader while fetching
+        } else if (snapshot.hasError) {
+          return Image.network(
+              'https://cdn.pixabay.com/photo/2017/03/02/19/18/mystery-man-973460_960_720.png'); // Fallback on error
+        }
 
-        ),
+       // Check if the image URL is available
+      if (imageUrl == null || imageUrl!.isEmpty) {
+        return Image.network(
+          'https://cdn.pixabay.com/photo/2017/03/02/19/18/mystery-man-973460_960_720.png', // Default online image
+        );
+      } else if (imageUrl!.startsWith('assets/')) {
+        return Image.asset(imageUrl!); // Use the local asset image
+      } else {
+        return Image.network(imageUrl!); // Use the fetched image URL
+      }
+      },
+    ),
+    decoration: BoxDecoration(
+      color: Color.fromARGB(83, 255, 255, 255),
+      borderRadius: BorderRadius.circular(100),
+    ),
       ),),
      
 
@@ -622,46 +603,11 @@ _fetchImage() async {
     print('No user is logged in');
   }
 }
-
-
-void _onTabChange(int index) {
-    setState(() {
-      _navcurrentIndex = index;
-    });
-
-    if (index == 0) {
-      // if Home tab selected
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else if (index == 1) {
-     //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 2) {
-       //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 3) {
-      //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 4) {
-       //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    }
-  }
-
-
+// only run once
+void _loadFnameLname() {
+  if (fName == null && lName == null) {
+    _fetch();
+}
 }
 
+}

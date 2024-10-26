@@ -1,7 +1,9 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
+import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -16,15 +18,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(HomePage());
+  runApp(GuestHomePage());
 }
-class HomePage extends StatefulWidget {
+class GuestHomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<GuestHomePage> {
   String? imageUrl; //iamge url
   User? _user = FirebaseAuth.instance.currentUser; // get current user
   String? fName; // first name to print
@@ -35,7 +37,9 @@ class _HomePageState extends State<HomePage> {
  var formatter =DateFormat.yMMMMd('en_US'); //format date as specified
   final List<String> imgList = [
     'assets/images/signUpForFeatures.png',
-    'assets/images/signedAllFeatures.gif',
+    'assets/images/managaTasksCrousel.png',
+    'assets/images/setRemindersCrousel.png',
+    'assets/images/chatCrousel.png',
 
   ]; //carousel list
 
@@ -117,7 +121,7 @@ class _HomePageState extends State<HomePage> {
                     autoPlay: _currentIndex == 1,
                     autoPlayInterval: Duration(milliseconds: 10500),
                     enlargeCenterPage: true,
-                    aspectRatio: 16/ 9,
+                    aspectRatio: 16/ 8.5,
                     viewportFraction: 0.9,
                     onPageChanged: (index, reason) {
                       setState(() {
@@ -125,27 +129,40 @@ class _HomePageState extends State<HomePage> {
                       });
                     },
                   ),
-                  items: imgList.map((item) {
-                    return Container(
-                      padding: const EdgeInsets.only(top: 2, bottom: 2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color.fromARGB(25, 203, 203, 203).withOpacity(0.9),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                            offset: Offset(0, 0),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.asset(item, fit: BoxFit.cover),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                  items:  imgList.asMap().entries.map((entry) {
+    int index = entry.key;
+    String item = entry.value;
+
+    // Wrap the first image with GestureDetector
+    return GestureDetector(
+      onTap: () {
+        if (index == 0) {
+           Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => WelcomePage()));
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.only(top: 2, bottom: 2),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(25, 203, 203, 203).withOpacity(0.9),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: Offset(0, 0),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(item, fit: BoxFit.cover),
+        ),
+      ),
+    );
+  }).toList(),
+),
                 // Indicator on top of the image
                 Positioned(
                   bottom: 10, // Position it at the bottom of the image
@@ -180,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                             children: <Widget>[
                               Padding(
                                 
-                                padding: const EdgeInsets.only(left: 10, top:10, right:4),
+                                padding: const EdgeInsets.only(left: 17, top:10, right:6),
                                 child: GestureDetector(
                 onTap: () {
                   /////////////////////////////////// Today's Task Page ////////////////////////////////
@@ -255,7 +272,7 @@ class _HomePageState extends State<HomePage> {
                               ), 
                               Padding(
                                 
-                                padding: const EdgeInsets.only(left: 4, top:10, right:8),
+                                padding: const EdgeInsets.only(left: 6, top:10, right:17),
                                 child: GestureDetector(
                 onTap: () {
                   /////////////////////////////////// Add Task Page ////////////////////////////////
@@ -335,7 +352,7 @@ class _HomePageState extends State<HomePage> {
                             children: <Widget>[
                               Padding(
                                 
-                                padding: const EdgeInsets.only(left: 10, top:10, right:4),
+                                padding: const EdgeInsets.only(left: 17, top:10, right:6),
                                 child:GestureDetector(
                 onTap: () {
                   /////////////////////////////////// Progress Page ////////////////////////////////
@@ -408,7 +425,7 @@ class _HomePageState extends State<HomePage> {
                                 ),)
                               ),  Padding(
                                 
-                                padding: const EdgeInsets.only(left: 4, top:10, right:8),
+                                padding: const EdgeInsets.only(left: 6, top:10, right:17),
                                 child: GestureDetector(
                 onTap: () {
                   /////////////////////////////////// Attena (chatbot) Page ////////////////////////////////
@@ -489,44 +506,7 @@ class _HomePageState extends State<HomePage> {
             )] ,
             
             )
-            , bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(bottom: 5.0, left:2, right:2), 
-        height: 70,decoration: BoxDecoration(
-          color: Colors.transparent, // Keep the container color transparent
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2), // Shadow color
-              blurRadius: 8.0, // Softness of the shadow
-              spreadRadius: 7.0, // Spread of the shadow
-              offset: Offset(0, 8), // Position of the shadow
-            ),
-          ],),
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(25.0),
-            topRight: Radius.circular(25.0),
-            bottomLeft: Radius.circular(25.0),
-            bottomRight: Radius.circular(25.0),
-          ),
-          child: BottomAppBar(
-            color: const Color.fromARGB(255, 226, 231, 234),
-            child: GNav(
-              color: const Color.fromARGB(255, 94, 129, 145),
-              activeColor: const Color.fromARGB(255, 0, 0, 0),
-              onTabChange: _onTabChange,
-              iconSize: 26.0,
-              tabs: const [
-                GButton(icon: Icons.home, text: 'Home'),
-                GButton(icon: Icons.task, text: 'Tasks'),
-                GButton(icon: Icons.sms, text: 'Chatbot'),
-                GButton(icon: Icons.poll, text: 'Progress'),
-                GButton(icon: Icons.person, text: 'Profile'),
-              ],
-              padding: const EdgeInsets.only(left: 4, right: 4),
-            ),
-          ),
-        ),
-      ),
+            ,  bottomNavigationBar: const GuestCustomBottomNavigationBar(),
           ) ;
         }
   
@@ -568,45 +548,6 @@ return AppBar(
 
      );
 }
-
-
-void _onTabChange(int index) {
-    setState(() {
-      _navcurrentIndex = index;
-    });
-
-    if (index == 0) {
-      // if Home tab selected
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else if (index == 1) {
-     //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 2) {
-       //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 3) {
-      //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    } else if (index == 4) {
-       //////////// Add your page here ///////////////// 
-      //  Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => HomePage()),
-      // );
-    }
-  }
 
 
 
