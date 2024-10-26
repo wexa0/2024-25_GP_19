@@ -15,6 +15,7 @@ class addTask extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Task Page',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -34,8 +35,7 @@ class TaskPage extends StatefulWidget {
 }
 
 class _TaskPageState extends State<TaskPage> {
-  User? _user =
-      FirebaseAuth.instance.currentUser; 
+  User? _user = FirebaseAuth.instance.currentUser;
 
   String? _currentTaskID;
 
@@ -48,7 +48,7 @@ class _TaskPageState extends State<TaskPage> {
   String formattedTime = 'Select Time';
 
   List<String> categories = [];
-  List<String> hardcodedCategories = ['Home', 'Work'];
+  List<String> hardcodedCategories = [];
   List<String> _newlyAddedCategories = [];
   bool isEditingCategory = false;
   String newCategory = '';
@@ -164,8 +164,7 @@ class _TaskPageState extends State<TaskPage> {
         DocumentReference categoryRef = querySnapshot.docs.first.reference;
 
         await categoryRef.update({
-          'taskIDs': FieldValue.arrayUnion(
-              [taskRef.id]) 
+          'taskIDs': FieldValue.arrayUnion([taskRef.id])
         });
       } else {
         DocumentReference categoryRef =
@@ -173,7 +172,7 @@ class _TaskPageState extends State<TaskPage> {
         await categoryRef.set({
           'categoryName': categoryName,
           'userID': currentUser.uid,
-          'taskIDs': [taskRef.id], 
+          'taskIDs': [taskRef.id],
         });
       }
     } catch (e) {
@@ -181,10 +180,10 @@ class _TaskPageState extends State<TaskPage> {
     }
   }
 
-  Future<void> _saveTaskToFirebase() async {
+  Future<bool> _saveTaskToFirebase() async {
     try {
       User? currentUser = await _getCurrentUser();
-      if (currentUser == null) return;
+      if (currentUser == null) return false;
 
       final DateTime taskDateTime = DateTime(
         selectedDate.year,
@@ -194,58 +193,73 @@ class _TaskPageState extends State<TaskPage> {
         selectedTime.minute,
       );
 
+      QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
+          .collection('Task')
+          .where('userID', isEqualTo: currentUser.uid) 
+          .where('scheduledDate',
+              isEqualTo: Timestamp.fromDate(
+                  taskDateTime)) 
+          .get();
+
+      if (existingTaskSnapshot.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'A task already exists with the same date and time. Please choose a different time.'),
+          ),
+        );
+        return false; 
+      }
+
       DocumentReference taskRef =
           FirebaseFirestore.instance.collection('Task').doc();
 
       await taskRef.set({
-        'completionStatus': '0',
-        'date': Timestamp.fromDate(taskDateTime),
+        'completionStatus': 0,
+        'scheduledDate': Timestamp.fromDate(taskDateTime),
         'note': notesController.text,
         'priority': _getPriorityValue(),
         'reminder': '',
         'timer': '',
         'title': taskNameController.text,
-        'userID': FirebaseFirestore.instance.collection('User').doc(_user!.uid),
+        'userID': currentUser.uid,
       });
-
-      String taskID = taskRef.id;
 
       if (selectedCategory.isNotEmpty) {
         await _saveCategoryAndLinkToTask(selectedCategory, taskRef);
       }
+
       for (String subtask in subtasks) {
         await FirebaseFirestore.instance.collection('SubTask').add({
-          'completionStatus': '0',
+          'completionStatus': 0,
           'taskID': taskRef,
           'timer': '',
           'title': subtask,
         });
       }
 
-      setState(() {
-        _currentTaskID = taskID;
-      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Task saved successfully!')));
 
-      // Show confirmation
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Task saved successfully!'),
-      ));
+      return true; 
     } catch (e) {
       print('Failed to save task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save task. Please try again.')));
+      return false; 
     }
   }
 
-  // Get the priority as a number
   int _getPriorityValue() {
     switch (selectedPriority) {
       case 'Urgent':
-        return 0;
+        return 4;
       case 'High':
-        return 1;
+        return 3;
       case 'Normal':
         return 2;
       case 'Low':
-        return 3;
+        return 1;
       default:
         return 2;
     }
@@ -260,10 +274,16 @@ class _TaskPageState extends State<TaskPage> {
 
     if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
       try {
-        await _saveTaskToFirebase();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task saved successfully!')),
-        );
+        bool isTaskSaved = await _saveTaskToFirebase();
+        if (isTaskSaved) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  EditTaskPage(taskId: 'YF3394Pf0xFX3YEKv3dj'),
+            ),
+          );
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to save task: $e')),
@@ -279,26 +299,31 @@ class _TaskPageState extends State<TaskPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Container(
-          padding: EdgeInsets.all(6),
-          child: Center(
-            child: Text(
-              'Add Task',
-              style: TextStyle(
-                color: Colors.black,
-                fontFamily: 'Poppins',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+     appBar: AppBar(
         backgroundColor: Color(0xFFEAEFF0),
         elevation: 0,
         iconTheme: IconThemeData(color: darkGray),
+        title: Center(
+          child: Text(
+            'Add Task',
+            style: TextStyle(
+              color: Colors.black,
+              fontFamily: 'Poppins',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: SingleChildScrollView(
@@ -386,19 +411,11 @@ class _TaskPageState extends State<TaskPage> {
               ),
               SizedBox(height: 20),
 
-              // Save button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    await _saveTask();
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              EditTaskPage(taskId: 'IVGolOFAlbH6uS8Ihdst')),
-                    );
+                    await _saveTask(); 
                   },
                   style: ButtonStyle(
                     backgroundColor:
@@ -406,7 +423,7 @@ class _TaskPageState extends State<TaskPage> {
                   ),
                   child: Text('Save', style: TextStyle(color: Colors.white)),
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -418,48 +435,70 @@ class _TaskPageState extends State<TaskPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...subtasks.map((subtask) => ListTile(
-              title: Text(
-                subtask,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w400,
-                  color: darkGray,
+        if (subtasks.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0), 
+            child: Text(
+              'Subtasks',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: darkGray,
+              ),
+            ),
+          ),
+        ...subtasks.map((subtask) => Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0), 
+              child: ListTile(
+                contentPadding: EdgeInsets.zero, 
+                title: Text(
+                  subtask,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    color: darkGray,
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete,
+                      color: Color.fromARGB(255, 125, 125, 125)),
+                  onPressed: () {
+                    setState(() {
+                      subtasks.remove(subtask);
+                    });
+                  },
                 ),
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete,
-                    color: Color.fromARGB(255, 125, 125, 125)),
+            )),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0), 
+          child: TextField(
+            controller: subtaskController,
+            decoration: InputDecoration(
+              labelText: 'Add sub tasks',
+              labelStyle: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: darkBlue,
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: darkBlue, width: 2.0),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
                 onPressed: () {
-                  setState(() {
-                    subtasks.remove(subtask);
-                  });
+                  if (subtaskController.text.isNotEmpty) {
+                    setState(() {
+                      subtasks.add(subtaskController.text);
+                      subtaskController.clear();
+                    });
+                  }
                 },
               ),
-            )),
-        TextField(
-          controller: subtaskController,
-          decoration: InputDecoration(
-            labelText: 'Add sub tasks',
-            labelStyle: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: darkBlue,
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: darkBlue, width: 2.0),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
-              onPressed: () {
-                if (subtaskController.text.isNotEmpty) {
-                  setState(() {
-                    subtasks.add(subtaskController.text);
-                    subtaskController.clear();
-                  });
-                }
-              },
             ),
           ),
         ),
@@ -471,227 +510,325 @@ class _TaskPageState extends State<TaskPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.category, color: mediumBlue),
-            SizedBox(width: 8),
-            Text(
-              'Category',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Poppins',
-                color: darkGray,
+        Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0),
+          child: Row(
+            children: [
+              Icon(Icons.category, color: Color(0xFF3B7292)),
+              SizedBox(width: 8),
+              Text(
+                'Category',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  color: darkGray,
+                ),
               ),
-            ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.edit, color: mediumBlue),
-              onPressed: () {
-                setState(() {
-                  isEditingCategory = !isEditingCategory;
-                });
-              },
-            ),
-          ],
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+                onPressed: () {
+                  _showCategoryEditDialog(); 
+                },
+              ),
+            ],
+          ),
         ),
         SizedBox(height: 10),
-        Wrap(
-          spacing: 8.0,
-          children: categories.map((category) {
-            bool isHardcoded = hardcodedCategories.contains(category);
 
-            return isEditingCategory &&
-                    !isHardcoded 
-                ? Chip(
-                    label: GestureDetector(
-                      onTap: () {
-                        if (!isHardcoded) {
-                          _showRenameCategoryDialog(category);
-                        }
-                      },
-                      child: Text(category),
-                    ),
-                    deleteIcon: Icon(Icons.close,
-                        color: const Color.fromARGB(255, 1, 39, 71)),
-                    onDeleted: () {
-                      _showDeleteCategoryConfirmation(category);
-                    },
-                    backgroundColor: lightestBlue,
-                  )
-                : ChoiceChip(
-                    label: Text(category),
-                    selected: selectedCategory == category,
-                    selectedColor: mediumBlue,
-                    backgroundColor: lightestBlue,
-                    labelStyle: TextStyle(
-                      color: selectedCategory == category
-                          ? Colors.white
-                          : darkGray,
-                    ),
-                    onSelected: (bool selected) {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                  );
-          }).toList(),
-        ),
-        if (isEditingCategory)
-          TextField(
-            controller: categoryController,
-            onSubmitted: _addCategory,
-            decoration: InputDecoration(
-              labelText: 'Add New Category',
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0), 
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: categories.map((category) {
+              return ChoiceChip(
+                label: Text(
+                  category,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                  ),
+                ),
+                selected: selectedCategory == category,
+                selectedColor: Color(0xFF3B7292),
+                backgroundColor: Colors.grey[200],
+                onSelected: (bool selected) {
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                },
+              );
+            }).toList(),
           ),
+        ),
       ],
     );
   }
 
-  void _addCategory(String text) async {
-    if (text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Category name cannot be empty.')),
-      );
-      return;
-    }
+void _showCategoryEditDialog() {
+    List<String> tempCategories = List.from(categories);
+    List<Map<String, String>> renamedCategories = [];
+    List<String> deletedCategories = [];
+    List<String> addedCategories = [];
 
-    if (_newlyAddedCategories.length + categories.length >= 7) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only create up to 7 categories.')),
-      );
-      return;
-    }
+    FocusNode firstCategoryFocusNode = FocusNode();
 
-    setState(() {
-      categories.add(text.trim()); 
-      _newlyAddedCategories.add(text.trim()); 
-      categoryController.clear();
-    });
-
-    await _saveCategoryToDatabase(text.trim());
-  }
-
-  void _showDeleteCategoryConfirmation(String category) {
-    showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Delete Category',
-            style: TextStyle(
-              color: Colors.black, 
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to delete the category "$category"? This action cannot be undone.',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.grey[800], 
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .pop(false); 
-              },
-              style: TextButton.styleFrom(
-                foregroundColor:
-                    Color(0xFF3B7292), 
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                _deleteCategory(category, isNew: true);
-                Navigator.of(context).pop(true); 
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red, 
-              ),
-              child: Text(
-                'Delete',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-          backgroundColor:
-              Color(0xFFF5F7F8), 
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        );
-      },
-    );
-  }
-
-  void _deleteCategory(String category, {required bool isNew}) async {
-    setState(() {
-      categories.remove(category);
-      if (isNew) {
-        _newlyAddedCategories.remove(category);
-      }
-    });
-
-    await _deleteCategoryFromDatabase(category);
-  }
-
-// Rename a category and update the database
-  void _showRenameCategoryDialog(String oldCategory) {
-    TextEditingController renameController =
-        TextEditingController(text: oldCategory);
+    final scaffoldContext = context;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Rename Category'),
-          content: TextField(
-            controller: renameController,
-            decoration: InputDecoration(
-              labelText: 'New Category Name',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); 
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return WillPopScope(
+              onWillPop: () async {
+                return await _showDiscardConfirmation();
               },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                String newCategoryName = renameController.text.trim();
-                if (newCategoryName.isNotEmpty &&
-                    newCategoryName != oldCategory) {
-                  setState(() {
-                    int index = categories.indexOf(oldCategory);
-                    if (index != -1) {
-                      categories[index] = newCategoryName; 
-                    }
-                  });
-                  await _renameCategoryInDatabase(oldCategory, newCategoryName);
-                }
-                Navigator.of(context).pop(); 
-              },
-              child: Text('Rename'),
-            ),
-          ],
+              child: AlertDialog(
+                backgroundColor: lightGray,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: darkGray,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Rename, create, or delete categories.',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: darkGray,
+                      ),
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Column(
+                        children: tempCategories.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          String category = entry.value;
+                          TextEditingController renameController =
+                              TextEditingController(text: category);
+
+                          return ListTile(
+                            title: TextField(
+                              controller: renameController,
+                              focusNode: index == 0
+                                  ? firstCategoryFocusNode
+                                  : null, 
+                              onSubmitted: (newName) {
+                                if (newName.isNotEmpty && newName != category) {
+                                  setState(() {
+                                    int index =
+                                        tempCategories.indexOf(category);
+                                    if (index != -1) {
+                                      renamedCategories.add({
+                                        'oldName': category,
+                                        'newName': newName,
+                                      });
+                                      tempCategories[index] = newName;
+                                    }
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: darkGray,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(Icons.close, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  deletedCategories
+                                      .add(category); 
+                                  tempCategories.remove(category);
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      Divider(),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: categoryController,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Add new category...',
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.send, color: mediumBlue),
+                                onPressed: () {
+                                  if (categoryController.text.isNotEmpty) {
+                                    if (tempCategories.length < 7) {
+                                      setState(() {
+                                        tempCategories
+                                            .add(categoryController.text);
+                                        addedCategories
+                                            .add(categoryController.text);
+                                        categoryController.clear();
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(scaffoldContext)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'You can only create up to 7 categories.',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: darkBlue,
+                        ),
+                        child: Text(
+                          'Discard',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      TextButton(
+                        onPressed: () async {
+                          await _saveChangesToDatabase(
+                            addedCategories,
+                            renamedCategories,
+                            deletedCategories,
+                          );
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: darkBlue,
+                        ),
+                        child: Text(
+                          'Save and Close',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            color: darkBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      firstCategoryFocusNode.requestFocus();
+    });
+  }
+
+  Future<void> _saveChangesToDatabase(
+      List<String> addedCategories,
+      List<Map<String, String>> renamedCategories,
+      List<String> deletedCategories) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    for (String category in addedCategories) {
+      await _saveCategoryToDatabase(category);
+    }
+
+    for (var renameMap in renamedCategories) {
+      String oldName = renameMap['oldName']!;
+      String newName = renameMap['newName']!;
+      await _renameCategoryInDatabase(oldName, newName);
+    }
+
+    for (String deletedCategory in deletedCategories) {
+      await _deleteCategoryFromDatabase(deletedCategory);
+    }
+
+    await _getCategories();
+  }
+
+  Future<void> _saveCategoryToDatabase(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    await FirebaseFirestore.instance.collection('Category').add({
+      'categoryName': categoryName,
+      'userID': currentUser.uid,
+    });
   }
 
   Future<void> _renameCategoryInDatabase(
@@ -711,17 +848,6 @@ class _TaskPageState extends State<TaskPage> {
     }
   }
 
-// Save a category to the database
-  Future<void> _saveCategoryToDatabase(String categoryName) async {
-    User? currentUser = await _getCurrentUser();
-    if (currentUser == null) return;
-
-    await FirebaseFirestore.instance.collection('Category').add({
-      'categoryName': categoryName,
-      'userID': currentUser.uid,
-    });
-  }
-
   Future<void> _deleteCategoryFromDatabase(String categoryName) async {
     User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
@@ -733,40 +859,173 @@ class _TaskPageState extends State<TaskPage> {
         .get();
 
     if (snapshot.docs.isNotEmpty) {
+      List<dynamic> taskIDs = snapshot.docs.first['taskIDs'];
+
+      if (taskIDs.isNotEmpty) {
+        bool confirmDelete =
+            await _showCategoryDeleteConfirmation(categoryName, taskIDs.length);
+
+        if (!confirmDelete) {
+          return;
+        }
+
+        for (var taskId in taskIDs) {
+          await FirebaseFirestore.instance
+              .collection('Task')
+              .doc(taskId)
+              .update({
+            'category': '', 
+          });
+        }
+      }
+
       await snapshot.docs.first.reference.delete();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Category "$categoryName" deleted successfully'),
+      ));
     }
   }
-
-  // Field for adding a new category
-  Widget _buildCategoryEditField() {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              labelText: 'Add New Category',
-            ),
-            onChanged: (value) {
-              newCategory = value;
-            },
+Future<bool> _showCategoryDeleteConfirmation(String categoryName, int taskCount) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: lightGray,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: Text(
+          'Delete Category?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: darkGray,
           ),
         ),
-        IconButton(
-          icon: Icon(Icons.add, color: Color(0xFF5AA9E6)),
-          onPressed: () {
-            if (newCategory.isNotEmpty) {
-              setState(() {
-                categories.add(newCategory);
-                isEditingCategory = false;
-              });
-            }
-          },
+        content: Text(
+          'The category "$categoryName" is assigned to $taskCount tasks. '
+          'Deleting this category will remove it from all those tasks. '
+          'Do you still want to proceed?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: darkGray,
+          ),
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: mediumBlue,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  ) ?? false; 
+}
+
+
+
+Future<bool> _showDiscardConfirmation() async {
+    return await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: lightGray, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Text(
+            'Are you sure?',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: darkGray, 
+            ),
+          ),
+          content: Text(
+            'Changes won\'t be saved.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: darkGray, 
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    mediumBlue, 
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      mediumBlue, 
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); 
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, 
+              ),
+              child: Text(
+                'Discard',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red, 
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // Method to show the Date Picker
+ 
+
+ 
+
+ 
+
   void _pickDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -784,8 +1043,7 @@ class _TaskPageState extends State<TaskPage> {
               onSurface: darkGray,
               secondary: lightBlue,
             ),
-            dialogBackgroundColor:
-                Color(0xFFF5F7F8), 
+            dialogBackgroundColor: Color(0xFFF5F7F8),
           ),
           child: child!,
         );
@@ -805,7 +1063,6 @@ class _TaskPageState extends State<TaskPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
         ),
-
         Theme(
           data: Theme.of(context).copyWith(
             dividerColor: Colors.transparent,
@@ -817,7 +1074,7 @@ class _TaskPageState extends State<TaskPage> {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontFamily: 'Poppins',
-                fontSize: 14,
+                fontSize: 16,
                 color: darkGray,
               ),
             ),
@@ -834,7 +1091,6 @@ class _TaskPageState extends State<TaskPage> {
             ],
           ),
         ),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
         ),
@@ -881,7 +1137,7 @@ class _TaskPageState extends State<TaskPage> {
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 16,
               color: _isDateMissing
                   ? const Color.fromARGB(255, 164, 24, 14)
                   : darkGray,
@@ -910,7 +1166,7 @@ class _TaskPageState extends State<TaskPage> {
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 16,
               color: _isTimeMissing
                   ? const Color.fromARGB(255, 164, 24, 14)
                   : darkGray,
@@ -937,14 +1193,13 @@ class _TaskPageState extends State<TaskPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
-          leading: Icon(Icons.notifications,
-              color: Color(0xFF3B7292)), 
+          leading: Icon(Icons.notifications, color: Color(0xFF3B7292)),
           title: Text(
             'Set Reminder',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 16,
               color: darkGray,
             ),
           ),
@@ -953,14 +1208,13 @@ class _TaskPageState extends State<TaskPage> {
 
         // Timer Section
         ListTile(
-          leading:
-              Icon(Icons.timer, color: Color(0xFF3B7292)), 
+          leading: Icon(Icons.timer, color: Color(0xFF3B7292)),
           title: Text(
             'Set Timer',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 16,
               color: darkGray,
             ),
           ),

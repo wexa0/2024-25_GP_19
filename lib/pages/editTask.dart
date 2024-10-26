@@ -13,7 +13,7 @@ class EditTaskPage extends StatefulWidget {
 }
 
 class _EditTaskPageState extends State<EditTaskPage> {
-  User? _user = FirebaseAuth.instance.currentUser; // Current logged-in user
+  User? _user = FirebaseAuth.instance.currentUser; 
   String selectedCategory = '';
   String? selectedPriority;
   Color priorityIconColor = Color(0xFF3B7292);
@@ -23,23 +23,83 @@ class _EditTaskPageState extends State<EditTaskPage> {
   String formattedTime = 'Select Time';
 
   List<String> categories = [];
-  List<String> hardcodedCategories = ['Home', 'Work'];
-    List<String> _newlyAddedCategories = [];
+  List<String> hardcodedCategories = [];
+  List<String> deletedSubtasks = [];
 
   List<String> subtasks = [];
   TextEditingController subtaskController = TextEditingController();
   TextEditingController taskNameController = TextEditingController();
   TextEditingController notesController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
-  Map<String, TextEditingController> subtaskControllers =
-      {}; 
-bool isEditingCategory = false;
+  Map<String, TextEditingController> subtaskControllers = {};
+  bool isEditingCategory = false;
   bool _isTitleMissing = false;
   bool _isDateMissing = false;
   bool _isTimeMissing = false;
 
+  Color darkBlue = Color(0xFF104A73);
+  Color mediumBlue = Color(0xFF3B7292);
+  Color lightBlue = Color(0xFF79A3B7);
+  Color lightestBlue = Color(0xFFC7D9E1);
+  Color lightGray = Color(0xFFF5F7F8);
+  Color darkGray = Color(0xFF545454);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTaskDetails();
+  }
+
+Future<void> _getCategories() async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    try {
+      QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      List<String> fetchedCategories = [];
+
+      for (var doc in categorySnapshot.docs) {
+        String categoryName = doc['categoryName'] ?? '';
+        if (categoryName.isNotEmpty) {
+          fetchedCategories.add(categoryName);
+        }
+      }
+
+      List<String> combinedCategories = [
+        ...hardcodedCategories,
+        ...fetchedCategories
+      ];
+
+      List<String> uniqueCategories = combinedCategories.toSet().toList();
+
+      setState(() {
+        categories = uniqueCategories;
+      });
+    } catch (e) {
+      print('Failed to fetch categories: $e');
+    }
+  }
+
+  Future<User?> _getCurrentUser() async {
+    if (_user == null) {
+      _user = FirebaseAuth.instance.currentUser;
+      if (_user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No logged-in user found')),
+        );
+      }
+    }
+    return _user;
+  }
+
   Future<void> _loadTaskDetails() async {
     try {
+      await _getCategories();
+
       DocumentSnapshot taskSnapshot = await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
@@ -51,40 +111,16 @@ bool isEditingCategory = false;
         setState(() {
           taskNameController.text = taskData['title'] ?? '';
           notesController.text = taskData['note'] ?? '';
-
-          selectedPriority = _getPriorityLabel(
-              taskData['priority']); 
-          priorityIconColor = _getPriorityColor(
-              selectedPriority!); 
-
-          formattedDate =
-              DateFormat('MMM dd, yyyy').format(taskData['date'].toDate());
-          selectedDate = taskData['date'].toDate();
+          selectedPriority = _getPriorityLabel(taskData['priority']);
+          priorityIconColor = _getPriorityColor(selectedPriority!);
+          formattedDate = DateFormat('MMM dd, yyyy')
+              .format(taskData['scheduledDate'].toDate());
+          selectedDate = taskData['scheduledDate'].toDate();
           formattedTime =
-              TimeOfDay.fromDateTime(taskData['date'].toDate()).format(context);
-          selectedTime = TimeOfDay.fromDateTime(taskData['date'].toDate());
-        });
-
-        // Fetch Subtasks
-        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
-            .collection('SubTask')
-            .where('taskID',
-                isEqualTo: FirebaseFirestore.instance
-                    .collection('Task')
-                    .doc(widget.taskId)) 
-            .get();
-
-        List<String> fetchedSubtasks = [];
-        subtaskSnapshot.docs.forEach((doc) {
-          var subtaskData = doc.data() as Map<String, dynamic>;
-          fetchedSubtasks.add(subtaskData['title']);
-          subtaskControllers[subtaskData['title']] = TextEditingController(
-              text:
-                  subtaskData['title']); 
-        });
-
-        setState(() {
-          subtasks = fetchedSubtasks;
+              TimeOfDay.fromDateTime(taskData['scheduledDate'].toDate())
+                  .format(context);
+          selectedTime =
+              TimeOfDay.fromDateTime(taskData['scheduledDate'].toDate());
         });
 
         QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
@@ -92,24 +128,41 @@ bool isEditingCategory = false;
             .where('taskIDs', arrayContains: widget.taskId)
             .get();
 
-        List<String> fetchedCategories = [];
-        categorySnapshot.docs.forEach((doc) {
-          var categoryData = doc.data() as Map<String, dynamic>;
-          fetchedCategories.add(categoryData['categoryName']);
+        if (categorySnapshot.docs.isNotEmpty) {
+          String taskCategory = categorySnapshot.docs.first['categoryName'];
+
+          setState(() {
+            selectedCategory = taskCategory;
+          });
+        }
+
+        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+            .collection('SubTask')
+            .where('taskID',
+                isEqualTo: FirebaseFirestore.instance
+                    .collection('Task')
+                    .doc(widget.taskId))
+            .get();
+
+        List<String> fetchedSubtasks = [];
+        subtaskSnapshot.docs.forEach((doc) {
+          var subtaskData = doc.data() as Map<String, dynamic>;
+          fetchedSubtasks.add(subtaskData['title']);
+          subtaskControllers[subtaskData['title']] =
+              TextEditingController(text: subtaskData['title']);
         });
 
         setState(() {
-          categories = [...hardcodedCategories, ...fetchedCategories];
-          if (categorySnapshot.docs.isNotEmpty) {
-            selectedCategory = categorySnapshot.docs.first['categoryName'];
-          }
+          subtasks = fetchedSubtasks;
         });
       }
     } catch (e) {
       print('Failed to load task details: $e');
     }
   }
-Future<void> _saveChangesToFirebase() async {
+
+
+ Future<void> _saveChangesToFirebase() async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
@@ -122,6 +175,28 @@ Future<void> _saveChangesToFirebase() async {
         selectedTime.minute,
       );
 
+      Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
+
+      QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
+          .collection('Task')
+          .where('userID', isEqualTo: currentUser.uid) 
+          .where('scheduledDate',
+              isEqualTo: taskTimestamp) 
+          .where(FieldPath.documentId,
+              isNotEqualTo:
+                  widget.taskId) 
+          .get();
+
+      if (existingTaskSnapshot.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Another task already exists with the same date and time. Please choose a different time.'),
+          ),
+        );
+        return; 
+      }
+
       await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
@@ -129,10 +204,26 @@ Future<void> _saveChangesToFirebase() async {
         'title': taskNameController.text,
         'note': notesController.text,
         'priority': _getPriorityValue(),
-        'date': Timestamp.fromDate(taskDateTime),
+        'scheduledDate':
+            taskTimestamp, 
       });
 
       await _handleCategoryChanges();
+
+      for (String deletedSubtask in deletedSubtasks) {
+        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+            .collection('SubTask')
+            .where('taskID',
+                isEqualTo: FirebaseFirestore.instance
+                    .collection('Task')
+                    .doc(widget.taskId))
+            .where('title', isEqualTo: deletedSubtask)
+            .get();
+
+        for (var doc in subtaskSnapshot.docs) {
+          await doc.reference.delete(); 
+        }
+      }
 
       for (String subtask in subtasks) {
         final subtaskTitle = subtaskControllers[subtask]?.text ?? subtask;
@@ -148,16 +239,16 @@ Future<void> _saveChangesToFirebase() async {
         if (subtaskSnapshot.docs.isNotEmpty) {
           DocumentReference subtaskRef = subtaskSnapshot.docs.first.reference;
           await subtaskRef.update({
-            'title': subtaskTitle, 
+            'title': subtaskTitle,
           });
         } else {
           await FirebaseFirestore.instance.collection('SubTask').add({
-            'completionStatus': '0',
+            'completionStatus': 0,
             'taskID': FirebaseFirestore.instance
                 .collection('Task')
                 .doc(widget.taskId),
             'timer': '',
-            'title': subtaskTitle, 
+            'title': subtaskTitle,
           });
         }
       }
@@ -165,13 +256,19 @@ Future<void> _saveChangesToFirebase() async {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Task updated successfully!'),
       ));
+
+      deletedSubtasks.clear();
     } catch (e) {
       print('Failed to update task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to update task. Please try again.'),
+      ));
     }
   }
 
+
   Future<void> _handleCategoryChanges() async {
-    if (selectedCategory.isEmpty) return; 
+    if (selectedCategory.isEmpty) return;
 
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -213,42 +310,66 @@ Future<void> _saveChangesToFirebase() async {
     }
   }
 
-
   Future<void> _deleteTask() async {
     try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+          .collection('SubTask')
+          .where('taskID',
+              isEqualTo: FirebaseFirestore.instance
+                  .collection('Task')
+                  .doc(widget.taskId))
+          .get();
+
+      for (var subtaskDoc in subtaskSnapshot.docs) {
+        await subtaskDoc.reference.delete();
+      }
+
+      QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('taskIDs', arrayContains: widget.taskId)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      if (categorySnapshot.docs.isNotEmpty) {
+        DocumentReference categoryRef = categorySnapshot.docs.first.reference;
+        await categoryRef.update({
+          'taskIDs': FieldValue.arrayRemove([widget.taskId])
+        });
+      }
+
       await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
           .delete();
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Task deleted successfully!'),
+        content: Text('Task and related subtasks deleted successfully!'),
       ));
 
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
     } catch (e) {
-      print('Failed to delete task: $e');
+      print('Failed to delete task and subtasks: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to delete task. Please try again.'),
+      ));
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTaskDetails(); 
   }
 
   String _getPriorityLabel(int priorityValue) {
     switch (priorityValue) {
-      case 0:
+      case 4:
         return 'Urgent';
-      case 1:
+      case 3:
         return 'High';
       case 2:
         return 'Normal';
-      case 3:
+      case 1:
         return 'Low';
       default:
-        return 'Normal'; 
+        return 'Normal';
     }
   }
 
@@ -263,99 +384,312 @@ Future<void> _saveChangesToFirebase() async {
       case 'Low':
         return Colors.grey;
       default:
-        return Colors.blue; 
+        return Colors.blue;
     }
   }
 
   int _getPriorityValue() {
     switch (selectedPriority) {
       case 'Urgent':
-        return 0;
+        return 4;
       case 'High':
-        return 1;
+        return 3;
       case 'Normal':
         return 2;
       case 'Low':
-        return 3;
+        return 1;
       default:
         return 2;
     }
   }
 
+  Future<void> _validateAndSaveTask() async {
+    setState(() {
+      _isTitleMissing = taskNameController.text.isEmpty;
+      _isDateMissing = formattedDate == 'Select Date';
+      _isTimeMissing = formattedTime == 'Select Time';
+    });
+
+    if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
+      try {
+        User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) return;
+
+        final DateTime taskDateTime = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+
+        Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
+
+        QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
+            .collection('Task')
+            .where('userID', isEqualTo: currentUser.uid)
+            .where('scheduledDate', isEqualTo: taskTimestamp)
+            .where(FieldPath.documentId,
+                isNotEqualTo: widget.taskId) 
+            .get();
+
+        if (existingTaskSnapshot.docs.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Another task already exists with the same date and time. Please choose a different time.'),
+            ),
+          );
+          return; 
+        }
+
+        await _saveChangesToFirebase();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Task saved successfully!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save task: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill in all mandatory fields.')),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Task'),
-        backgroundColor: Color(0xFFEAEFF0),
-        iconTheme: IconThemeData(color: Colors.black),
+    return WillPopScope(
+      onWillPop: () async {
+        bool shouldLeave = await _showExitConfirmationDialog();
+        return shouldLeave;
+      },
+      child: Scaffold(
+       appBar: AppBar(
+          backgroundColor: Color(0xFFEAEFF0),
+          elevation: 0,
+          iconTheme: IconThemeData(color: darkGray),
+          title: Center(
+            child: Text(
+              'Edit Task',
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: 'Poppins',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+         automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () async {
+              bool shouldLeave = await _showExitConfirmationDialog();
+              if (shouldLeave) {
+                Navigator.of(context).pop(); 
+              }
+            },
+          ),
+        ),
+
+        body: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: taskNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Task name *',
+                    labelStyle: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: darkGray,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: lightestBlue),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: darkBlue),
+                    ),
+                    errorText: _isTitleMissing ? 'Task Name is required' : null,
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                _buildSubtaskSection(),
+                SizedBox(height: 20),
+
+                _buildCategorySection(),
+                SizedBox(height: 20),
+
+                _buildDateTimePicker(),
+                SizedBox(height: 20),
+
+                _buildPrioritySection(),
+                SizedBox(height: 30),
+
+                _buildNotesSection(),
+                SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _validateAndSaveTask,
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(mediumBlue),
+                      ),
+                      child: Text(
+                        'Save Changes',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _deleteTask,
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.red),
+                      ),
+                      child: Text(
+                        'Delete Task',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+
+  Future<bool> _showExitConfirmationDialog() async {
+    return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: lightGray, 
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(12), 
+              ),
+              title: Text(
+                'Unsaved Changes',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: darkGray,
+                ),
+              ),
+              content: Text(
+                'Are you sure you want to leave? Your changes won’t be saved.',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14, 
+                  color: darkGray,
+                ),
+              ),
+              actionsPadding: EdgeInsets.symmetric(
+                  horizontal: 20, vertical: 10), 
+              actionsAlignment:
+                  MainAxisAlignment.spaceEvenly, 
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(false); 
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: mediumBlue,
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: mediumBlue,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pop(true); 
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    'Leave',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red, 
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+
+
+  Widget _buildNotesSection() {
+    return Padding(
+      padding: const EdgeInsets.only(
+          left: 16.0), 
+      child: TextField(
+        controller: notesController,
+        maxLines: 4,
+        decoration: InputDecoration(
+          labelText: null,
+          filled: true,
+          fillColor: Colors.white,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: lightestBlue),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: darkBlue),
+          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          label: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: taskNameController,
-                decoration: InputDecoration(
-                  labelText: 'Task name *',
-                  labelStyle: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+              Icon(Icons.note, color: darkGray),
+              SizedBox(width: 8),
+              Text(
+                'Notes',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: darkGray,
                 ),
-              ),
-              SizedBox(height: 20),
-              _buildSubtaskSection(), 
-              SizedBox(height: 20),
-              _buildCategorySection(),
-              SizedBox(height: 20),
-              _buildDateTimePicker(),
-              SizedBox(height: 20),
-              _buildPrioritySection(),
-              SizedBox(height: 20),
-              TextField(
-                controller: notesController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  labelText: 'Notes',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: _saveChangesToFirebase,
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Color(0xFF3B7292)),
-                    ),
-                    child: Text(
-                      'Save Changes',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _deleteTask,
-                    style: ButtonStyle(
-                      backgroundColor:
-                          MaterialStateProperty.all<Color>(Colors.red),
-                    ),
-                    child: Text(
-                      'Delete Task',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -364,221 +698,323 @@ Future<void> _saveChangesToFirebase() async {
     );
   }
 
-    Widget _buildCategorySection() {
+  Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.category, color: Color(0xFF3B7292)),
-            SizedBox(width: 8),
-            Text(
-              'Category',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
-              onPressed: () {
-                setState(() {
-                  isEditingCategory = !isEditingCategory;
-                });
-              },
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              Icon(Icons.category, color: Color(0xFF3B7292)),
+              SizedBox(width: 8),
+              Text(
+                'Category',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  color: darkGray,
+                ),
+              ),
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+                onPressed: () {
+                  _showCategoryEditDialog(); 
+                },
+              ),
+            ],
+          ),
         ),
         SizedBox(height: 10),
-        Wrap(
-          spacing: 8.0,
-          children: categories.map((category) {
-            bool isHardcoded = hardcodedCategories.contains(category);
 
-            return isEditingCategory && !isHardcoded
-                ? Chip(
-                    label: GestureDetector(
-                      onTap: () {
-                        if (!isHardcoded) {
-                          _showRenameCategoryDialog(category);
-                        }
-                      },
-                      child: Text(category),
-                    ),
-                    deleteIcon: Icon(Icons.close, color: Color(0xFF3B7292)),
-                    onDeleted: () {
-                      _showDeleteCategoryConfirmation(category);
-                    },
-                    backgroundColor: Colors.grey[200],
-                  )
-                : ChoiceChip(
-                    label: Text(category),
-                    selected: selectedCategory == category,
-                    selectedColor: Color(0xFF3B7292),
-                    backgroundColor: Colors.grey[200],
-                    onSelected: (bool selected) {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                  );
-          }).toList(),
-        ),
-        if (isEditingCategory)
-          TextField(
-            controller: categoryController,
-            onSubmitted: _addCategory,
-            decoration: InputDecoration(
-              labelText: 'Add New Category',
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: categories.map((category) {
+              return ChoiceChip(
+                label: Text(
+                  category,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                  ),
+                ),
+                selected: selectedCategory == category,
+                selectedColor: Color(0xFF3B7292),
+                backgroundColor: Colors.grey[200],
+                onSelected: (bool selected) {
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                },
+              );
+            }).toList(),
           ),
+        ),
       ],
     );
   }
 
-void _addCategory(String text) async {
-    if (text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Category name cannot be empty.')),
-      );
-      return;
-    }
 
-    if (_newlyAddedCategories.length + categories.length >= 7) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You can only create up to 7 categories.')),
-      );
-      return;
-    }
+  void _showCategoryEditDialog() {
+    List<String> tempCategories = List.from(categories);
+    List<Map<String, String>> renamedCategories = [];
+    List<String> deletedCategories = [];
+    List<String> addedCategories = [];
 
-    setState(() {
-      categories.add(text.trim()); 
-      _newlyAddedCategories.add(text.trim()); 
-      categoryController.clear();
-    });
+    FocusNode firstCategoryFocusNode = FocusNode();
 
-    await _saveCategoryToDatabase(text.trim());
-  }
-
-
-  void _showDeleteCategoryConfirmation(String category) {
-    showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Delete Category',
-            style: TextStyle(
-              color: Colors.black,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to delete the category "$category"? This action cannot be undone.',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.grey[800],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false); 
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF3B7292),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                _deleteCategory(category, isNew: true);
-                Navigator.of(context).pop(true);
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
-              child: Text(
-                'Delete',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-          backgroundColor: Color(0xFFF5F7F8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        );
-      },
-    );
-  }
-
-  void _deleteCategory(String category, {required bool isNew}) async {
-    setState(() {
-      categories.remove(category);
-      if (isNew) {
-        _newlyAddedCategories.remove(category);
-      }
-    });
-
-    await _deleteCategoryFromDatabase(category);
-  }
-
-  void _showRenameCategoryDialog(String oldCategory) {
-    TextEditingController renameController =
-        TextEditingController(text: oldCategory);
+    final scaffoldContext = context;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Rename Category'),
-          content: TextField(
-            controller: renameController,
-            decoration: InputDecoration(
-              labelText: 'New Category Name',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); 
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return WillPopScope(
+              onWillPop: () async {
+                return await _showDiscardConfirmation();
               },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                String newCategoryName = renameController.text.trim();
-                if (newCategoryName.isNotEmpty &&
-                    newCategoryName != oldCategory) {
-                  setState(() {
-                    int index = categories.indexOf(oldCategory);
-                    if (index != -1) {
-                      categories[index] = newCategoryName; 
-                    }
-                  });
-                  await _renameCategoryInDatabase(oldCategory, newCategoryName);
-                }
-                Navigator.of(context).pop(); 
-              },
-              child: Text('Rename'),
-            ),
-          ],
+              child: AlertDialog(
+                backgroundColor: lightGray,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: darkGray,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Rename, create, or delete categories.',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: darkGray,
+                      ),
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Column(
+                        children: tempCategories.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          String category = entry.value;
+                          TextEditingController renameController =
+                              TextEditingController(text: category);
+
+                          return ListTile(
+                            title: TextField(
+                              controller: renameController,
+                              focusNode: index == 0
+                                  ? firstCategoryFocusNode
+                                  : null, 
+                              onSubmitted: (newName) {
+                                if (newName.isNotEmpty && newName != category) {
+                                  setState(() {
+                                    int index =
+                                        tempCategories.indexOf(category);
+                                    if (index != -1) {
+                                      renamedCategories.add({
+                                        'oldName': category,
+                                        'newName': newName,
+                                      });
+                                      tempCategories[index] = newName;
+                                    }
+                                  });
+                                }
+                              },
+                              decoration: InputDecoration(
+                                border: InputBorder.none, // No border
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: darkGray,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(Icons.close, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  deletedCategories.add(category);
+                                  tempCategories.remove(category);
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      Divider(),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: categoryController,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Add new category...',
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.send, color: mediumBlue),
+                                onPressed: () {
+                                  if (categoryController.text.isNotEmpty) {
+                                    if (tempCategories.length < 7) {
+                                      setState(() {
+                                        tempCategories
+                                            .add(categoryController.text);
+                                        addedCategories
+                                            .add(categoryController.text);
+                                        categoryController.clear();
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(scaffoldContext)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'You can only create up to 7 categories.',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: darkBlue,
+                        ),
+                        child: Text(
+                          'Discard',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 20),
+                      TextButton(
+                        onPressed: () async {
+                          await _saveChangesToDatabase(
+                            addedCategories,
+                            renamedCategories,
+                            deletedCategories,
+                          );
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: darkBlue,
+                        ),
+                        child: Text(
+                          'Save and Close',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            color: darkBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      firstCategoryFocusNode.requestFocus();
+    });
+  }
+
+
+  Future<void> _saveChangesToDatabase(
+      List<String> addedCategories,
+      List<Map<String, String>> renamedCategories,
+      List<String> deletedCategories) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    for (String category in addedCategories) {
+      await _saveCategoryToDatabase(category);
+    }
+
+    for (var renameMap in renamedCategories) {
+      String oldName = renameMap['oldName']!;
+      String newName = renameMap['newName']!;
+      await _renameCategoryInDatabase(oldName, newName);
+    }
+
+    for (String deletedCategory in deletedCategories) {
+      await _deleteCategoryFromDatabase(deletedCategory);
+    }
+
+    await _getCategories();
   }
 
   Future<void> _saveCategoryToDatabase(String categoryName) async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
+    User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
 
     await FirebaseFirestore.instance.collection('Category').add({
@@ -587,24 +1023,9 @@ void _addCategory(String text) async {
     });
   }
 
-  Future<void> _deleteCategoryFromDatabase(String categoryName) async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return;
-
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('categoryName', isEqualTo: categoryName)
-        .where('userID', isEqualTo: currentUser.uid)
-        .get();
-
-    if (snapshot.docs.isNotEmpty) {
-      await snapshot.docs.first.reference.delete();
-    }
-  }
-
   Future<void> _renameCategoryInDatabase(
       String oldCategory, String newCategory) async {
-    User? currentUser = FirebaseAuth.instance.currentUser;
+    User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
 
     QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -619,44 +1040,266 @@ void _addCategory(String text) async {
     }
   }
 
+ Future<void> _deleteCategoryFromDatabase(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('categoryName', isEqualTo: categoryName)
+        .where('userID', isEqualTo: currentUser.uid)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      List<dynamic> taskIDs = snapshot.docs.first['taskIDs'];
+
+      if (taskIDs.isNotEmpty) {
+        bool confirmDelete =
+            await _showCategoryDeleteConfirmation(categoryName, taskIDs.length);
+
+        if (!confirmDelete) {
+          return;
+        }
+
+        for (var taskId in taskIDs) {
+          await FirebaseFirestore.instance
+              .collection('Task')
+              .doc(taskId)
+              .update({
+            'category': '', 
+          });
+        }
+      }
+
+      await snapshot.docs.first.reference.delete();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Category "$categoryName" deleted successfully'),
+      ));
+    }
+  }
+
+  Future<bool> _showCategoryDeleteConfirmation(
+      String categoryName, int taskCount) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: lightGray,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: Text(
+                'Delete Category?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: darkGray,
+                ),
+              ),
+              content: Text(
+                'The category "$categoryName" is assigned to $taskCount tasks. '
+                'Deleting this category will remove it from all those tasks. '
+                'Do you still want to proceed?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: darkGray,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: mediumBlue,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); 
+                  },
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; 
+  }
+
+  Future<bool> _showDiscardConfirmation() async {
+    return await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: lightGray, 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Text(
+            'Are you sure?', 
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: darkGray, 
+            ),
+          ),
+          content: Text(
+            'Changes won\'t be saved.',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: darkGray, 
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); 
+              },
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    mediumBlue,
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      mediumBlue, 
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); 
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red, 
+              ),
+              child: Text(
+                'Discard',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red, 
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   Widget _buildSubtaskSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (subtasks.isNotEmpty)
+          Padding(
+            padding:
+                const EdgeInsets.only(left: 16.0), 
+            child: Row(
+              children: [
+                SizedBox(width: 8),
+                Text(
+                  'Subtasks',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: darkGray,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        SizedBox(height: 10),
+
         ...subtasks.map((subtask) => ListTile(
-              title: TextField(
-                controller: subtaskControllers[
-                    subtask],
-                decoration: InputDecoration(
-                  labelText: 'Subtask',
+              title: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0), 
+                child: TextField(
+                  controller: subtaskControllers[subtask],
+                  decoration: InputDecoration(
+                    labelText: '',
+                    labelStyle: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: darkBlue,
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: darkBlue, width: 2.0),
+                    ),
+                  ),
                 ),
               ),
               trailing: IconButton(
                 icon: Icon(Icons.delete, color: Colors.red),
                 onPressed: () {
                   setState(() {
+                    deletedSubtasks.add(subtask); 
                     subtasks.remove(subtask);
                     subtaskControllers.remove(subtask);
                   });
                 },
               ),
             )),
-        TextField(
-          controller: subtaskController,
-          decoration: InputDecoration(
-            labelText: 'Add Subtask',
-            suffixIcon: IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                if (subtaskController.text.isNotEmpty) {
-                  setState(() {
-                    subtasks.add(subtaskController.text);
-                    subtaskControllers[subtaskController.text] =
-                        TextEditingController(text: subtaskController.text);
-                    subtaskController.clear();
-                  });
-                }
-              },
+
+        Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0), 
+          child: TextField(
+            controller: subtaskController,
+            decoration: InputDecoration(
+              labelText: 'Add sub tasks',
+              labelStyle: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: darkBlue,
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: darkBlue, width: 2.0),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
+                onPressed: () {
+                  if (subtaskController.text.isNotEmpty) {
+                    setState(() {
+                      subtasks.add(subtaskController.text);
+                      subtaskControllers[subtaskController.text] =
+                          TextEditingController(text: subtaskController.text);
+                      subtaskController.clear();
+                    });
+                  }
+                },
+              ),
             ),
           ),
         ),
@@ -666,17 +1309,63 @@ void _addCategory(String text) async {
 
   Widget _buildDateTimePicker() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
-          leading: Icon(Icons.calendar_today, color: Color(0xFF3B7292)),
-          title: Text('Date *'),
-          trailing: Text(formattedDate),
+          leading: Icon(Icons.calendar_today,
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : mediumBlue),
+          title: Text(
+            'Date *',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
+            ),
+          ),
+          trailing: Text(
+            formattedDate,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Poppins',
+              color: _isDateMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
+            ),
+          ),
           onTap: () => _pickDate(context),
         ),
+        SizedBox(height: 16),
         ListTile(
-          leading: Icon(Icons.access_time, color: Color(0xFF3B7292)),
-          title: Text('Time *'),
-          trailing: Text(formattedTime),
+          leading: Icon(Icons.access_time,
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : mediumBlue),
+          title: Text(
+            'Time *',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
+            ),
+          ),
+          trailing: Text(
+            formattedTime,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Poppins',
+              color: _isTimeMissing
+                  ? const Color.fromARGB(255, 164, 24, 14)
+                  : darkGray,
+            ),
+          ),
           onTap: () => _pickTime(context),
         ),
       ],
@@ -685,17 +1374,28 @@ void _addCategory(String text) async {
 
   Widget _buildPrioritySection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.flag, color: priorityIconColor), 
-            SizedBox(width: 8),
-            Text(
-              'Priority',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.only(
+              left: 16.0), 
+          child: Row(
+            children: [
+              Icon(Icons.flag, color: priorityIconColor),
+              SizedBox(width: 8),
+              Text(
+                'Priority',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  color: darkGray,
+                ),
+              ),
+            ],
+          ),
         ),
+        SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -713,12 +1413,8 @@ void _addCategory(String text) async {
     return Column(
       children: [
         IconButton(
-          icon: Icon(
-            Icons.flag,
-            color: selectedPriority == label
-                ? color
-                : Colors.grey[300], 
-          ),
+          icon: Icon(Icons.flag,
+              color: selectedPriority == label ? color : Colors.grey[300]),
           onPressed: () {
             setState(() {
               selectedPriority = label;
@@ -726,7 +1422,15 @@ void _addCategory(String text) async {
             });
           },
         ),
-        Text(label),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: darkGray,
+          ),
+        ),
       ],
     );
   }
@@ -737,7 +1441,22 @@ void _addCategory(String text) async {
       initialDate: selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: darkBlue, // Header color
+            colorScheme: ColorScheme.light(
+              primary: darkBlue, // Background for header and buttons
+              onPrimary: Colors.white, // Text color on the header
+              onSurface: darkGray, // Text color for dates
+            ),
+            dialogBackgroundColor: lightGray, // Dialog background
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (pickedDate != null && pickedDate != selectedDate) {
       setState(() {
         selectedDate = pickedDate;
@@ -750,7 +1469,27 @@ void _addCategory(String text) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: selectedTime,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: darkBlue, // Background color for header and buttons
+              onPrimary: Colors.white, // Text color for selected time
+              onSurface: darkGray, // Text color for unselected time and AM/PM
+            ),
+            dialogBackgroundColor: lightGray, // Background color for the dialog
+            timePickerTheme: TimePickerThemeData(
+              dayPeriodColor: lightBlue, // Background color for AM/PM selector
+              dayPeriodTextColor: darkGray, // Text color for AM/PM
+              dialHandColor: darkBlue, // Color of the dial hand
+              dialBackgroundColor: Colors.white, // Background of the dial
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (pickedTime != null && pickedTime != selectedTime) {
       setState(() {
         selectedTime = pickedTime;
@@ -758,4 +1497,5 @@ void _addCategory(String text) async {
       });
     }
   }
+
 }
