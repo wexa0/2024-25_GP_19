@@ -6,13 +6,12 @@ import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:carousel_slider/carousel_slider.dart'  as carousel;
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application/pages/addTaskForm.dart' as add;
-import 'package:flutter_application/pages/task_page' as task;
+import 'package:flutter_application/pages/addTaskForm.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -191,13 +190,13 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.only(
                               left: 17, top: 10, right: 6),
                           child: GestureDetector(
-                            onTap: () {
+                          //  onTap: () {
                               /////////////////////////////////// Today's Task Page ////////////////////////////////
-                              Navigator.push(
-                                context,
-                              MaterialPageRoute(builder: (context) => const TaskPage()), 
-                  );
-                            },
+                             // Navigator.push(
+                                //context,
+                          //    MaterialPageRoute(builder: (context) => const TaskPage()), 
+                //  );
+                          //  },
                             child: Container(
                               height: 110,
                               width: 100,
