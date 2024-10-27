@@ -41,7 +41,7 @@ class ProgressPage extends StatelessWidget {
     // Apply the Google font to the entire page
     return Theme(
       data: ThemeData(
-        textTheme: GoogleFonts.abyssinicaSilTextTheme(
+        textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context).textTheme,
         ),
       ),

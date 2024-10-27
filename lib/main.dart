@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 // Make sure this import path is correct
-import 'package:flutter_application/TimerPage';
+import 'package:flutter_application/Progress_Page';
 
 void main() {
   runApp(const MyApp());
@@ -60,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
        ElevatedButton(
   onPressed: () {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) =>  TimerPage()),
+      MaterialPageRoute(builder: (context) =>  const ProgressPage()),
     );
   },
   child: const Text('Enter Progress Page'),

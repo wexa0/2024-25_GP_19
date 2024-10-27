@@ -15,7 +15,7 @@ class _TimerPageState extends State<TimerPage> {
     // Apply the Google font to the entire page
     return Theme(
       data: ThemeData(
-        textTheme: GoogleFonts.abyssinicaSilTextTheme(
+        textTheme: GoogleFonts.poppinsTextTheme(
           Theme.of(context).textTheme,
         ),
       ),
@@ -31,7 +31,7 @@ class _TimerPageState extends State<TimerPage> {
               child: Align(
                 alignment: Alignment.centerLeft,  // Align to the left
                 child: Text(
-                  "Countdown Timer", 
+                  "Countingup timer", 
                   style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
                 ),
               ),
