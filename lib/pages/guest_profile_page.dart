@@ -3,7 +3,7 @@ import 'package:flutter_application/authentication/login_page.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'package:image_picker/image_picker.dart';
+//import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For File type
 import 'dart:html' as html; // Import for web detection
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -79,7 +79,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
   AppUser user = AppUser(); // Instance of AppUser
   bool isLoading = true;
   File? _image; // Variable to store the selected image
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
+  //final ImagePicker _picker = ImagePicker(); // Image picker instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -128,25 +128,25 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
     });
   }
 
-  Future<void> _changeProfilePicture() async {
-    // Allow the user to choose an image from the gallery
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 100, // Optional: Set the quality of the image
-    );
+  // Future<void> _changeProfilePicture() async {
+  //   // Allow the user to choose an image from the gallery
+  //   final pickedFile = await _picker.pickImage(
+  //     source: ImageSource.gallery,
+  //     imageQuality: 100, // Optional: Set the quality of the image
+  //   );
 
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path); // Set the selected image
-        user.profilePicture =
-            pickedFile.path; // Update user profile picture path
-        user.updateProfilePicture(pickedFile.path
-            as BuildContext); // Update profile picture in Firestore
-      });
-    } else {
-      print('No image selected.');
-    }
-  }
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _image = File(pickedFile.path); // Set the selected image
+  //       user.profilePicture =
+  //           pickedFile.path; // Update user profile picture path
+  //       user.updateProfilePicture(pickedFile.path
+  //           as BuildContext); // Update profile picture in Firestore
+  //     });
+  //   } else {
+  //     print('No image selected.');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -323,16 +323,16 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                         ),
                       ],
                     ),
-                    Positioned(
-                      top: top,
-                      left: MediaQuery.of(context).size.width / 2 -
-                          profileHeight / 2,
-                      child: ProfileWidget(
-                        imagePath: _image?.path ??
-                            user.profilePicture, // Use selected image or default
-                        onClicked: _changeProfilePicture,
-                      ),
-                    ),
+                    // Positioned(
+                    //   top: top,
+                    //   left: MediaQuery.of(context).size.width / 2 -
+                    //       profileHeight / 2,
+                    //   child: ProfileWidget(
+                    //     imagePath: _image?.path ??
+                    //         user.profilePicture, // Use selected image or default
+                    //     onClicked: _changeProfilePicture,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

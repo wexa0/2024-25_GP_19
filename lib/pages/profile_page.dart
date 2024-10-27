@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'package:image_picker/image_picker.dart';
+//import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For File type
 import 'dart:html' as html; // Import for web detection
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -94,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
   AppUser user = AppUser(); // Instance of AppUser
   bool isLoading = true;
   File? _image; // Variable to store the selected image
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
+  //final ImagePicker _picker = ImagePicker(); // Image picker instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -151,22 +151,22 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  Future<void> _changeProfilePicture() async {
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 100,
-    );
+  // Future<void> _changeProfilePicture() async {
+  //   final pickedFile = await _picker.pickImage(
+  //     source: ImageSource.gallery,
+  //     imageQuality: 100,
+  //   );
 
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-        user.profilePicture = pickedFile.path;
-        user.updateProfilePicture(pickedFile.path as BuildContext);
-      });
-    } else {
-      print('No image selected.');
-    }
-  }
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _image = File(pickedFile.path);
+  //       user.profilePicture = pickedFile.path;
+  //       user.updateProfilePicture(pickedFile.path as BuildContext);
+  //     });
+  //   } else {
+  //     print('No image selected.');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -395,14 +395,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-                    Positioned(
-                      top: top,
-                      left: MediaQuery.of(context).size.width / 2 - profileHeight / 2,
-                      child: ProfileWidget(
-                        imagePath: _image?.path ?? user.profilePicture,
-                        onClicked: _changeProfilePicture,
-                      ),
-                    ),
+                    // Positioned(
+                    //   top: top,
+                    //   left: MediaQuery.of(context).size.width / 2 - profileHeight / 2,
+                    //   child: ProfileWidget(
+                    //     imagePath: _image?.path ?? user.profilePicture,
+                    //     onClicked: _changeProfilePicture,
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

@@ -6,18 +6,17 @@ import 'package:flutter_application/welcome_page.dart'; // Import your WelcomePa
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const firebaseOptions = FirebaseOptions(
-    apiKey: "<API-KEY>",
-    authDomain: "attensionlens-db.firebaseapp.com",
-    projectId: "attensionlens-db",
-    storageBucket: "attensionlens-db.appspot.com",
-    messagingSenderId: "806322652007",
-    appId: "<APP-ID>",
-    measurementId: "G-5JNN0NVSSB",
-  );
-
-  try {
-    await Firebase.initializeApp(options: firebaseOptions);
+ try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyDmLYRShTksz7xniQH8Qks8TxhBQKhzFSk",
+        authDomain: "attensionlens-db.firebaseapp.com",
+        projectId: "attensionlens-db",
+        storageBucket: "attensionlens-db.appspot.com",
+        messagingSenderId: "806322652007",
+        appId: "1:806322652007:web:a283d85295ec4affa7a5c2",
+      ),
+    );
     print("Firebase initialized successfully");
   } catch (e) {
     print("Firebase initialization error: $e");

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/welcome_page.dart'; // Import the WelcomePage
-import 'package:image_picker/image_picker.dart'; // Import the image picker
+//import 'package:image_picker/image_picker.dart'; // Import the image picker
 
 class AppUser {
   String? firstName;
@@ -15,7 +15,7 @@ class AppUser {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
+ // final ImagePicker _picker = ImagePicker(); // Image picker instance
 
   // Unnamed constructor to initialize attributes to default values
   AppUser() {
@@ -48,33 +48,33 @@ class AppUser {
         lastName = userDoc['lastName'];
         email = userDoc['email'];
         dateOfBirth = userDoc['dateOfBirth'];
-        profilePicture = userDoc['profilePhoto'];
+        profilePicture = null;
         userID = currentUser.uid;
       }
     }
   }
 
-  Future<void> updateProfilePicture(BuildContext context) async {
-    // Allow the user to choose an image from the gallery
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 100, // Optional: Set the quality of the image
-    );
+  // Future<void> updateProfilePicture(BuildContext context) async {
+  //   // Allow the user to choose an image from the gallery
+  //   final pickedFile = await _picker.pickImage(
+  //     source: ImageSource.gallery,
+  //     imageQuality: 100, // Optional: Set the quality of the image
+  //   );
 
-    if (pickedFile != null) {
-      profilePicture = pickedFile.path; // Update user profile picture path
-      User? currentUser = _auth.currentUser;
+  //   if (pickedFile != null) {
+  //     profilePicture = pickedFile.path; // Update user profile picture path
+  //     User? currentUser = _auth.currentUser;
 
-      if (currentUser != null) {
-        // Update profile picture in Firestore
-        await _firestore.collection('User').doc(currentUser.uid).update({
-          'profilePhoto': profilePicture,
-        });
-      }
-    } else {
-      print('No image selected.');
-    }
-  }
+  //     if (currentUser != null) {
+  //       // Update profile picture in Firestore
+  //       await _firestore.collection('User').doc(currentUser.uid).update({
+  //         'profilePhoto': profilePicture,
+  //       });
+  //     }
+  //   } else {
+  //     print('No image selected.');
+  //   }
+  // }
 
   Future<void> showEditDialog(BuildContext context, String field) async {
     final TextEditingController controller = TextEditingController();
