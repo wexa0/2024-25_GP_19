@@ -2,7 +2,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
-import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -12,6 +11,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application/pages/task_page.dart';
+import 'package:flutter_application/pages/addTaskForm.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -191,11 +192,13 @@ class _HomePageState extends State<HomePage> {
                               left: 17, top: 10, right: 6),
                           child: GestureDetector(
                             onTap: () {
-                              /////////////////////////////////// Today's Task Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      TaskPage(), // Navigating to TaskPage here
+                                ),
+                              );
                             },
                             child: Container(
                               height: 110,
@@ -242,7 +245,7 @@ class _HomePageState extends State<HomePage> {
                                           children: [
                                             SizedBox(height: 30),
                                             Text(
-                                              "Today\'s Tasks",
+                                              "Today's Tasks",
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
                                                 color: Colors.black,
@@ -264,11 +267,12 @@ class _HomePageState extends State<HomePage> {
                               left: 6, top: 10, right: 17),
                           child: GestureDetector(
                             onTap: () {
-                              /////////////////////////////////// Add Task Page ////////////////////////////////
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => addTask()),
+                                  builder: (context) =>
+                                      addTask(), // Navigating to AddTaskPage here
+                                ),
                               );
                             },
                             child: Container(
@@ -335,6 +339,7 @@ class _HomePageState extends State<HomePage> {
                           ))
                     ],
                   ),
+
                   TableRow(
                     children: <Widget>[
                       Padding(

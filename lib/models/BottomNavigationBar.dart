@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:flutter_application/pages/profile_page.dart'; 
+import 'package:flutter_application/pages/progress_page.dart'; 
+import 'package:flutter_application/pages/calender_page.dart'; 
+
 
 class CustomBottomNavigationBar extends StatefulWidget {
   const CustomBottomNavigationBar({Key? key}) : super(key: key);
@@ -54,15 +58,26 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                       break;
                     case 1:
                       // Navigate to Tasks
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TaskPage(),
+                        ),
+                      );
                       break;
                     case 2:
                       // Navigate to Chatbot
                       break;
                     case 3:
                       // Navigate to Progress
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProgressPage(),
+                        ),
+                      );
                       break;
                     case 4:
-                                          case 4:
                       // Navigate to ProfilePage
                       Navigator.push(
                         context,

@@ -24,17 +24,17 @@ class addTask extends StatelessWidget {
               fontFamily: 'Poppins',
             ),
       ),
-      home: TaskPage(),
+      home: AddTaskPage(),
     );
   }
 }
 
-class TaskPage extends StatefulWidget {
+class AddTaskPage extends StatefulWidget {
   @override
-  _TaskPageState createState() => _TaskPageState();
+  _AddTaskPageState createState() => _AddTaskPageState();
 }
 
-class _TaskPageState extends State<TaskPage> {
+class _AddTaskPageState extends State<AddTaskPage> {
   User? _user = FirebaseAuth.instance.currentUser;
 
   String? _currentTaskID;
