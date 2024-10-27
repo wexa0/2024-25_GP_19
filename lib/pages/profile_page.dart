@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/welcome_page.dart';
-//import 'package:image_picker/image_picker.dart';
 import 'dart:io'; // For File type
 import 'dart:html' as html; // Import for web detection
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -9,76 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter_application/services/user.dart'; // Import the AppUser class
+import 'package:flutter_application/services/user.dart';
 import 'guest_profile_page.dart';
-
-class ProfileWidget extends StatelessWidget {
-  final String? imagePath; // String? to allow null values
-  final VoidCallback onClicked;
-
-  const ProfileWidget({
-    Key? key,
-    required this.imagePath,
-    required this.onClicked,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Stack(
-        children: [
-          buildImage(),
-          Positioned(
-            bottom: 10,
-            right: 0.5,
-            child: buildEditIcon(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildImage() {
-    ImageProvider<Object> image;
-
-    // Check if running on the web and handle image loading accordingly
-    if (imagePath == null || imagePath!.isEmpty) {
-      image = NetworkImage(
-          'https://cdn.pixabay.com/photo/2017/03/02/19/18/mystery-man-973460_960_720.png'); // Default online image
-    } else if (html.window.navigator.userAgent.contains('Chrome')) {
-      image = AssetImage(imagePath!);
-    } else {
-      image = FileImage(File(imagePath!));
-    }
-
-    return ClipOval(
-      child: Material(
-        color: Colors.transparent,
-        child: Ink.image(
-          image: image,
-          fit: BoxFit.cover,
-          width: 128,
-          height: 128,
-          child: const SizedBox(),
-        ),
-      ),
-    );
-  }
-
-  Widget buildEditIcon() {
-    return InkWell(
-      onTap: onClicked,
-      child: Container(
-        padding: EdgeInsets.all(8),
-        child: Icon(
-          Icons.camera_alt,
-          color: Color(0xFF525252),
-          size: 32,
-        ),
-      ),
-    );
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,8 +24,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   AppUser user = AppUser(); // Instance of AppUser
   bool isLoading = true;
-  File? _image; // Variable to store the selected image
-  //final ImagePicker _picker = ImagePicker(); // Image picker instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -151,23 +80,6 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
-  // Future<void> _changeProfilePicture() async {
-  //   final pickedFile = await _picker.pickImage(
-  //     source: ImageSource.gallery,
-  //     imageQuality: 100,
-  //   );
-
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _image = File(pickedFile.path);
-  //       user.profilePicture = pickedFile.path;
-  //       user.updateProfilePicture(pickedFile.path as BuildContext);
-  //     });
-  //   } else {
-  //     print('No image selected.');
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     double coverHeight = 150;
@@ -179,14 +91,12 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Text(
           'Profile',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+              color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Color.fromRGBO(121, 163, 183, 1),
+        backgroundColor: const Color.fromARGB(255, 226, 231, 234),
         elevation: 0.0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(),
       backgroundColor: Color(0xFFF5F7F8),
@@ -229,7 +139,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('${user.firstName ?? ''} ${user.lastName ?? ''}'.trim()),
+                                  Text(
+                                      '${user.firstName ?? ''} ${user.lastName ?? ''}'
+                                          .trim()),
                                   SizedBox(width: 8),
                                   Icon(Icons.arrow_forward_ios),
                                 ],
@@ -257,7 +169,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         Material(
                           color: Colors.white,
                           child: InkWell(
-                            onTap: () => user.showEditDialog(context, 'dateOfBirth'),
+                            onTap: () =>
+                                user.showEditDialog(context, 'dateOfBirth'),
                             child: ListTile(
                               title: Text('Date of Birth'),
                               trailing: Row(
@@ -290,7 +203,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         Container(
                           width: double.infinity,
-                          color: Colors.grey[300],
+                          color: const Color.fromRGBO(200, 220, 228, 1),
                           padding: EdgeInsets.all(16),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -342,7 +255,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.logout, color: Color.fromRGBO(54, 54, 54, 1)),
+                                Icon(Icons.logout,
+                                    color: Color.fromRGBO(54, 54, 54, 1)),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Center(
@@ -375,7 +289,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.close, color: Color.fromRGBO(54, 54, 54, 1)),
+                                Icon(Icons.close,
+                                    color: Color.fromRGBO(54, 54, 54, 1)),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Center(
@@ -395,14 +310,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-                    // Positioned(
-                    //   top: top,
-                    //   left: MediaQuery.of(context).size.width / 2 - profileHeight / 2,
-                    //   child: ProfileWidget(
-                    //     imagePath: _image?.path ?? user.profilePicture,
-                    //     onClicked: _changeProfilePicture,
-                    //   ),
-                    // ),
                   ],
                 ),
               ),

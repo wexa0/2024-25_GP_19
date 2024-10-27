@@ -65,7 +65,7 @@ class _CustomBottomNavigationBarState extends State<GuestCustomBottomNavigationB
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
-                      //     builder: (context) => ProfilePage(),
+                      //     builder: (context) => GuestProfilePage(),
                       //   ),
                       // );
                       break;
