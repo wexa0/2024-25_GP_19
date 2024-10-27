@@ -506,7 +506,7 @@ class _TaskPageState extends State<TaskPage> {
     );
   }
 
-  Widget _buildCategorySection() {
+   Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
