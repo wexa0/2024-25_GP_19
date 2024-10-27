@@ -6,15 +6,15 @@ import 'package:flutter_application/welcome_page.dart'; // Import your WelcomePa
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
- try {
+  try {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "AIzaSyDmLYRShTksz7xniQH8Qks8TxhBQKhzFSk",
+        apiKey: "[api-key]",
         authDomain: "attensionlens-db.firebaseapp.com",
         projectId: "attensionlens-db",
         storageBucket: "attensionlens-db.appspot.com",
         messagingSenderId: "806322652007",
-        appId: "1:806322652007:web:a283d85295ec4affa7a5c2",
+        appId: "[app-id]",
       ),
     );
     print("Firebase initialized successfully");
