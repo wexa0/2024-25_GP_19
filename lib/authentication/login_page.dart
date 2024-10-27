@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to the next screen after login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => addTask()),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       } on FirebaseAuthException catch (e) {
         // Print the exception code to debug
