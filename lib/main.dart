@@ -1,9 +1,11 @@
 
 import 'package:flutter/material.dart';
-// Make sure this import path is correct
-import 'package:flutter_application/Progress_Page';
+import 'package:flutter_application/task_page';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -14,6 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -60,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
        ElevatedButton(
   onPressed: () {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) =>  const ProgressPage()),
+      MaterialPageRoute(builder: (context) =>  const TaskPage()),
     );
   },
   child: const Text('Enter Progress Page'),

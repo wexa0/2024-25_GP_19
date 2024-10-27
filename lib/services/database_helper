@@ -1,0 +1,143 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class DatabaseHelper {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // ---------------- User Collection ----------------
+  Future<void> createUser({
+    required String email,
+    required String password,
+    required String profilePhoto,
+    required String lastName,
+    required String firstName,
+    required String dateOfBirth,
+  }) async {
+    await _firestore.collection('user').add({
+      'email': email,
+      'password': password,
+      'profilePhoto': profilePhoto,
+      'lastName': lastName,
+      'firstName': firstName,
+      'dateOfBirth': dateOfBirth,
+    });
+  }
+
+  Future<DocumentSnapshot> getUser(String userId) async {
+    return await _firestore.collection('user').doc(userId).get();
+  }
+
+  // ---------------- Task Collection ----------------
+  Future<void> createTask({
+    required String title,
+    required String timer,
+    required int priority,
+    required String note,
+    required String userID,
+    required List<Timestamp> reminder,
+    required Timestamp scheduledDate,
+    required int completionStatus,
+  }) async {
+    await _firestore.collection('Task').add({
+      'title': title,
+      'timer': timer,
+      'priority': priority,
+      'note': note,
+      'userID': userID,
+      'reminder': reminder, // List of Timestamp
+      'scheduledDate': scheduledDate,
+      'completionStatus': completionStatus, // 0: not complete, 1: in progress, 2: completed
+    });
+  }
+
+  Future<DocumentSnapshot> getTask(String taskId) async {
+    return await _firestore.collection('Task').doc(taskId).get();
+  }
+
+  Future<void> updateTaskCompletionStatus(String taskId, int completionStatus) async {
+    await _firestore.collection('Task').doc(taskId).update({
+      'completionStatus': completionStatus,
+    });
+  }
+
+  // ---------------- SubTask Collection ----------------
+  Future<void> createSubTask({
+    required String title,
+    required String timer,
+    required String taskID,
+    required int completionStatus,
+  }) async {
+    await _firestore.collection('SubTask').add({
+      'title': title,
+      'timer': timer,
+      'taskID': taskID, // Foreign key from Task
+      'completionStatus': completionStatus, // 0: not complete, 1: completed
+    });
+  }
+
+  Future<DocumentSnapshot> getSubTask(String subTaskId) async {
+    return await _firestore.collection('SubTask').doc(subTaskId).get();
+  }
+
+  Future<void> updateSubTaskCompletionStatus(String subTaskId, int completionStatus) async {
+    await _firestore.collection('SubTask').doc(subTaskId).update({
+      'completionStatus': completionStatus,
+    });
+
+    // After updating subtask completion, check if all subtasks are completed and update Task status
+    await checkAndUpdateTaskCompletionStatus(subTaskId);
+  }
+
+  Future<void> checkAndUpdateTaskCompletionStatus(String taskID) async {
+    QuerySnapshot subTasksSnapshot = await _firestore
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskID)
+        .get();
+
+    // Check if all subtasks are completed
+    bool allCompleted = subTasksSnapshot.docs.every((doc) => doc['completionStatus'] == 1);
+
+    if (allCompleted) {
+      await _firestore.collection('Task').doc(taskID).update({
+        'completionStatus': 2, // Set Task to completed if all subtasks are completed
+      });
+    } else {
+      // If any subtask is completed, set Task to 'inProgress'
+      bool anyInProgress = subTasksSnapshot.docs.any((doc) => doc['completionStatus'] == 1);
+
+      if (anyInProgress) {
+        await _firestore.collection('Task').doc(taskID).update({
+          'completionStatus': 1, // Set Task to inProgress
+        });
+      }
+    }
+  }
+
+  // ---------------- Category Collection ----------------
+  Future<void> createCategory({
+    required String categoryName,
+    required String userID,
+    required List<DocumentReference> taskIDs,
+  }) async {
+    await _firestore.collection('Category').add({
+      'categoryName': categoryName,
+      'userID': userID, // Foreign key from User
+      'taskIDs': taskIDs, // List of Document References to Task
+    });
+  }
+
+  Future<DocumentSnapshot> getCategory(String categoryId) async {
+    return await _firestore.collection('Category').doc(categoryId).get();
+  }
+
+  Future<void> addTaskToCategory(String categoryId, DocumentReference taskReference) async {
+    await _firestore.collection('Category').doc(categoryId).update({
+      'taskIDs': FieldValue.arrayUnion([taskReference]), // Add task reference to the list
+    });
+  }
+
+  Future<void> removeTaskFromCategory(String categoryId, DocumentReference taskReference) async {
+    await _firestore.collection('Category').doc(categoryId).update({
+      'taskIDs': FieldValue.arrayRemove([taskReference]), // Remove task reference from the list
+    });
+  }
+}
