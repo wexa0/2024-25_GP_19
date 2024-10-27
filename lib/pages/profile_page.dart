@@ -229,9 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                      '${user.firstName ?? ''} ${user.lastName ?? ''}'
-                                          .trim()),
+                                  Text('${user.firstName ?? ''} ${user.lastName ?? ''}'.trim()),
                                   SizedBox(width: 8),
                                   Icon(Icons.arrow_forward_ios),
                                 ],
@@ -259,8 +257,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Material(
                           color: Colors.white,
                           child: InkWell(
-                            onTap: () =>
-                                user.showEditDialog(context, 'dateOfBirth'),
+                            onTap: () => user.showEditDialog(context, 'dateOfBirth'),
                             child: ListTile(
                               title: Text('Date of Birth'),
                               trailing: Row(
@@ -345,8 +342,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.logout,
-                                    color: Color.fromRGBO(54, 54, 54, 1)),
+                                Icon(Icons.logout, color: Color.fromRGBO(54, 54, 54, 1)),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Center(
@@ -379,8 +375,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.close,
-                                    color: Color.fromRGBO(54, 54, 54, 1)),
+                                Icon(Icons.close, color: Color.fromRGBO(54, 54, 54, 1)),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Center(
@@ -402,8 +397,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     Positioned(
                       top: top,
-                      left: MediaQuery.of(context).size.width / 2 -
-                          profileHeight / 2,
+                      left: MediaQuery.of(context).size.width / 2 - profileHeight / 2,
                       child: ProfileWidget(
                         imagePath: _image?.path ?? user.profilePicture,
                         onClicked: _changeProfilePicture,

@@ -42,8 +42,7 @@ class AppUser {
   Future<void> loadUserData() async {
     User? currentUser = _auth.currentUser;
     if (currentUser != null) {
-      DocumentSnapshot userDoc =
-          await _firestore.collection('User').doc(currentUser.uid).get();
+      DocumentSnapshot userDoc = await _firestore.collection('User').doc(currentUser.uid).get();
       if (userDoc.exists) {
         firstName = userDoc['firstName'];
         lastName = userDoc['lastName'];
@@ -81,8 +80,7 @@ class AppUser {
     final TextEditingController controller = TextEditingController();
 
     if (field == 'name') {
-      controller.text =
-          '${firstName ?? ''} ${lastName ?? ''}'; // Set current name
+      controller.text = '${firstName ?? ''} ${lastName ?? ''}'; // Set current name
     } else if (field == 'email') {
       controller.text = email ?? ''; // Set current email
     } else if (field == 'dateOfBirth') {
@@ -112,26 +110,17 @@ class AppUser {
                   if (names.length > 1) {
                     firstName = names[0];
                     lastName = names[1];
-                    await _firestore
-                        .collection('User')
-                        .doc(_auth.currentUser!.uid)
-                        .update({
+                    await _firestore.collection('User').doc(_auth.currentUser!.uid).update({
                       'firstName': firstName,
                       'lastName': lastName,
                     });
                   }
                 } else if (field == 'email') {
                   email = controller.text;
-                  await _firestore
-                      .collection('User')
-                      .doc(_auth.currentUser!.uid)
-                      .update({'email': email});
+                  await _firestore.collection('User').doc(_auth.currentUser!.uid).update({'email': email});
                 } else if (field == 'dateOfBirth') {
                   dateOfBirth = controller.text;
-                  await _firestore
-                      .collection('User')
-                      .doc(_auth.currentUser!.uid)
-                      .update({'dateOfBirth': dateOfBirth});
+                  await _firestore.collection('User').doc(_auth.currentUser!.uid).update({'dateOfBirth': dateOfBirth});
                 }
                 Navigator.of(context).pop(); // Close the dialog
               },
@@ -144,8 +133,7 @@ class AppUser {
   }
 
   Future<void> showChangePasswordDialog(BuildContext context) async {
-    final TextEditingController currentPasswordController =
-        TextEditingController();
+    final TextEditingController currentPasswordController = TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
 
     showDialog(
@@ -203,15 +191,13 @@ class AppUser {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(false); // Close the dialog and return false
+                Navigator.of(context).pop(false); // Close the dialog and return false
               },
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(true); // Close the dialog and return true
+                Navigator.of(context).pop(true); // Close the dialog and return true
               },
               child: Text('Yes'),
             ),
@@ -223,8 +209,7 @@ class AppUser {
     if (confirm == true) {
       await _auth.signOut(); // Sign out the user
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-            builder: (context) => WelcomePage()), // Redirect to welcome page
+        MaterialPageRoute(builder: (context) => WelcomePage()), // Redirect to welcome page
       );
     }
   }
@@ -236,20 +221,17 @@ class AppUser {
       builder: (context) {
         return AlertDialog(
           title: Text('Delete Account'),
-          content: Text(
-              'Are you sure you want to delete your account? This action cannot be undone.'),
+          content: Text('Are you sure you want to delete your account? This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(false); // Close the dialog and return false
+                Navigator.of(context).pop(false); // Close the dialog and return false
               },
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(true); // Close the dialog and return true
+                Navigator.of(context).pop(true); // Close the dialog and return true
               },
               child: Text('Delete'),
             ),
@@ -266,8 +248,7 @@ class AppUser {
         // Delete user from Firebase Auth
         await currentUser.delete();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => WelcomePage()), // Redirect to welcome page
+          MaterialPageRoute(builder: (context) => WelcomePage()), // Redirect to welcome page
         );
       }
     }

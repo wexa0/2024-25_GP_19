@@ -1,0 +1,173 @@
+import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class TimerPage extends StatefulWidget {
+  @override
+  _TimerPageState createState() => _TimerPageState();
+}
+
+class _TimerPageState extends State<TimerPage> {
+  double percent = 0.75;
+
+  @override
+  Widget build(BuildContext context) {
+    // Apply the Google font to the entire page
+    return Theme(
+      data: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          // Your AppBar code here (if needed)
+        ),
+        body: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25), // Padding for left and right
+                  child: Align(
+                    alignment: Alignment.centerLeft,  // Align to the left
+                    child: Text(
+                      "Countingup timer",
+                      style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+
+                // Adding space above the progress line
+                SizedBox(height: 18),
+
+                // Progress Line
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 40),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: LinearProgressIndicator(
+                      value: percent,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2F5496)),
+                      minHeight: 10,
+                    ),
+                  ),
+                ),
+
+                // Adding more space between progress line and text
+                SizedBox(height: 20),
+
+                // Topic text under the progress line
+                Padding(
+                  padding: const EdgeInsets.only(top: 10), // Adjusting the top padding
+                  child: Text(
+                    "Keep going, you are getting there!",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17.0,
+                      color: Color(0xFF919191),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 30), // Adding space between the text and the CircularPercentIndicator
+
+                // Circular Progress Indicator
+                CircularPercentIndicator(
+                  radius: 150.0,
+                  lineWidth: 15.0,
+                  animation: true,
+                  percent: percent,
+                  center: Text(
+                    "12:33",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 47.0),
+                  ),
+                  circularStrokeCap: CircularStrokeCap.round,
+                  progressColor: Color(0xFF2F5496),
+                ),
+
+                // Adding space below the CircularPercentIndicator
+                SizedBox(height: 40),
+
+                // Buttons Row
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      _buildCircleButton(Icons.cancel, "Cancel", 'cancelButton', Color(0xFF595959)),
+                      _buildCircleButton(Icons.pause, "Pause", 'pauseButton', Color(0xFF595959)),
+                      _buildCircleButton(Icons.check, "Done", 'doneButton', Color(0xFF595959)),
+                    ],
+                  ),
+                )
+              ],
+            ),
+
+            // Coming Soon overlay
+            Positioned.fill(
+              child: Container(
+                color: Colors.grey.withOpacity(0.8),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.hourglass_empty, size: 80, color: Colors.white),
+                      SizedBox(height: 20),
+                      Text(
+                        'Coming Soon',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'This feature is not available yet.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton(IconData icon, String label, String heroTag, Color labelColor) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 70,  // Set width for the button
+          height:70,  // Set height for the button
+          child: FloatingActionButton(
+            heroTag: heroTag,
+            onPressed: () {}, // No functionality for now
+            child: Icon(icon, color: Colors.white , size:35),
+            backgroundColor: Color(0xFF919191),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(39), // Customize border radius
+            ),
+          ),
+        ),
+         Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: labelColor,
+              fontWeight: FontWeight.bold, // Make the text bold
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
