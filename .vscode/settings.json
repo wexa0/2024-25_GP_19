@@ -4,5 +4,6 @@
     "dart.flutterHotReloadOnSave": "all",
     "dart.hotReloadOnSave": "all",
     "dart.flutterGenerateLocalizationsOnSave": "all",
-    "files.autoSaveWhenNoErrors": true
+    "files.autoSaveWhenNoErrors": true,
+    "dart.projectSearchDepth": 7
 }

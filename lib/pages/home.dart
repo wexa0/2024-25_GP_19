@@ -2,16 +2,17 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
-import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart'  as carousel;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application/pages/addTaskForm.dart' as add;
+import 'package:flutter_application/pages/task_page' as task;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -192,10 +193,10 @@ class _HomePageState extends State<HomePage> {
                           child: GestureDetector(
                             onTap: () {
                               /////////////////////////////////// Today's Task Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
+                              Navigator.push(
+                                context,
+                              MaterialPageRoute(builder: (context) => const TaskPage()), 
+                  );
                             },
                             child: Container(
                               height: 110,

@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_application/pages/calender_page';
+import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_application/pages/timer_page';
-import 'package:flutter_application/pages/progress_page';
+import 'package:flutter_application/pages/progress_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'dart:math';
 
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
@@ -22,6 +22,12 @@ class _TaskPageState extends State<TaskPage> {
   bool showEmptyState = true;
    String userID = 'NoXMhi9mBmdu9M4NRMItLsIG9Fc2'; 
 
+   
+
+
+
+  
+  //list for empty list state.
   final List<String> emptyStateMessages = [
     "You have no tasks for today. Start planning!",
     "Nothing on your to-do list today. Add your tasks!",
@@ -29,31 +35,29 @@ class _TaskPageState extends State<TaskPage> {
     "All set! Want to add more tasks for today?"
   ];
 
-  final List<Map<String, dynamic>> tasks = [];
- List<String> availableCategories = []; // This will store the categories from Firestore.
+
+  final List<Map<String, dynamic>> tasks = []; // store task from Firestore.
+ List<String> availableCategories = []; // store categories from Firestore.
 
 
- // Define startOfDay and endOfDay as nullable and initialize them later
   DateTime? startOfDay;
   DateTime? endOfDay;
   bool isLoading = true;
 
   @override
   void initState() {
-    super.initState();
-    fetchTasksFromFirestore();  // استدعاء جلب المهام هنا
+     super.initState();
+  selectedCategories = ['All']; // Set "All" as the default selected category.
+  fetchTasksFromFirestore(); 
 
   }
 
-
-
 void fetchTasksFromFirestore() async {
   setState(() {
-    isLoading = true; // بدء التحميل
+    isLoading = true; 
   });
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  // جلب المهام
   QuerySnapshot taskSnapshot = await firestore.collection('Task').get();
   List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
 
@@ -73,50 +77,75 @@ void fetchTasksFromFirestore() async {
     availableCategories.clear();
     availableCategories.add('All'); // إضافة خيار "All" للعرض الكامل
     availableCategories.add('Uncategorized'); // خيار المهام غير المصنفة
+    availableCategories.add('Home');
 
+    // جلب الفئات
+    Map<String, List<String>> categoryTaskMap = {};
     for (var doc in categorySnapshot.docs) {
       String categoryName = doc['categoryName'];
-
-      // تحويل بيانات المستند إلى خريطة Map والتحقق من `taskIDs`
       Map<String, dynamic> categoryData = doc.data() as Map<String, dynamic>;
       List<dynamic> taskIDs = categoryData.containsKey('taskIDs') ? categoryData['taskIDs'] : [];
 
       availableCategories.add(categoryName); // إضافة الفئة لقائمة الفئات
 
-      // ربط المهام بالفئة بناءً على `taskIDs` وأيضاً التحقق من الوقت
-      for (var taskDoc in taskDocuments) {
-        if (taskIDs.contains(taskDoc.id)) {
-          Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
-          DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
-
-          // التحقق من أن المهمة تقع في نطاق اليوم
-          if (taskTime.isAfter(startOfDay!) && taskTime.isBefore(endOfDay!)) {
-            Map<String, dynamic> task = {
-              'id': taskDoc.id,
-              'title': taskData['title'] ?? 'Untitled',
-              'time': taskTime,
-              'priority': taskData['priority'] as int,
-              'completed': taskData['completionStatus'] == 2,
-              'expanded': false,
-              'subtasks': [],
-              'categories': [categoryName], // إضافة الفئة المرتبطة بالمهمة
-            };
-
-            tasks.add(task); // إضافة المهمة للقائمة
-          }
+      for (var taskId in taskIDs) {
+        if (categoryTaskMap.containsKey(taskId)) {
+          categoryTaskMap[taskId]?.add(categoryName);
+        } else {
+          categoryTaskMap[taskId] = [categoryName];
         }
       }
     }
+
+    // معالجة وإضافة المهام
+    for (var taskDoc in taskDocuments) {
+      Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
+      DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
+
+ 
+      // تحقق من أن المهمة تقع ضمن اليوم الحالي
+    if (taskTime.year == startOfDay!.year &&
+    taskTime.month == startOfDay!.month &&
+    taskTime.day == startOfDay!.day) {
+      print("Task Date: $taskTime, Start of Day: $startOfDay, End of Day: $endOfDay");
+        String taskId = taskDoc.id;
+        Map<String, dynamic> task = {
+          'id': taskId,
+          'title': taskData['title'] ?? 'Untitled',
+          'time': taskTime,
+          'priority': taskData['priority'] as int,
+          'completed': taskData['completionStatus'] == 2,
+          'expanded': false,
+          'subtasks': [],
+          'categories': categoryTaskMap[taskId] ?? ['Uncategorized'],
+        };
+
+        // جلب "السب تاسك" لكل مهمة
+        firestore.collection('SubTask')
+            .where('taskID', isEqualTo: taskId)
+            .get()
+            .then((subtaskSnapshot) {
+          List<Map<String, dynamic>> subtasks = subtaskSnapshot.docs.map((subDoc) {
+            Map<String, dynamic> subtaskData = subDoc.data() as Map<String, dynamic>;
+            return {
+              'id': subDoc.id,
+              'title': subtaskData['title'],
+              'completed': subtaskData['completionStatus'] == 1,
+            };
+          }).toList();
+
+          setState(() {
+            task['subtasks'] = subtasks; // تحديث المهام الفرعية بعد الجلب
+          });
+        });
+
+        tasks.add(task); // إضافة المهمة للقائمة مرة واحدة فقط
+      }
+    }
+
     isLoading = false; // انتهاء التحميل
   });
 }
-
-
-
-
-
-
-
 
   
     String getEmptyStateMessage() {
@@ -132,13 +161,14 @@ void deleteTask(Map<String, dynamic> task) async {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   // Delete the task from Firestore
-  await firestore.collection('Task').doc(task['id']).delete(); // Ensure 'Task' matches the collection name
+  await firestore.collection('Task').doc(task['id']).delete(); 
 
   setState(() {
     tasks.remove(task); // Remove task from the local list
   });
   _showTopNotification("Task deleted successfully.");
 }
+
 
 
 
@@ -465,63 +495,77 @@ void showCategoryDialog() {
   }
 
 void toggleTaskCompletion(Map<String, dynamic> task) async {
-  task['completed'] = !task['completed'];
+  bool newTaskCompletionStatus = !task['completed']; // عكس حالة الإكمال للمهمة الرئيسية
 
-  if (task['completed']) {
-    // Mark all subtasks as complete when the main task is marked as complete
+  setState(() {
+    task['completed'] = newTaskCompletionStatus;
+  });
+
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  if (newTaskCompletionStatus) {
+    // إذا كانت المهمة الرئيسية مكتملة، اجعل جميع المهام الفرعية مكتملة
     for (var subtask in task['subtasks']) {
       subtask['completed'] = true;
-      await FirebaseFirestore.instance
-          .collection('SubTask')
-          .doc(subtask['id'])
-          .update({'completionStatus': 1});
+      await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': 1});
     }
-    // Set task as fully complete
-    await FirebaseFirestore.instance
-        .collection('Task')
-        .doc(task['id'])
-        .update({'completionStatus': 2});
+    // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"مكتملة"
+    await firestore.collection('Task').doc(task['id']).update({'completionStatus': 2});
   } else {
-    // Mark all subtasks as incomplete when the main task is marked as incomplete
+    // إذا كانت المهمة الرئيسية غير مكتملة، اجعل جميع المهام الفرعية غير مكتملة
     for (var subtask in task['subtasks']) {
       subtask['completed'] = false;
-      await FirebaseFirestore.instance
-          .collection('SubTask')
-          .doc(subtask['id'])
-          .update({'completionStatus': 0});
+      await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': 0});
     }
-    // If the task is incomplete, set task status to 0 (not complete)
-    await FirebaseFirestore.instance
-        .collection('Task')
-        .doc(task['id'])
-        .update({'completionStatus': 0});
+    // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"غير مكتملة"
+    await firestore.collection('Task').doc(task['id']).update({'completionStatus': 0});
   }
 
-  setState(() {}); // Refresh UI
+  if (mounted) {
+    setState(() {}); // تحديث واجهة المستخدم
+  }
 }
 
-void toggleSubtaskCompletion(Map<String, dynamic> task, Map<String, dynamic> subtask) async {
-  subtask['completed'] = !subtask['completed'];
-  await FirebaseFirestore.instance
-      .collection('SubTask')
-      .doc(subtask['id'])
-      .update({'completionStatus': subtask['completed'] ? 1 : 0});
 
+
+
+void toggleSubtaskCompletion(Map<String, dynamic> task, Map<String, dynamic> subtask) async {
+  bool newSubtaskCompletionStatus = !subtask['completed']; // عكس حالة إكمال المهام الفرعية
+
+  setState(() {
+    subtask['completed'] = newSubtaskCompletionStatus;
+  });
+
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  // تحديث حالة المهمة الفرعية في قاعدة البيانات
+  await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
+
+  // التحقق مما إذا كانت جميع المهام الفرعية مكتملة أو على الأقل واحدة مكتملة
   bool allSubtasksComplete = task['subtasks'].every((s) => s['completed'] == true);
   bool anySubtaskComplete = task['subtasks'].any((s) => s['completed'] == true);
 
-  // Determine task completion status based on subtasks
-  int newStatus = allSubtasksComplete ? 2 : (anySubtaskComplete ? 1 : 0);
-  await FirebaseFirestore.instance
-      .collection('Task')
-      .doc(task['id'])
-      .update({'completionStatus': newStatus});
+  int newTaskStatus;
+  if (allSubtasksComplete) {
+    newTaskStatus = 2; // المهمة الرئيسية مكتملة
+    task['completed'] = true;
+  } else if (anySubtaskComplete) {
+    newTaskStatus = 1; // المهمة الرئيسية قيد التنفيذ
+    task['completed'] = false;
+  } else {
+    newTaskStatus = 0; // المهمة الرئيسية غير مكتملة
+    task['completed'] = false;
+  }
+  if (mounted) {
+    setState(() {}); // تحديث واجهة المستخدم
+  }
 
-// Update UI
-  task['completed'] = allSubtasksComplete;  // This will mark the task as completed in the UI if all subtasks are complete
+  // تحديث حالة المهمة الرئيسية في قاعدة البيانات
+  await firestore.collection('Task').doc(task['id']).update({'completionStatus': newTaskStatus});
 
-  setState(() {}); // Refresh the UI to reflect changes
+  
 }
+
 
 
 
@@ -610,8 +654,11 @@ void _showTopNotification(String message) {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
+    bool isGuestUser = userID.isEmpty;
+ 
     return GestureDetector(
       onTap: closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
       child: Scaffold(
@@ -629,7 +676,7 @@ void _showTopNotification(String message) {
           centerTitle: true,
           backgroundColor: const Color.fromARGB(255, 226, 231, 234),
           elevation: 0,
-
+          
           // Hamburger Menu
           actions: [
             PopupMenuButton<String>(
@@ -656,7 +703,7 @@ void _showTopNotification(String message) {
                     ),
                   ),
                   PopupMenuItem<String>(
-                    value: 'sort',
+                   value: 'sort',
                     child: Row(
                       children: const [
                         Icon(Icons.sort, size: 24),
@@ -675,10 +722,15 @@ void _showTopNotification(String message) {
                       ],
                     ),
                   ),
+
                 ];
               },
+            
+              
             ),
+            
           ],
+          
         ),
 
         // Body content
@@ -786,102 +838,122 @@ void _showTopNotification(String message) {
                     const SizedBox(height: 50), // إضافة مسافة رأسية بعد النص
                   ],
                 ),
-              )else if (areAllTasksCompleted())
+              )
+              else if (areAllTasksCompleted() && selectedCategories.contains('All'))
                 Center(
                   child: Column(
                     children: [
+          const SizedBox(height: 70),                      
                       Image.asset(
         'assets/images/done.png', // عرض الصورة
-        height: 150, // ارتفاع الصورة
+        height: 110, // ارتفاع الصورة
       ),
       const SizedBox(height: 20), // المسافة بين الصورة والنص
                       const Text(
-                        'Awesome job! You\'ve conquered your to-do list today!',
+                        'Awesome job! You\'ve conquered your\n to-do list today!',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF3B7292),
                         ),
                         textAlign: TextAlign.center,
+                    ),
+                          ],
+                        ),
                       ),
-      ],
-    ),
-  ),
-  
-                
-
-
-            
-       
 // Existing Expanded widget for displaying tasks
 Expanded(
-  child: ListView(
-    children: [
-      // Show Pending Tasks header only if there are pending tasks
-      if (tasks.any((task) => !task['completed'])) // Check if there are pending tasks
-        Row(
-          children: const [
-            Expanded(child: Divider(thickness: 1)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
+  child: tasks.isEmpty || 
+      (!tasks.any((task) =>
+          selectedCategories.contains('All') ||
+          (selectedCategories.contains('Uncategorized') && task['categories'].contains('Uncategorized')) ||
+          selectedCategories.any((category) => task['categories'].contains(category)))) 
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 30),
+            Center(
+              child: Image.asset(
+                'assets/images/empty_list.png', // تأكد من وجود الصورة في المسار المحدد
+                width: 100,
+                height: 110,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Center(
               child: Text(
-                'Pending Tasks',
+                'There are no tasks in this category',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: Color(0xFF3B7292),
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
+          ],
+        )
+      : ListView(
+          children: [
+      // Show Pending Tasks section if there are any uncompleted tasks
+    if (tasks.any((task) => !task['completed'] && 
+        (selectedCategories.contains('All') || 
+         (selectedCategories.contains('Uncategorized') && (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
+         selectedCategories.any((category) => task['categories'].contains(category)))))
+      Row(
+        children: const [
+          Expanded(child: Divider(thickness: 1)),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              'Pending Tasks',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
             Expanded(child: Divider(thickness: 1)),
           ],
         ),
-      ...tasks.where((task) {
-          // Check if categories are selected, and handle 'All' and 'Uncategorized' cases.
- if (selectedCategories.isEmpty || selectedCategories.contains('All')) {
-     return true; // عرض جميع المهام إذا كانت "All" مختارة
-  } else if (selectedCategories.contains('Uncategorized')) {
-    // عرض المهام غير المصنفة
-    return (task['categories'] == null || task['categories'].isEmpty);
-  }
-  // التحقق إذا كانت الفئة المحددة موجودة ضمن `categories` الخاصة بالمهمة
-  return selectedCategories.any((category) => task['categories'].contains(category));
-}).where((task) => !task['completed']).map(
-  (task) => TaskCard(
-    task: task,
-    onTaskToggle: () {
-      toggleTaskCompletion(task);
-    },
-    onExpandToggle: () {
-      setState(() {
-        task['expanded'] = !task['expanded'];
-      });
-    },
-    onSubtaskToggle: (subtask) {
-      toggleSubtaskCompletion(task, subtask);
-    },
-    
-    onSubtaskDeleted: (subtask) async {
-      await FirebaseFirestore.instance
-          .collection('SubTask')
-          .doc(subtask['id'])
-          .delete();
-      task['subtasks'].remove(subtask);
-      setState(() {}); // Refresh the UI
-      _showTopNotification("Task deleted successfully.");
-    },
-    getPriorityColor: getPriorityColor,
-    onDeleteTask: () {
-      showDeleteConfirmationDialog(task);
-    },
-    onEditTask: () {
-      editTask(task);
-    },
-    ),
-      ),
-      
+       ...tasks.where((task) {
+        // فحص إذا كانت الفئة المختارة هي "All" لعرض جميع المهام، أو فحص الفئات الأخرى
+        if (selectedCategories.contains('All')) {
+          return !task['completed'];
+        } else if (selectedCategories.contains('Uncategorized')) {
+          return !task['completed'] && (task['categories'] == null || task['categories'].contains('Uncategorized'));
+        }
+        return !task['completed'] && selectedCategories.any((category) => task['categories'].contains(category));
+      }).map(
+        (task) => TaskCard(
+          task: task,
+          onTaskToggle: () => toggleTaskCompletion(task),
+          onExpandToggle: () {
+            setState(() {
+              task['expanded'] = !task['expanded'];
+            });
+          },
+          onSubtaskToggle: (subtask) => toggleSubtaskCompletion(task, subtask),
+          onSubtaskDeleted: (subtask) async {
+            await FirebaseFirestore.instance.collection('SubTask').doc(subtask['id']).delete();
+            task['subtasks'].remove(subtask);
+            setState(() {}); // تحديث الواجهة بعد الحذف
+            _showTopNotification("Subtask deleted successfully.");
+          },
+            getPriorityColor: getPriorityColor,
+            onDeleteTask: () => showDeleteConfirmationDialog(task),
+            onEditTask: () => editTask(task),
+          ),
+        ),
       const SizedBox(height: 16),
-      if (tasks.any((task) => task['completed']))
-        Row(
+
+
+       // Show Completed Tasks section if there are any completed tasks
+      if (tasks.any((task) => task['completed'] && 
+        (selectedCategories.contains('All') || 
+         (selectedCategories.contains('Uncategorized') && (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
+         selectedCategories.any((category) => task['categories'].contains(category)))))
+      Row(
           children: const [
             Expanded(child: Divider(thickness: 1)),
             Padding(
@@ -897,59 +969,41 @@ Expanded(
             Expanded(child: Divider(thickness: 1)),
           ],
         ),
-      ...tasks.where((task) {
-        if (selectedCategories.isEmpty) {
-          return true;
+
+       ...tasks.where((task) {
+        // شرط عرض المهام المكتملة للفئة المحددة
+        if (selectedCategories.contains('All')) {
+          return task['completed'];
+        } else if (selectedCategories.contains('Uncategorized')) {
+          return task['completed'] && (task['categories'] == null || task['categories'].contains('Uncategorized'));
         }
-        // Check if the task has categories and filter by them
-        return task['categories'] != null &&
-               selectedCategories.any((category) => task['categories'].contains(category));
-      }).where((task) => task['completed']).map(
-        (task) => TaskCard(
-          task: task,
-          onTaskToggle: () {
-            toggleTaskCompletion(task);
-          },
-          onExpandToggle: () {
-  setState(() {
-    task['expanded'] = !task['expanded'];
-    // Since subtasks are already fetched, no need to fetch again.
-    // Just toggle the expanded state to show/hide the subtasks.
-  });
-},
-
-          onSubtaskToggle: (subtask) {
-            toggleSubtaskCompletion(task, subtask);
-          },
-           onSubtaskDeleted: (subtask) async {
-          // Delete subtask from Firestore
-          await FirebaseFirestore.instance
-              .collection('SubTask')
-              .doc(subtask['id'])
-              .delete();
-
-          // Update task's subtasks in the UI
-          task['subtasks'].remove(subtask);
-          setState(() {}); // Refresh UI
-        },
-   getPriorityColor: getPriorityColor,
-
-    onDeleteTask: () {
-      showDeleteConfirmationDialog(task);
-    },
-    onEditTask: () {
-      editTask(task);
-    },      
-      ),
-      ),
-    ],
-  ),
-),
-
-
-
-            ],
-          ),
+        return task['completed'] && selectedCategories.any((category) => task['categories'].contains(category));
+      }).map(
+          (task) => TaskCard(
+            task: task,
+            onTaskToggle: () => toggleTaskCompletion(task),
+            onExpandToggle: () {
+              setState(() {
+                task['expanded'] = !task['expanded'];
+              });
+            },
+            onSubtaskToggle: (subtask) => toggleSubtaskCompletion(task, subtask),
+            onSubtaskDeleted: (subtask) async {
+              await FirebaseFirestore.instance.collection('SubTask').doc(subtask['id']).delete();
+              task['subtasks'].remove(subtask);
+              setState(() {}); // تحديث الواجهة بعد الحذف
+              _showTopNotification("Subtask deleted successfully.");
+            },
+            getPriorityColor: getPriorityColor,
+            onDeleteTask: () => showDeleteConfirmationDialog(task),
+            onEditTask: () => editTask(task),
+           ),
+                              ),
+                        ],
+                      ),
+                    ), 
+                  ],
+                ), 
         ),
 floatingActionButton: FloatingActionButton(
   onPressed: () {
@@ -961,11 +1015,11 @@ floatingActionButton: FloatingActionButton(
   ),
   child: const Icon(Icons.add, color: Colors.white),
  
-),
-      ),
+ ),
+  
 
-      
-    );
+      ), //jjjj
+    ); //jjjj
   }
 }
 
@@ -1038,7 +1092,7 @@ class TaskCard extends StatelessWidget {
                   ),
                   child: const Text(
                     'Delete',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: Colors.white),
                   ),
           ),
           ],
