@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/authentication/login_page.dart';
-import 'package:flutter_application/pages/guest_home.dart'; 
+import 'package:flutter_application/pages/guest_home.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -26,9 +26,11 @@ class WelcomePage extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(32.0, 0, 32.0, 20.0), // Adjusted bottom padding
+                padding: const EdgeInsets.fromLTRB(
+                    32.0, 0, 32.0, 20.0), // Adjusted bottom padding
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Keeps the column as small as possible
+                  mainAxisSize:
+                      MainAxisSize.min, // Keeps the column as small as possible
                   children: [
                     // Sign Up Button
                     SizedBox(
@@ -38,11 +40,13 @@ class WelcomePage extends StatelessWidget {
                           // Navigate to sign-up page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const SignUpPage()),
+                            MaterialPageRoute(
+                                builder: (context) => const SignUpPage()),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3b7292), // Custom button color
+                          backgroundColor:
+                              const Color(0xFF3b7292), // Custom button color
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -67,7 +71,9 @@ class WelcomePage extends StatelessWidget {
                           // Navigate to log-in page
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const LoginPage()), // Navigate to LoginPage
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const LoginPage()), // Navigate to LoginPage
                           );
                         },
                         style: OutlinedButton.styleFrom(
@@ -90,46 +96,48 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
                     ),
-                     const SizedBox(height: 12), // Space between buttons
+                    const SizedBox(height: 12), // Space between buttons
 
                     // Log In Button
                     SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () {
-                          // Navigate to attentionlens
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => GuestHomePage()), // Navigate to LoginPage
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontSize: 17,
-                            decoration: TextDecoration.underline,
-                            color: Color.fromARGB(255, 85, 93, 97),
-                          ),
-                          children: [
-                            const TextSpan(text: 'Navigate AttentionLens as '),
-                            TextSpan(
-                              text: 'Guest', 
-                              style: const TextStyle(color: Color(0xFF3b7292),
-                               decoration: TextDecoration.underline,
-                                decorationColor: Color(0xFF3b7292),
-                              ),
-                             
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () {
+                            // Navigate to attentionlens
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      GuestHomePage()), // Navigate to LoginPage
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ],
-                        ),
-                      ),)
-                    ),
+                          ),
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 17,
+                                decoration: TextDecoration.underline,
+                                color: Color.fromARGB(255, 85, 93, 97),
+                              ),
+                              children: [
+                                const TextSpan(text: 'Continue as '),
+                                TextSpan(
+                                  text: 'Guest',
+                                  style: const TextStyle(
+                                    color: Color(0xFF3b7292),
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Color(0xFF3b7292),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )),
                   ],
                 ),
               ),

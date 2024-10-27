@@ -20,7 +20,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
 
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation
@@ -149,7 +148,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           decoration: InputDecoration(
                             labelText: 'First Name *',
                             filled: true,
-                            fillColor: const Color(0xFFE6EBEF),
+                            fillColor: Colors.white70,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: const BorderSide(
@@ -181,7 +180,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           decoration: InputDecoration(
                             labelText: 'Last Name *',
                             filled: true,
-                            fillColor: const Color(0xFFE6EBEF),
+                            fillColor: Colors.white70,
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: const BorderSide(
@@ -215,7 +214,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: InputDecoration(
                       labelText: 'Email *',
                       filled: true,
-                      fillColor: const Color(0xFFE6EBEF),
+                      fillColor: Colors.white70,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(
@@ -251,7 +250,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: InputDecoration(
                       labelText: 'Date of Birth *',
                       filled: true,
-                      fillColor: const Color(0xFFE6EBEF),
+                      fillColor: Colors.white70,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(
@@ -283,7 +282,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: InputDecoration(
                       labelText: 'Password *',
                       filled: true,
-                      fillColor: const Color(0xFFE6EBEF),
+                      fillColor: Colors.white70,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(

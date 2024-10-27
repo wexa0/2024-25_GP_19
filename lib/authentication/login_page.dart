@@ -16,16 +16,11 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  final _formKey = GlobalKey<FormState>(); // Key for form validation
+
   // Function to handle the login process
   void _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in both fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else {
+    if (_formKey.currentState!.validate()) {
       try {
         UserCredential userCredential =
             await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -38,7 +33,6 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to the next screen after login
         Navigator.pushReplacement(
           context,
-
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       } on FirebaseAuthException catch (e) {
@@ -96,116 +90,135 @@ class _LoginPageState extends State<LoginPage> {
           // Main content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                // Email TextField
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email *',
-                    filled: true,
-                    fillColor: Colors.white70,
-                    // Set the enabled border color
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFE6EBEF),
+            child: Form(
+              key: _formKey, // Form key for validation
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 40),
+                  // Email TextFormField with validation
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email *',
+                      filled: true,
+                      fillColor: Colors.white70,
+                      // Set the enabled border color
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFE6EBEF),
+                        ),
                       ),
-                    ),
-                    // Set the focused border color
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: const BorderSide(
+                      // Set the focused border color
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF3b7292),
+                        ),
+                      ),
+                      floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
                     ),
-                    floatingLabelStyle: const TextStyle(
-                      color: Color(0xFF3b7292),
-                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
+                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Password TextField
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password *',
-                    filled: true,
-                    fillColor: Colors.white70,
-                    // Set the enabled border color
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: const BorderSide(
-                        color: Color(0xFFE6EBEF),
+                  const SizedBox(height: 16),
+                  // Password TextFormField with validation
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password *',
+                      filled: true,
+                      fillColor: Colors.white70,
+                      // Set the enabled border color
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFFE6EBEF),
+                        ),
                       ),
-                    ),
-                    // Set the focused border color
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: const BorderSide(
+                      // Set the focused border color
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF3b7292),
+                        ),
+                      ),
+                      floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
                     ),
-                    floatingLabelStyle: const TextStyle(
-                      color: Color(0xFF3b7292),
-                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password is required';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Log In Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B7292),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 24),
+                  // Log In Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B7292),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: const Text(
-                      'Log In',
-                      style: TextStyle(
-                        color: Colors.white, // Font color
-                        fontWeight: FontWeight.bold, // Bold font
-                        fontSize: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Sign Up prompt
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account?",
-                      style: TextStyle(
-                          color: Color(0xFF737373)), // Corrected color code
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUpPage()),
-                        );
-                      },
                       child: const Text(
-                        'Sign Up',
+                        'Log In',
                         style: TextStyle(
-                          color: Color(0xFF3B7292),
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Sign Up prompt
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                            color: Color(0xFF737373)), // Corrected color code
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SignUpPage()),
+                          );
+                        },
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Color(0xFF3B7292),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
