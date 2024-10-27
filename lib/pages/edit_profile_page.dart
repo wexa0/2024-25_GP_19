@@ -1,4 +1,4 @@
-//need more updating and i still have an error beacuse i don't hve access to firebase 
+//need more updating and i still have an error beacuse i don't hve access to firebase
 //need to add picture field
 
 import 'package:flutter/material.dart';
@@ -52,8 +52,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return Theme(
           data: ThemeData.light().copyWith(
             primaryColor: Color(0xFF3b7292), // Header color
-            colorScheme: ColorScheme.light(primary: Color(0xFF3b7292)), // Selected date color
-            buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary), // Button text color
+            colorScheme: ColorScheme.light(
+                primary: Color(0xFF3b7292)), // Selected date color
+            buttonTheme: ButtonThemeData(
+                textTheme: ButtonTextTheme.primary), // Button text color
           ),
           child: child ?? Container(),
         );
@@ -63,7 +65,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _dobController.text = "${picked.day}/${picked.month}/${picked.year}"; // Format as DD/MM/YYYY
+        _dobController.text =
+            "${picked.day}/${picked.month}/${picked.year}"; // Format as DD/MM/YYYY
       });
     }
   }
@@ -125,7 +128,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
             top: 40, // Adjust position as needed
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Color(0xFF104A73), size: 55), // Arrow icon
+              icon: Icon(Icons.arrow_back,
+                  color: Color(0xFF104A73), size: 55), // Arrow icon
               onPressed: () {
                 Navigator.pop(context); // Go back to the previous page
               },
@@ -141,7 +145,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 children: [
                   Text(
                     'Edit Profile',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 24),
@@ -240,7 +247,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Email is required';
-                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                          .hasMatch(value)) {
                         return 'Enter a valid email';
                       }
                       return null;
@@ -284,13 +292,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ElevatedButton(
                     onPressed: _updateProfile,
                     style: ElevatedButton.styleFrom(
-                      primary: Color(0xFF3b7292), // Button color
+                      backgroundColor: Color(0xFF3b7292), // Button color
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    child: Text('Update Profile', style: TextStyle(fontSize: 16)),
+                    child:
+                        Text('Update Profile', style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ),

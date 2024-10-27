@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/home.dart';
-// import 'package:flutter_application/profile_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-// import 'package:flutter_application/profile_page.dart'; 
+import 'package:flutter_application/pages/profile_page.dart'; 
 
 class CustomBottomNavigationBar extends StatefulWidget {
   const CustomBottomNavigationBar({Key? key}) : super(key: key);
@@ -63,14 +62,16 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                       // Navigate to Progress
                       break;
                     case 4:
+                                          case 4:
                       // Navigate to ProfilePage
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => ProfilePage(),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfilePage(),
+                        ),
+                      );
                       break;
+                      
                   }
                 },
                 tabs: const [
