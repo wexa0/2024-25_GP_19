@@ -84,84 +84,92 @@ void initState() {
   }
 
 void fetchTasksFromFirestore() async {
-  setState(() {
-    isLoading = true; 
-  });
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+    if (!mounted) return; // Ensure the widget is still in the tree
+    setState(() {
+      isLoading = true;
+    });
 
-QuerySnapshot taskSnapshot = await firestore
-        .collection('Task')
-        .where('userID', isEqualTo: userID) // Filter by the logged-in user's ID
-        .get();
-      
-  List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  // تحديد بداية ونهاية اليوم الحالي
-  startOfDay = DateTime.now();
-  startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
-  endOfDay = startOfDay!.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+      // Fetch tasks for the user
+      QuerySnapshot taskSnapshot = await firestore
+          .collection('Task')
+          .where('userID',
+              isEqualTo: userID) // Filter by the logged-in user's ID
+          .get();
 
-  // جلب الفئات وتخزين taskIDs لكل فئة
-  QuerySnapshot categorySnapshot = await firestore
-      .collection('Category')
-      .where('userID', isEqualTo: userID)
-      .get();
+      List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
 
-  setState(() {
-    tasks.clear();
-    availableCategories.clear();
-    availableCategories.add('All'); // إضافة خيار "All" للعرض الكامل
-    availableCategories.add('Uncategorized'); // خيار المهام غير المصنفة
-    availableCategories.add('Home');
+      // تحديد بداية ونهاية اليوم الحالي
+      startOfDay = DateTime.now();
+      startOfDay =
+          DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
+      endOfDay = startOfDay!
+          .add(const Duration(days: 1))
+          .subtract(const Duration(seconds: 1));
 
-    // جلب الفئات
-    Map<String, List<String>> categoryTaskMap = {};
-    for (var doc in categorySnapshot.docs) {
-      String categoryName = doc['categoryName'];
-      Map<String, dynamic> categoryData = doc.data() as Map<String, dynamic>;
-      List<dynamic> taskIDs = categoryData.containsKey('taskIDs') ? categoryData['taskIDs'] : [];
+      // Fetch categories and map tasks to categories
+      QuerySnapshot categorySnapshot = await firestore
+          .collection('Category')
+          .where('userID', isEqualTo: userID)
+          .get();
 
-      availableCategories.add(categoryName); // إضافة الفئة لقائمة الفئات
+      Map<String, List<String>> categoryTaskMap = {};
 
-      for (var taskId in taskIDs) {
-        if (categoryTaskMap.containsKey(taskId)) {
-          categoryTaskMap[taskId]?.add(categoryName);
-        } else {
-          categoryTaskMap[taskId] = [categoryName];
+      for (var doc in categorySnapshot.docs) {
+        String categoryName = doc['categoryName'];
+        Map<String, dynamic> categoryData = doc.data() as Map<String, dynamic>;
+        List<dynamic> taskIDs =
+            categoryData.containsKey('taskIDs') ? categoryData['taskIDs'] : [];
+
+        availableCategories.add(categoryName); // Add category to the list
+
+        for (var taskId in taskIDs) {
+          if (categoryTaskMap.containsKey(taskId)) {
+            categoryTaskMap[taskId]?.add(categoryName);
+          } else {
+            categoryTaskMap[taskId] = [categoryName];
+          }
         }
       }
-    }
 
-    // معالجة وإضافة المهام
-    for (var taskDoc in taskDocuments) {
-      Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
-      DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
+      // Process and add tasks
+      List<Map<String, dynamic>> tasksList = [];
 
- 
-      // تحقق من أن المهمة تقع ضمن اليوم الحالي
-    if (taskTime.year == startOfDay!.year &&
-    taskTime.month == startOfDay!.month &&
-    taskTime.day == startOfDay!.day) {
-      print("Task Date: $taskTime, Start of Day: $startOfDay, End of Day: $endOfDay");
-        String taskId = taskDoc.id;
-        Map<String, dynamic> task = {
-          'id': taskId,
-          'title': taskData['title'] ?? 'Untitled',
-          'time': taskTime,
-          'priority': taskData['priority'] as int,
-          'completed': taskData['completionStatus'] == 2,
-          'expanded': false,
-          'subtasks': [],
-          'categories': categoryTaskMap[taskId] ?? ['Uncategorized'],
-        };
+      for (var taskDoc in taskDocuments) {
+        Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
+        DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
 
-        // جلب "السب تاسك" لكل مهمة
-        firestore.collection('SubTask')
-            .where('taskID', isEqualTo: taskId)
-            .get()
-            .then((subtaskSnapshot) {
-          List<Map<String, dynamic>> subtasks = subtaskSnapshot.docs.map((subDoc) {
-            Map<String, dynamic> subtaskData = subDoc.data() as Map<String, dynamic>;
+        // Check if the task falls within the current day
+        if (taskTime.year == startOfDay!.year &&
+            taskTime.month == startOfDay!.month &&
+            taskTime.day == startOfDay!.day) {
+          print(
+              "Task Date: $taskTime, Start of Day: $startOfDay, End of Day: $endOfDay");
+
+          String taskId = taskDoc.id;
+          Map<String, dynamic> task = {
+            'id': taskId,
+            'title': taskData['title'] ?? 'Untitled',
+            'time': taskTime,
+            'priority': taskData['priority'] as int,
+            'completed': taskData['completionStatus'] == 2,
+            'expanded': false,
+            'subtasks': [], // Placeholder for subtasks
+            'categories': categoryTaskMap[taskId] ?? ['Uncategorized'],
+          };
+
+          // Fetch subtasks for each task
+          QuerySnapshot subtaskSnapshot = await firestore
+              .collection('SubTask')
+              .where('taskID', isEqualTo: taskId)
+              .get();
+
+          List<Map<String, dynamic>> subtasks =
+              subtaskSnapshot.docs.map((subDoc) {
+            Map<String, dynamic> subtaskData =
+                subDoc.data() as Map<String, dynamic>;
             return {
               'id': subDoc.id,
               'title': subtaskData['title'],
@@ -169,18 +177,29 @@ QuerySnapshot taskSnapshot = await firestore
             };
           }).toList();
 
-          setState(() {
-            task['subtasks'] = subtasks; // تحديث المهام الفرعية بعد الجلب
-          });
-        });
+          task['subtasks'] = subtasks; // Add subtasks to the task
 
-        tasks.add(task); // إضافة المهمة للقائمة مرة واحدة فقط
+          tasksList.add(task); // Add task to the task list
+        }
+      }
+
+      if (!mounted)
+        return; // Ensure the widget is still mounted before calling setState()
+
+      setState(() {
+        tasks.clear();
+        tasks.addAll(tasksList); // Update tasks in the state
+        isLoading = false; // Set loading to false after processing
+      });
+    } catch (error) {
+      print('Error fetching tasks: $error');
+      if (mounted) {
+        setState(() {
+          isLoading = false; // Stop loading on error
+        });
       }
     }
-
-    isLoading = false; // انتهاء التحميل
-  });
-}
+  }
 
   
     String getEmptyStateMessage() {
@@ -207,14 +226,20 @@ void deleteTask(Map<String, dynamic> task) async {
 
 
 
-void editTask(Map<String, dynamic> task) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => EditTaskPage(taskId: task['id']),
-    ),
-  );
-}
+void editTask(Map<String, dynamic> task) async {
+    bool? result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskPage(taskId: task['id']),
+      ),
+    );
+
+    // If result is true, refresh the task list
+    if (result == true) {
+      fetchTasksFromFirestore();
+    }
+  }
+
 
 
 
@@ -254,19 +279,32 @@ void showViewDialog() {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor:
+                  const Color(0xFFF5F7F8), // Light background color
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
               title: const Text(
                 'View Options',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20, // Adjust font size for title
+                  color: Color(0xFF104A73), // Title color
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   RadioListTile<String>(
-                    activeColor: const Color(0xFF79A3B7),
-                    title: const Text('View as List'),
+                    activeColor:
+                        const Color(0xFF79A3B7), // Active color for selection
+                    title: const Text(
+                      'View as List',
+                      style: TextStyle(
+                        color: Color(0xFF545454), // Text color for radio item
+                        fontWeight: FontWeight.w500, // Slightly bold text
+                      ),
+                    ),
                     value: 'list',
                     groupValue: selectedView,
                     onChanged: (value) {
@@ -276,8 +314,15 @@ void showViewDialog() {
                     },
                   ),
                   RadioListTile<String>(
-                    activeColor: const Color(0xFF79A3B7),
-                    title: const Text('View as Calendar'),
+                    activeColor:
+                        const Color(0xFF79A3B7), // Active color for selection
+                    title: const Text(
+                      'View as Calendar',
+                      style: TextStyle(
+                        color: Color(0xFF545454), // Text color for radio item
+                        fontWeight: FontWeight.w500, // Slightly bold text
+                      ),
+                    ),
                     value: 'calendar',
                     groupValue: selectedView,
                     onChanged: (value) {
@@ -293,37 +338,47 @@ void showViewDialog() {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor:
+                        Colors.white, // White background for cancel button
                     shape: RoundedRectangleBorder(
-                      side: const BorderSide(color: Color(0xFF79A3B7)),
+                      side: const BorderSide(
+                          color: Color(0xFF79A3B7)), // Border color
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   child: const Text(
                     'Cancel',
-                    style: TextStyle(color: Color(0xFF79A3B7)),
+                    style: TextStyle(
+                      color: Color(0xFF79A3B7), // Button text color
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
- ElevatedButton(
-  onPressed: () {
-    Navigator.of(context).pop();
-    if (selectedView == 'calendar') {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => CalendarPage()),
-      );
-    }
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF79A3B7),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0),
-    ),
-  ),
-  child: const Text('Apply', style: TextStyle(color: Colors.white)),
-
-              ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (selectedView == 'calendar') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => CalendarPage()),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFF79A3B7), // Apply button background
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply',
+                    style: TextStyle(
+                      color: Colors.white, // White text for apply button
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ],
             );
           },
@@ -331,85 +386,119 @@ void showViewDialog() {
       },
     );
   }
+
   
 
  void showSortDialog() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            title: const Text(
-              'Sort by',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RadioListTile<String>(
-                  activeColor: const Color(0xFF79A3B7),
-                  title: const Text('Time'),
-                  value: 'timeline',
-                  groupValue: selectedSort,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedSort = value!;
-                    });
-                  },
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor:
+                  const Color(0xFFF5F7F8), // Change background color
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              title: const Text(
+                'Sort by',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20, // Adjust font size
+                  color: Color(0xFF104A73), // Text color matching your theme
                 ),
-                RadioListTile<String>(
-                  activeColor: const Color(0xFF79A3B7),
-                  title: const Text('Priority'),
-                  value: 'priority',
-                  groupValue: selectedSort,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedSort = value!;
-                    });
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<String>(
+                    activeColor: const Color(0xFF79A3B7),
+                    title: const Text(
+                      'Time',
+                      style: TextStyle(
+                        color: Color(0xFF545454), // Text color for radio item
+                        fontWeight: FontWeight.w500, // Slightly bold text
+                      ),
+                    ),
+                    value: 'timeline',
+                    groupValue: selectedSort,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedSort = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    activeColor: const Color(0xFF79A3B7),
+                    title: const Text(
+                      'Priority',
+                      style: TextStyle(
+                        color: Color(0xFF545454), // Text color for radio item
+                        fontWeight: FontWeight.w500, // Slightly bold text
+                      ),
+                    ),
+                    value: 'priority',
+                    groupValue: selectedSort,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedSort = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white, // White button background
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(
+                          color: Color(0xFF79A3B7)), // Border color
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFF79A3B7), // Button text color
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      sortTasks(); // Ensure sorting happens here
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFF79A3B7), // Apply button color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply',
+                    style: TextStyle(
+                      color: Colors.white, // White text for the apply button
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(color: Color(0xFF79A3B7)),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: const Text('Cancel', style: TextStyle(color: Color(0xFF79A3B7))),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    sortTasks(); // Ensure sorting happens here
-                  });
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF79A3B7),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: const Text('Apply', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+            );
+          },
+        );
+      },
+    );
+  }
+
 
 bool isValidTimeFormat(String time) {
   final timePattern = RegExp(r'^[1-9]|1[0-2]:[0-5][0-9] (AM|PM)$', caseSensitive: false);
@@ -440,87 +529,111 @@ void sortTasks() {
 
 
 void showCategoryDialog() {
-  List<String> tempSelectedCategories = List.from(selectedCategories);
+    List<String> tempSelectedCategories = List.from(selectedCategories);
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        title: const Text(
-          'Category',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: availableCategories.map((category) {
-                return ChoiceChip(
-                  label: Text(category),
-                  selected: tempSelectedCategories.contains(category),
-                  selectedColor: const Color(0xFF79A3B7),
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        if (category == 'All') {
-                          tempSelectedCategories.clear();
-                          tempSelectedCategories.add('All');
-                        } else if (category == 'Uncategorized') {
-                          tempSelectedCategories.clear();
-                          tempSelectedCategories.add('Uncategorized');
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5F7F8), // Light gray background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: const Text(
+            'Category',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 6, 6, 6), // Dark blue text color
+            ),
+          ),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                children: availableCategories.map((category) {
+                  return ChoiceChip(
+                    label: Text(category),
+                    labelStyle: TextStyle(
+                      color: tempSelectedCategories.contains(category)
+                          ? Colors.white
+                          : const Color.fromARGB(255, 20, 20, 20), // Text color changes based on selection
+                    ),
+                    selected: tempSelectedCategories.contains(category),
+                    selectedColor:
+                        const Color(0xFF79A3B7), // Light blue when selected
+                    backgroundColor: const Color(0xFFC7D9E1), // Lightest blue
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          if (category == 'All') {
+                            tempSelectedCategories.clear();
+                            tempSelectedCategories.add('All');
+                          } else if (category == 'Uncategorized') {
+                            tempSelectedCategories.clear();
+                            tempSelectedCategories.add('Uncategorized');
+                          } else {
+                            tempSelectedCategories.remove('All');
+                            tempSelectedCategories.remove('Uncategorized');
+                            tempSelectedCategories.add(category);
+                          }
                         } else {
-                          tempSelectedCategories.remove('All');
-                          tempSelectedCategories.remove('Uncategorized');
-                          tempSelectedCategories.add(category);
+                          tempSelectedCategories.remove(category);
                         }
-                      } else {
-                        tempSelectedCategories.remove(category);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            );
-          },
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
+                      });
+                    },
+                  );
+                }).toList(),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFFF5F7F8), // Light gray background
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(
+                      color: Color(0xFF79A3B7)), // Light blue border
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF79A3B7), // Light blue text color
+                ),
               ),
             ),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF79A3B7))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                selectedCategories = tempSelectedCategories;
-              });
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF79A3B7),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  selectedCategories = tempSelectedCategories;
+                });
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFF79A3B7), // Light blue background
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Apply',
+                style: TextStyle(
+                  color: Colors.white, // White text color
+                ),
               ),
             ),
-            child: const Text('Apply', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      );
-    },
-  );
-}
+          ],
+        );
+      },
+    );
+  }
 
 
 
@@ -616,6 +729,7 @@ void toggleSubtaskCompletion(Map<String, dynamic> task, Map<String, dynamic> sub
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
+         backgroundColor: Color(0xFFF5F7F8), 
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
@@ -714,17 +828,16 @@ void _showTopNotification(String message) {
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
-          title: const Text(
+         title: Text(
             'Tasks page',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
+           style: TextStyle(
               color: Colors.black,
-              fontFamily: 'Poppins',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
           centerTitle: true,
-          backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+          backgroundColor:  const Color.fromARGB(255, 226, 231, 234),
           elevation: 0,
           automaticallyImplyLeading: false,
 
@@ -740,26 +853,45 @@ void _showTopNotification(String message) {
                   showCategoryDialog();
                 }
               },
-              icon: const Icon(Icons.more_vert, color: Colors.black),
+              icon: const Icon(Icons.more_vert,
+                  color: Color(0xFF104A73)), // Adjusted icon color
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
                     value: 'view',
                     child: Row(
                       children: const [
-                        Icon(Icons.list, size: 24),
+                        Icon(Icons.list,
+                            size: 24,
+                            color: Color(0xFF545454)), // Adjust icon color
                         SizedBox(width: 10),
-                        Text('View', style: TextStyle(fontSize: 18)),
+                        Text(
+                          'View',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color:
+                                Color(0xFF545454), // Text color matching theme
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   PopupMenuItem<String>(
-                   value: 'sort',
+                    value: 'sort',
                     child: Row(
                       children: const [
-                        Icon(Icons.sort, size: 24),
+                        Icon(Icons.sort,
+                            size: 24,
+                            color: Color(0xFF545454)), // Adjust icon color
                         SizedBox(width: 10),
-                        Text('Sort', style: TextStyle(fontSize: 18)),
+                        Text(
+                          'Sort',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color:
+                                Color(0xFF545454), // Text color matching theme
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -767,21 +899,26 @@ void _showTopNotification(String message) {
                     value: 'categorize',
                     child: Row(
                       children: const [
-                        Icon(Icons.label, size: 24),
+                        Icon(Icons.label,
+                            size: 24,
+                            color: Color(0xFF545454)), // Adjust icon color
                         SizedBox(width: 10),
-                        Text('Categorize', style: TextStyle(fontSize: 18)),
+                        Text(
+                          'Categorize',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color:
+                                Color(0xFF545454), // Text color matching theme
+                          ),
+                        ),
                       ],
                     ),
                   ),
-
                 ];
               },
-            
-              
             ),
-            
           ],
-          
+
         ),
 
         // Body content
@@ -913,7 +1050,6 @@ else
           ],
         ),
        ...tasks.where((task) {
-        // فحص إذا كانت الفئة المختارة هي "All" لعرض جميع المهام، أو فحص الفئات الأخرى
         if (selectedCategories.contains('All')) {
           return !task['completed'];
         } else if (selectedCategories.contains('Uncategorized')) {
@@ -1028,17 +1164,16 @@ floatingActionButton: FloatingActionButton(
           onPressed: () async {
             if (userID != null) {
               // Navigate to AddTaskPage if the user is logged in
-              final result = await Navigator.push(
+              bool? result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      AddTaskPage(), // Pass required params if needed
+                  builder: (context) => AddTaskPage(),
                 ),
               );
 
-              // Check if a task was added and refresh the tasks
+              // Check if a task was added (i.e., result is true) and refresh tasks
               if (result == true) {
-                fetchTasksFromFirestore(); // Re-fetch tasks after adding a new task
+                fetchTasksFromFirestore();
               }
             } else {
               // Show a dialog prompting the user to sign in
@@ -1046,15 +1181,16 @@ floatingActionButton: FloatingActionButton(
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
+                    backgroundColor: const Color(0xFFF5F7F8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                     title: const Text(
-                      'Login & Explore',
+                      'Sign In Required',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     content: const Text(
-                      'Ready to add tasks? Sign in or create an account to access all features.',
+                      'You need to sign in to add tasks. Please log in or create an account.',
                     ),
                     actions: [
                       ElevatedButton(
@@ -1075,12 +1211,9 @@ floatingActionButton: FloatingActionButton(
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog first
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => WelcomePage(),
-                            ),
-                          );
+                          Navigator.of(context).pop();
+                          // Navigate to Sign-In page or provide sign-in functionality
+                          // Implement navigation to your sign-in page here if needed
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF79A3B7),
@@ -1089,7 +1222,7 @@ floatingActionButton: FloatingActionButton(
                           ),
                         ),
                         child: const Text(
-                          'Join Now',
+                          'Sign In',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -1105,7 +1238,6 @@ floatingActionButton: FloatingActionButton(
           ),
           child: const Icon(Icons.add, color: Colors.white),
         ),
-
 
   
 
@@ -1141,6 +1273,8 @@ class TaskCard extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+                              backgroundColor: const Color(0xFFF5F7F8),
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),

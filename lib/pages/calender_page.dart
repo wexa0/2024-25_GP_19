@@ -18,69 +18,70 @@ class _CalendarPageState extends State<CalendarPage> {
     return GestureDetector(
       onTap: () {},
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5), // Same background color as TaskPage
+        backgroundColor:
+            const Color(0xFFF5F5F5), // Same background color as TaskPage
         appBar: AppBar(
-          title: const Text(
-            'Calendar',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              fontFamily: 'Poppins',
+            title: const Text(
+              'Calendar',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          centerTitle: true,
-          backgroundColor: const Color(0xFFEAEFF0), // Same header color as TaskPage
-          elevation: 0,
-          actions: [
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'view') {
-                  showViewDialog();
-                } else if (value == 'sort') {
-                  showSortDialog();
-                } else if (value == 'categorize') {
-                  showCategoryDialog();
-                }
-              },
-              icon: const Icon(Icons.more_vert, color: Colors.black),
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem<String>(
-                    value: 'view',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.list, size: 24),
-                        SizedBox(width: 10),
-                        Text('View', style: TextStyle(fontSize: 18)),
-                      ],
+            centerTitle: true,
+            backgroundColor:
+                const Color(0xFFEAEFF0), // Same header color as TaskPage
+            elevation: 0,
+            actions: [
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'view') {
+                    showViewDialog();
+                  } else if (value == 'sort') {
+                    showSortDialog();
+                  } else if (value == 'categorize') {
+                    showCategoryDialog();
+                  }
+                },
+                icon: const Icon(Icons.more_vert, color: Colors.black),
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'view',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.list, size: 24),
+                          SizedBox(width: 10),
+                          Text('View', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'sort',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.sort, size: 24),
-                        SizedBox(width: 10),
-                        Text('Sort', style: TextStyle(fontSize: 18)),
-                      ],
+                    PopupMenuItem<String>(
+                      value: 'sort',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.sort, size: 24),
+                          SizedBox(width: 10),
+                          Text('Sort', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
                     ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'categorize',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.label, size: 24),
-                        SizedBox(width: 10),
-                        Text('Categorize', style: TextStyle(fontSize: 18)),
-                      ],
+                    PopupMenuItem<String>(
+                      value: 'categorize',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.label, size: 24),
+                          SizedBox(width: 10),
+                          Text('Categorize', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
                     ),
-                  ),
-                ];
-              },
-            ),
-          ],
-        ),
+                  ];
+                },
+              ),
+            ],
+            automaticallyImplyLeading: false),
         body: Stack(
           children: [
             Padding(
@@ -114,7 +115,8 @@ class _CalendarPageState extends State<CalendarPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Icon(Icons.hourglass_empty, size: 80, color: Colors.white),
+                      Icon(Icons.hourglass_empty,
+                          size: 80, color: Colors.white),
                       SizedBox(height: 20),
                       Text(
                         'Coming Soon',
@@ -136,10 +138,8 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
             // Floating Action Button inside the fill
-            
           ],
         ),
-       
       ),
     );
   }
@@ -157,14 +157,21 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
               title: const Text(
                 'View Options',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF545454), // Dark gray color for title
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   RadioListTile<String>(
                     activeColor: const Color(0xFF79A3B7),
-                    title: const Text('View as List'),
+                    title: const Text(
+                      'View as List',
+                      style:
+                          TextStyle(color: Color(0xFF545454)), // Dark gray text
+                    ),
                     value: 'list',
                     groupValue: selectedView,
                     onChanged: (value) {
@@ -175,7 +182,11 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                   RadioListTile<String>(
                     activeColor: const Color(0xFF79A3B7),
-                    title: const Text('View as Calendar'),
+                    title: const Text(
+                      'View as Calendar',
+                      style:
+                          TextStyle(color: Color(0xFF545454)), // Dark gray text
+                    ),
                     value: 'calendar',
                     groupValue: selectedView,
                     onChanged: (value) {
@@ -218,7 +229,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Apply', style: TextStyle(color: Colors.white)),
+                  child: const Text('Apply',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -240,14 +252,21 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
               title: const Text(
                 'Sort by',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF545454), // Dark gray color for title
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   RadioListTile<String>(
                     activeColor: const Color(0xFF79A3B7),
-                    title: const Text('Time'),
+                    title: const Text(
+                      'Time',
+                      style:
+                          TextStyle(color: Color(0xFF545454)), // Dark gray text
+                    ),
                     value: 'timeline',
                     groupValue: selectedSort,
                     onChanged: (value) {
@@ -258,7 +277,11 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                   RadioListTile<String>(
                     activeColor: const Color(0xFF79A3B7),
-                    title: const Text('Priority'),
+                    title: const Text(
+                      'Priority',
+                      style:
+                          TextStyle(color: Color(0xFF545454)), // Dark gray text
+                    ),
                     value: 'priority',
                     groupValue: selectedSort,
                     onChanged: (value) {
@@ -281,7 +304,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF79A3B7))),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Color(0xFF79A3B7))),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -296,7 +320,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Apply', style: TextStyle(color: Colors.white)),
+                  child: const Text('Apply',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -318,26 +343,38 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
           title: const Text(
             'Category',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF545454), // Dark gray for title
+            ),
           ),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Wrap(
                 spacing: 8.0,
                 runSpacing: 8.0,
-                children: ['All']
+                children: ['All', 'Uncategorized', 'Work', 'Personal']
                     .map((category) => ChoiceChip(
                           label: Text(category),
+                          labelStyle: const TextStyle(
+                            color: Colors
+                                .white, // White text color for selected chips
+                          ),
                           selected: tempSelectedCategories.contains(category),
-                          selectedColor: const Color(0xFF79A3B7),
+                          selectedColor: const Color(
+                              0xFF79A3B7), // Custom color for selected chips
+                          backgroundColor:
+                              Colors.grey[300], // Color for unselected chips
                           onSelected: (selected) {
                             setState(() {
                               if (selected) {
-                                if (!tempSelectedCategories.contains(category)) {
+                                if (!tempSelectedCategories
+                                    .contains(category)) {
                                   tempSelectedCategories.add(category);
                                 }
                               } else {
-                                tempSelectedCategories.removeWhere((item) => item == category);
+                                tempSelectedCategories
+                                    .removeWhere((item) => item == category);
                               }
                             });
                           },
@@ -358,7 +395,8 @@ class _CalendarPageState extends State<CalendarPage> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
-              child: const Text('Cancel', style: TextStyle(color: Color(0xFF79A3B7))),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Color(0xFF79A3B7))),
             ),
             ElevatedButton(
               onPressed: () {

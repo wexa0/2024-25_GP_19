@@ -50,11 +50,10 @@ class ProgressPage extends StatelessWidget {
           
           title: const Text(
             'Progress',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
+           style: TextStyle(
               color: Colors.black,
-              fontFamily: 'Poppins',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
           

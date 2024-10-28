@@ -280,24 +280,28 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   void _showTopNotification(String message) {
-    OverlayState? overlayState = Overlay.of(context);
+    final overlayState =
+        Navigator.of(context).overlay; // Access the root navigator's overlay
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 50,
-        left: 0,
-        right: 0,
+        top: MediaQuery.of(context).size.height * 0.1, // Top position
+        left: 20,
+        right: 20,
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: EdgeInsets.all(16),
-            margin: EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 112, 112, 112),
+              color: Colors.black.withOpacity(0.8),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               message,
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -306,7 +310,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
     );
 
     overlayState?.insert(overlayEntry);
-    Future.delayed(Duration(seconds: 2), () {
+
+    Future.delayed(const Duration(seconds: 2), () {
       overlayEntry.remove();
     });
   }
@@ -339,6 +344,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+               SizedBox(height: 12),
               TextField(
                 controller: taskNameController,
                 decoration: InputDecoration(

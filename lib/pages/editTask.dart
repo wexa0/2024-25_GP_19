@@ -89,8 +89,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
     if (_user == null) {
       _user = FirebaseAuth.instance.currentUser;
       if (_user == null) {
-           _showTopNotification('No logged-in user found');
-        
+        _showTopNotification('No logged-in user found');
       }
     }
     return _user;
@@ -181,7 +180,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
           .get();
 
       if (existingTaskSnapshot.docs.isNotEmpty) {
-          _showTopNotification(
+        _showTopNotification(
           'Another task already exists with the same date and time. Please choose a different time.',
         );
         return;
@@ -240,7 +239,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
     } catch (e) {
       print('Failed to update task: $e');
       _showTopNotification('Failed to update task. Please try again.');
-      
     }
   }
 
@@ -322,16 +320,15 @@ class _EditTaskPageState extends State<EditTaskPage> {
           .doc(widget.taskId)
           .delete();
 
-     _showTopNotification('Task and related subtasks deleted successfully!');
+      _showTopNotification('Task and related subtasks deleted successfully!');
       // Pop back to the TaskPage
       Navigator.pop(
           context, true); // Passing `true` to indicate successful deletion
     } catch (e) {
       print('Failed to delete task and subtasks: $e');
-     _showTopNotification('Failed to delete task. Please try again.');
+      _showTopNotification('Failed to delete task. Please try again.');
     }
   }
-
 
   String _getPriorityLabel(int priorityValue) {
     switch (priorityValue) {
@@ -378,7 +375,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
     }
   }
 
- Future<void> _validateAndSaveTask() async {
+  Future<void> _validateAndSaveTask() async {
     setState(() {
       _isTitleMissing = taskNameController.text.isEmpty;
       _isDateMissing = formattedDate == 'Select Date';
@@ -420,7 +417,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
         // Save changes to Firebase
         await _saveChangesToFirebase();
 
-         _showTopNotification('Task updated successfully!');
+        _showTopNotification('Task updated successfully!');
 
         // Navigate back to TaskPage
         Navigator.pop(
@@ -429,10 +426,11 @@ class _EditTaskPageState extends State<EditTaskPage> {
         _showTopNotification('Failed to update task: $e');
       }
     } else {
-       _showTopNotification('Please fill in all mandatory fields.');
+      _showTopNotification('Please fill in all mandatory fields.');
     }
   }
-void _showTopNotification(String message) {
+
+  void _showTopNotification(String message) {
     OverlayState? overlayState = Overlay.of(context);
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -472,21 +470,20 @@ void _showTopNotification(String message) {
         return shouldLeave;
       },
       child: Scaffold(
-         backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           backgroundColor: Color(0xFFEAEFF0),
           elevation: 0,
           centerTitle: true, // لضبط العنوان في المنتصف
-          
+
           title: Center(
             child: Text(
               'Edit Task',
-              style: TextStyle(
-                color: Colors.black,
-                fontFamily: 'Poppins',
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-              ),
+             style: TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -498,6 +495,7 @@ void _showTopNotification(String message) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 12),
                 TextField(
                   controller: taskNameController,
                   decoration: InputDecoration(
@@ -539,7 +537,7 @@ void _showTopNotification(String message) {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                      onPressed: _deleteTask,
+                      onPressed: showDeleteConfirmationDialog,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
@@ -898,9 +896,8 @@ void _showTopNotification(String message) {
                                       categoryController.clear();
                                     });
                                   } else {
-                                   
-                                       _showTopNotification(  'You can only create up to 7 categories.');
-                                    
+                                    _showTopNotification(
+                                        'You can only create up to 7 categories.');
                                   }
                                 }
                               },
@@ -1052,8 +1049,8 @@ void _showTopNotification(String message) {
       }
 
       await snapshot.docs.first.reference.delete();
-     
-     _showTopNotification('Category "$categoryName" deleted successfully');
+
+      _showTopNotification('Category "$categoryName" deleted successfully');
     }
   }
 
@@ -1121,6 +1118,63 @@ void _showTopNotification(String message) {
         ) ??
         false;
   }
+
+  void showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: lightGray, // Use the light gray as the background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          title: const Text(
+            'Are you sure you want to delete this task?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              // Match title text color with your dark gray
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog without deleting
+              },
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    mediumBlue, // Use mediumBlue for the Cancel button
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _deleteTask(); // Call the delete method
+                Navigator.of(context).pop(); // Close dialog after deleting
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.red, // Keep the red background for the Delete button
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.white, // White text on Delete button
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   // Future<bool> _showDiscardConfirmation() async {
   //   return await showDialog(

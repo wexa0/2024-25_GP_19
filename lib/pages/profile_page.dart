@@ -71,11 +71,10 @@ void _refreshUserData() {
         title: Text(
           'Profile',
           style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-              fontFamily: 'Poppins',
-            ),
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: const Color.fromARGB(255, 226, 231, 234),
         elevation: 0.0,

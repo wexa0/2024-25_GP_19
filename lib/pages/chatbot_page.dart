@@ -14,10 +14,9 @@ class ChatbotpageWidget extends StatelessWidget {
         title: const Text(
           'Chatbot',
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
             color: Colors.black,
-            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
         backgroundColor: const Color.fromARGB(255, 226, 231, 234),

@@ -15,7 +15,6 @@ import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -92,13 +91,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(),
+      appBar: _currentIndex == 0 ? _buildAppBar() : null,
       backgroundColor: const Color.fromARGB(255, 245, 247, 248),
       body: _pages[_currentIndex], // Show the current page
       bottomNavigationBar: Container(
         color: const Color.fromARGB(
             255, 226, 231, 234), // Background color of the navigation bar
-        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
         child: GNav(
           backgroundColor: const Color(0xFF79A3B7)
               .withOpacity(0), // Set the background color to match your old bar
@@ -352,58 +351,308 @@ class _HomePageContentState extends State<HomePageContent> {
   }
 
   Widget _buildQuickActions() {
-    return Container(
-      height: 240,
-      child: Table(
-        children: [
-          TableRow(
-            children: [
-              _buildQuickAction(
-                imagePath: 'assets/images/todayTask.png',
-                label: "Today's Tasks",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => TaskPage()),
-                  );
-                },
-              ),
-              _buildQuickAction(
-                imagePath: 'assets/images/addTask.png',
-                label: 'Add a Task',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => addTask()),
-                  );
-                },
-              ),
-            ],
-          ),
-          TableRow(
-            children: [
-              _buildQuickAction(
-                imagePath: 'assets/images/viewProgress.png',
-                label: 'View Progress',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProgressPage()),
-                  );
-                },
-              ),
-              _buildQuickAction(
-                imagePath: 'assets/images/chatWithAttena.png',
-                label: 'Chat with Attena',
-                onTap: () {
-                  
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatbotpageWidget()));
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        SizedBox(
+          height: 240,
+          child: Table(children: [
+            TableRow(
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const TaskPage()),
+                        );
+                      },
+                      child: Container(
+                        height: 110,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(95, 203, 203, 203)
+                                  .withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        child: Table(
+                          columnWidths: const {
+                            0: const FractionColumnWidth(0.3)
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Container(
+                                  margin:
+                                      const EdgeInsets.only(top: 3, left: 3),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/todayTask.png',
+                                        height: 45,
+                                        width: 45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(right: 40),
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 30),
+                                      Text(
+                                        "Today's Tasks",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+                Padding(
+                    padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
+                    child: GestureDetector(
+                      onTap: () {
+                        /////////////////////////////////// Add Task Page ////////////////////////////////
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => addTask()),
+                        );
+                      },
+                      child: Container(
+                        height: 110,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(95, 203, 203, 203)
+                                  .withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        child: Table(
+                          columnWidths: const {
+                            0: const FractionColumnWidth(0.3)
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Container(
+                                  margin:
+                                      const EdgeInsets.only(top: 3, left: 3),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/addTask.png',
+                                        height: 45,
+                                        width: 45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(right: 40),
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 30),
+                                      Text(
+                                        "Add a Task",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ))
+              ],
+            ),
+            TableRow(
+              children: <Widget>[
+                Padding(
+                    padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        /////////////////////////////////// Progress Page ////////////////////////////////
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ProgressPage()),
+                        );
+                      },
+                      child: Container(
+                        height: 110,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(95, 203, 203, 203)
+                                  .withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        child: Table(
+                          columnWidths: const {
+                            0: const FractionColumnWidth(0.3)
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Container(
+                                  margin:
+                                      const EdgeInsets.only(top: 3, left: 3),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/viewProgress.png',
+                                        height: 45,
+                                        width: 45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(right: 30),
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 28),
+                                      Text(
+                                        "View Progress",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+                Padding(
+                    padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
+                    child: GestureDetector(
+                      onTap: () {
+                        ///////////////////////////////// Attena (chatbot) Page ////////////////////////////////
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ChatbotpageWidget()),
+                        );
+                      },
+                      child: Container(
+                        height: 110,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(95, 203, 203, 203)
+                                  .withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                        ),
+                        child: Table(
+                          columnWidths: const {
+                            0: const FractionColumnWidth(0.3)
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                Container(
+                                  margin:
+                                      const EdgeInsets.only(top: 3, left: 3),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/chatWithAttena.png',
+                                        height: 45,
+                                        width: 45,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(right: 24),
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(height: 28),
+                                      Text(
+                                        "Chat with Attena",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ))
+              ],
+            ),
+          ]),
+        )
+      ],
     );
   }
 

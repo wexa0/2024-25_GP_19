@@ -76,8 +76,11 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
       appBar: AppBar(
         title: Text(
           'Profile',
-          style: TextStyle(
-              color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+         style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: const Color.fromARGB(255, 226, 231, 234),
         elevation: 0.0,
@@ -167,9 +170,9 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                           ),
                         ),
                         SizedBox(height: 20),
-                        Container(
+                       Container(
                           width: double.infinity,
-                          color: const Color.fromRGBO(200, 220, 228, 1),
+                          color: const Color.fromARGB(255, 226, 231, 234),
                           padding: EdgeInsets.all(16),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),

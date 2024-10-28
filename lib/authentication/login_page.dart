@@ -74,21 +74,7 @@ class _LoginPageState extends State<LoginPage> {
             width: double.infinity,
             height: double.infinity,
           ),
-          // Back Button
-          Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back,
-                  color: Color(0xFF104A73), size: 55),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const WelcomePage()),
-                );
-              },
-            ),
-          ),
+         
           // Main content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
