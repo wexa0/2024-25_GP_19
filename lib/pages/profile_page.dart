@@ -60,45 +60,8 @@ Future<void> signOut() async {
 }
 
 
-
-  void _showTopNotification(String message) {
-    OverlayState? overlayState = Overlay.of(context);
-    OverlayEntry overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: 50,
-        left: 0,
-        right: 0,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: EdgeInsets.all(16),
-            margin: EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-    );
-
-    overlayState?.insert(overlayEntry);
-    Future.delayed(Duration(seconds: 2), () {
-      overlayEntry.remove();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    double coverHeight = 150;
-    double profileHeight = 128;
-    final top = coverHeight - (profileHeight - 35);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -126,8 +89,6 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                   children: [
                     Column(
                       children: [
-                       
-                        SizedBox(height: 50),
                         Container(
                           width: double.infinity,
                           color: const Color.fromARGB(255, 226, 231, 234),
@@ -257,7 +218,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: TextButton(
-                            onPressed: signOut, // استدعاء دالة تسجيل الخروج
+                            onPressed: () => user.logout(context), // استدعاء دالة تسجيل الخروج
                             style: TextButton.styleFrom(
                               backgroundColor: Color.fromRGBO(199, 217, 225, 1),
                               shape: RoundedRectangleBorder(
