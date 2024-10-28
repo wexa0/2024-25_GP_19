@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
+import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
@@ -853,28 +854,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                   ],
                 ),
               )
-              else if (areAllTasksCompleted() && selectedCategories.contains('All'))
-                Center(
-                  child: Column(
-                    children: [
-          const SizedBox(height: 70),                      
-                      Image.asset(
-        'assets/images/done.png', // عرض الصورة
-        height: 110, // ارتفاع الصورة
-      ),
-      const SizedBox(height: 20), // المسافة بين الصورة والنص
-                      const Text(
-                        'Awesome job! You\'ve conquered your\n to-do list today!',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3B7292),
-                        ),
-                        textAlign: TextAlign.center,
-                    ),
-                          ],
-                        ),
-                      )
+             
 // Existing Expanded widget for displaying tasks
 else
             Expanded(
@@ -964,7 +944,30 @@ else
         ),
       const SizedBox(height: 16),
 
-
+  if (areAllTasksCompleted() && selectedCategories.contains('All'))
+                Center(
+                  child: Column(
+                    children: [
+          const SizedBox(height: 70),                      
+                      Image.asset(
+        'assets/images/done.png', // عرض الصورة
+        height: 110, // ارتفاع الصورة
+      ),
+      const SizedBox(height: 20), // المسافة بين الصورة والنص
+                      const Text(
+                        'Awesome job! You\'ve conquered your\n to-do list today!',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3B7292),
+                        ),
+                        textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                      
        // Show Completed Tasks section if there are any completed tasks
       if (tasks.any((task) => task['completed'] && 
         (selectedCategories.contains('All') || 
@@ -1042,11 +1045,11 @@ floatingActionButton: FloatingActionButton(
               borderRadius: BorderRadius.circular(16.0),
             ),
             title: const Text(
-              'Sign In Required',
+              'Login & Explore',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             content: const Text(
-              'You need to sign in to add tasks. Please log in or create an account.',
+              'Ready to add tasks? Sign in or create an account to access all features.',
             ),
             actions: [
               ElevatedButton(
@@ -1067,9 +1070,12 @@ floatingActionButton: FloatingActionButton(
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  // Navigate to Sign-In page or provide sign-in functionality
-                  // Implement navigation to your sign-in page here if needed
+                   Navigator.of(context).pop(); // Close the dialog first
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WelcomePage(),
+      ),
+    );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF79A3B7),
@@ -1078,7 +1084,7 @@ floatingActionButton: FloatingActionButton(
                   ),
                 ),
                 child: const Text(
-                  'Sign In',
+                  'Join Now',
                   style: TextStyle(color: Colors.white),
                 ),
               ),

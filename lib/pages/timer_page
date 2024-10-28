@@ -21,6 +21,18 @@ class _TimerPageState extends State<TimerPage> {
       ),
       child: Scaffold(
         appBar: AppBar(
+          title: const Text(
+            'CountingUp page',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+        automaticallyImplyLeading: false,
           // Your AppBar code here (if needed)
         ),
         body: Stack(
@@ -30,13 +42,7 @@ class _TimerPageState extends State<TimerPage> {
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25), // Padding for left and right
-                  child: Align(
-                    alignment: Alignment.centerLeft,  // Align to the left
-                    child: Text(
-                      "Countingup timer",
-                      style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  
                 ),
 
                 // Adding space above the progress line

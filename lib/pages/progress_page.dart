@@ -47,6 +47,7 @@ class ProgressPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
+          
           title: const Text(
             'Progress',
             style: TextStyle(
@@ -56,13 +57,13 @@ class ProgressPage extends StatelessWidget {
               fontFamily: 'Poppins',
             ),
           ),
+          
           centerTitle: true,
           backgroundColor: const Color(0xFFEAEFF0),
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
+          
+          
         ),
         body: Stack(
           children: [
