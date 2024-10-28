@@ -60,7 +60,7 @@ class AppUser {
     }
   }
 
-  Future<void> showEditDialog(BuildContext context, String field) async {
+  Future<void> showEditDialog(BuildContext context, String field, VoidCallback onUpdate) async {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController fieldController = TextEditingController();
@@ -227,6 +227,7 @@ class AppUser {
                                   .doc(_auth.currentUser!.uid)
                                   .update(updateData);
                               await loadUserData(); // Reload user data after update
+                              onUpdate(); // Trigger UI refresh callback
                             }
 
                             // Show notification and close dialog
@@ -253,6 +254,7 @@ class AppUser {
     },
   );
 }
+
 
 
   Future<void> showChangePasswordDialog(BuildContext context) async {
@@ -378,7 +380,7 @@ Future<void> logout(BuildContext context) async {
           borderRadius: BorderRadius.circular(16.0),
         ),
         title: Text(
-          'Logout',
+          'Sign out',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         content: Text(

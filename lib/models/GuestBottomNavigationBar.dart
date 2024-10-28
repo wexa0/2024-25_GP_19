@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/guest_home.dart';
+import 'package:flutter_application/pages/guest_profile_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 class GuestCustomBottomNavigationBar extends StatefulWidget {
@@ -53,21 +56,29 @@ class _CustomBottomNavigationBarState extends State<GuestCustomBottomNavigationB
                       break;
                     case 1:
                       // Navigate to Tasks
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => TaskPage()),
+                      );
                       break;
                     case 2:
                       // Navigate to Chatbot
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChatbotpageWidget()),
+                      );
                       break;
                     case 3:
                       // Navigate to Progress
                       break;
                     case 4:
-                      // Navigate to ProfilePage
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => GuestProfilePage(),
-                      //   ),
-                      // );
+                      //Navigate to ProfilePage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GuestProfilePage(),
+                        ),
+                      );
                       break;
                   }
                 },

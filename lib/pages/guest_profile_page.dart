@@ -157,7 +157,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                             ),
                             child: Center(
                               child: Text(
-                                'Login',
+                                'Sign In',
                                 style: TextStyle(
                                   color: Color.fromRGBO(54, 54, 54, 1),
                                   fontSize: 18,

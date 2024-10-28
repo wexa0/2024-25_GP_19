@@ -59,6 +59,10 @@ Future<void> signOut() async {
   );
 }
 
+// Callback to reload data and refresh the interface
+void _refreshUserData() {
+  setState(() {}); // Trigger a rebuild with updated data
+}
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +111,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                         Material(
                           color: Colors.white,
                           child: InkWell(
-                            onTap: () => user.showEditDialog(context, 'name'),
+                            onTap: () => user.showEditDialog(context, 'name', _refreshUserData),
                             child: ListTile(
                               title: Text('Name'),
                               trailing: Row(
@@ -126,7 +130,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                         Material(
                           color: Colors.white,
                           child: InkWell(
-                            onTap: () => user.showEditDialog(context, 'email'),
+                            onTap: () => user.showEditDialog(context, 'email', _refreshUserData),
                             child: ListTile(
                               title: Text('Email'),
                               trailing: Row(
@@ -143,8 +147,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                         Material(
                           color: Colors.white,
                           child: InkWell(
-                            onTap: () =>
-                                user.showEditDialog(context, 'dateOfBirth'),
+                                onTap: () => user.showEditDialog(context, 'dateOfBirth', _refreshUserData),
                             child: ListTile(
                               title: Text('Date of Birth'),
                               trailing: Row(
@@ -235,7 +238,7 @@ bottomNavigationBar: const CustomBottomNavigationBar(),
                                 Expanded(
                                   child: Center(
                                     child: Text(
-                                      'Logout',
+                                      'Sign Out',
                                       style: TextStyle(
                                         color: Color.fromRGBO(54, 54, 54, 1),
                                         fontSize: 18,
