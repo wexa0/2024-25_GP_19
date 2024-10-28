@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/home.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -8,7 +9,7 @@ import 'package:flutter_application/pages/calender_page.dart';
 
 
 class CustomBottomNavigationBar extends StatefulWidget {
-  const CustomBottomNavigationBar({Key? key}) : super(key: key);
+  const CustomBottomNavigationBar({super.key});
 
   @override
   _CustomBottomNavigationBarState createState() =>
@@ -53,7 +54,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                     case 0:
                        Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomePage()),
+                        MaterialPageRoute(builder: (context) => const HomePage()),
                       );
                       break;
                     case 1:
@@ -61,19 +62,25 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TaskPage(),
+                          builder: (context) => const TaskPage(),
                         ),
                       );
                       break;
                     case 2:
                       // Navigate to Chatbot
+                       Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChatbotpageWidget(),
+                        ),
+                      );   
                       break;
                     case 3:
                       // Navigate to Progress
                        Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProgressPage(),
+                          builder: (context) => const ProgressPage(),
                         ),
                       );
                       break;

@@ -1,5 +1,6 @@
 //updated
 import 'package:flutter/material.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
@@ -25,19 +26,17 @@ class ChatbotpageWidget extends StatelessWidget {
     // Get the screen width
     double screenWidth = MediaQuery.of(context).size.width;
     // Figma Flutter Generator ChatbotpageWidget - FRAME
-    return Container(
-        width: 360,
-        height: 800,
-        decoration: const BoxDecoration(
-          color: Color.fromRGBO(255, 255, 255, 1),
-        ),
-        child: Stack(children: <Widget>[
+     return Scaffold(
+      backgroundColor: const Color.fromRGBO(255, 255, 255, 1),
+      bottomNavigationBar: const CustomBottomNavigationBar(),
+      body: Stack(
+        children: <Widget>[
           Positioned(
-              top: 39,
-              left: 72,
-              child: Container(
-                decoration: const BoxDecoration(),
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+            top: 39,
+            left: 72,
+            child: Container(
+              decoration: const BoxDecoration(),
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[

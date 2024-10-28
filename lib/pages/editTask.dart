@@ -461,18 +461,20 @@ class _EditTaskPageState extends State<EditTaskPage> {
         return shouldLeave;
       },
       child: Scaffold(
+         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           backgroundColor: Color(0xFFEAEFF0),
           elevation: 0,
-          iconTheme: IconThemeData(color: darkGray),
+          centerTitle: true, // لضبط العنوان في المنتصف
+          
           title: Center(
             child: Text(
               'Edit Task',
               style: TextStyle(
                 color: Colors.black,
                 fontFamily: 'Poppins',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),

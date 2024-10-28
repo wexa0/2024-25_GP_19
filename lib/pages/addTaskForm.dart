@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/pages/editTask.dart';
+import 'package:flutter_application/pages/task_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -211,7 +212,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
       DocumentReference taskRef =
           FirebaseFirestore.instance.collection('Task').doc();
-
+      String taskId = taskRef.id;  
+          
       await taskRef.set({
         'completionStatus': 0,
         'scheduledDate': Timestamp.fromDate(taskDateTime),
@@ -230,7 +232,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       for (String subtask in subtasks) {
         await FirebaseFirestore.instance.collection('SubTask').add({
           'completionStatus': 0,
-          'taskID': taskRef,
+          'taskID': taskId,
           'timer': '',
           'title': subtask,
         });
@@ -277,8 +279,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  EditTaskPage(taskId: 'fcOMcH9HcgGsaqTmojyI'),
+              builder: (context) => const TaskPage(),
             ),
           );
         }
@@ -307,14 +308,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
             style: TextStyle(
               color: Colors.black,
               fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
         ),
         automaticallyImplyLeading: false,
       ),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: SingleChildScrollView(
@@ -504,7 +506,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Icon(Icons.category, color: Color(0xFF3B7292)),
+              Icon(Icons.label, color: Color(0xFF3B7292)),
               SizedBox(width: 8),
               Text(
                 'Category',

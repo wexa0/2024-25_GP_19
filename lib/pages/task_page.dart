@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +9,8 @@ import 'package:lottie/lottie.dart';
 import 'package:flutter_application/pages/timer_page';
 import 'package:flutter_application/pages/progress_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math';
+import 'package:flutter_application/pages/addTaskForm.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
@@ -20,7 +23,7 @@ class TaskPage extends StatefulWidget {
 class _TaskPageState extends State<TaskPage> {
     String selectedSort = 'timeline';
   bool showEmptyState = true;
-   String userID = 'NoXMhi9mBmdu9M4NRMItLsIG9Fc2'; 
+    String? userID;
 
    
 
@@ -43,13 +46,40 @@ class _TaskPageState extends State<TaskPage> {
   DateTime? startOfDay;
   DateTime? endOfDay;
   bool isLoading = true;
-
   @override
-  void initState() {
-     super.initState();
-  selectedCategories = ['All']; // Set "All" as the default selected category.
-  fetchTasksFromFirestore(); 
+void dispose() {
+  tasks.clear(); 
+  userID = null; 
+  super.dispose();
+}
 
+ @override
+void initState() {
+  super.initState();
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    // إذا كان المستخدم غير مسجل الدخول، قم بتعيين userID إلى null ووقف جلب المهام
+    setState(() {
+      userID = null;
+      isLoading = false;
+    });
+  } else {
+    // إذا كان المستخدم مسجل الدخول، قم بجلب المهام
+    userID = user.uid;
+    selectedCategories = ['All']; // تعيين "All" كالفئة الافتراضية
+    fetchTasksFromFirestore();
+  }
+}
+
+  Future<void> _fetchUserID() async {
+    // Get the current user from FirebaseAuth
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        userID = user.uid; // Assign the logged-in user's UID
+      });
+      fetchTasksFromFirestore(); // Fetch tasks now that we have the user ID
+    }
   }
 
 void fetchTasksFromFirestore() async {
@@ -58,7 +88,11 @@ void fetchTasksFromFirestore() async {
   });
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  QuerySnapshot taskSnapshot = await firestore.collection('Task').get();
+QuerySnapshot taskSnapshot = await firestore
+        .collection('Task')
+        .where('userID', isEqualTo: userID) // Filter by the logged-in user's ID
+        .get();
+      
   List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
 
   // تحديد بداية ونهاية اليوم الحالي
@@ -173,9 +207,14 @@ void deleteTask(Map<String, dynamic> task) async {
 
 
 void editTask(Map<String, dynamic> task) {
-  // You can add functionality to edit the task here.
-  // For now, this could open an edit dialog.
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => EditTaskPage(taskId: task['id']),
+    ),
+  );
 }
+
 
 
 
@@ -312,7 +351,7 @@ void showViewDialog() {
               children: [
                 RadioListTile<String>(
                   activeColor: const Color(0xFF79A3B7),
-                  title: const Text('Timeline'),
+                  title: const Text('Time'),
                   value: 'timeline',
                   groupValue: selectedSort,
                   onChanged: (value) {
@@ -657,7 +696,17 @@ void _showTopNotification(String message) {
 
   @override
   Widget build(BuildContext context) {
-    bool isGuestUser = userID.isEmpty;
+    
+    bool hasTodayTasks = tasks.any((task) =>
+      task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!));
+
+  // التحقق إذا كانت الفئة المختارة لا تحتوي على أي مهام
+ bool noTasksInSelectedCategory = !tasks.any((task) =>
+  selectedCategories.contains('All') ||
+  (selectedCategories.contains('Uncategorized') && task['categories'].contains('Uncategorized')) ||
+  selectedCategories.any((category) => task['categories'].contains(category))
+);
+
  
     return GestureDetector(
       onTap: closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
@@ -676,7 +725,8 @@ void _showTopNotification(String message) {
           centerTitle: true,
           backgroundColor: const Color.fromARGB(255, 226, 231, 234),
           elevation: 0,
-          
+          automaticallyImplyLeading: false,
+
           // Hamburger Menu
           actions: [
             PopupMenuButton<String>(
@@ -734,43 +784,7 @@ void _showTopNotification(String message) {
         ),
 
         // Body content
-          bottomNavigationBar: Container(
-  margin: const EdgeInsets.only(bottom: 5.0, left:2, right:2), 
-  height: 70,decoration: BoxDecoration(
-    color: Colors.transparent, // Keep the container color transparent
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.2), // Shadow color
-        blurRadius: 8.0, // Softness of the shadow
-        spreadRadius: 7.0, // Spread of the shadow
-        offset: Offset(0, 8), // Position of the shadow
-      ),
-    ],),
-  child: ClipRRect(
-    borderRadius: BorderRadius.only(
-      topLeft: Radius.circular(25.0),
-      topRight: Radius.circular(25.0),
-       bottomLeft: Radius.circular(25.0),
-      bottomRight: Radius.circular(25.0),
-    ),
-    child: BottomAppBar(
-      color: const Color.fromARGB(255, 226, 231, 234),
-      child: GNav(
-        color: const Color.fromARGB(255, 94, 129, 145),
-        activeColor: const Color.fromARGB(255, 0, 0, 0),
-         iconSize: 26.0,
-        tabs: const [
-          GButton(icon: Icons.home, text: 'Home'),
-          GButton(icon: Icons.task, text: 'Tasks'),
-          GButton(icon: Icons.sms, text: 'Chatbot'),
-          GButton(icon: Icons.poll, text: 'Progress'),
-          GButton(icon: Icons.person, text: 'Profile'),
-        ],
-        padding: const EdgeInsets.only(left: 4, right: 4),
-      ),
-    ),
-  ),
-),
+bottomNavigationBar: const CustomBottomNavigationBar(),
        body: Padding(
   padding: const EdgeInsets.all(16.0),
   child: isLoading
@@ -815,7 +829,7 @@ void _showTopNotification(String message) {
               ),
             ),
              
-               if (tasks.isEmpty || !tasks.any((task) => task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!)))
+             if (tasks.isEmpty || !tasks.any((task) => task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!)))
               Center(
                 child: Column(
                   children: [
@@ -860,15 +874,17 @@ void _showTopNotification(String message) {
                     ),
                           ],
                         ),
-                      ),
+                      )
 // Existing Expanded widget for displaying tasks
-Expanded(
-  child: tasks.isEmpty || 
-      (!tasks.any((task) =>
-          selectedCategories.contains('All') ||
-          (selectedCategories.contains('Uncategorized') && task['categories'].contains('Uncategorized')) ||
-          selectedCategories.any((category) => task['categories'].contains(category)))) 
-      ? Column(
+else
+            Expanded(
+              child: (!tasks.any((task) =>
+                      selectedCategories.contains('All') ||
+                      (selectedCategories.contains('Uncategorized') &&
+                          task['categories'].contains('Uncategorized')) ||
+                      selectedCategories.any((category) =>
+                          task['categories'].contains(category))))
+                  ? Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 30),
@@ -882,7 +898,7 @@ Expanded(
             const SizedBox(height: 20),
             const Center(
               child: Text(
-                'There are no tasks in this category',
+                'There are no tasks in this category\.',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -894,6 +910,7 @@ Expanded(
           ],
         )
       : ListView(
+      
           children: [
       // Show Pending Tasks section if there are any uncompleted tasks
     if (tasks.any((task) => !task['completed'] && 
@@ -1007,15 +1024,77 @@ Expanded(
         ),
 floatingActionButton: FloatingActionButton(
   onPressed: () {
-    // Action to be performed when the button is pressed
+    if (userID != null) {
+      // Navigate to AddTaskPage if the user is logged in
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddTaskPage(),
+        ),
+      );
+    } else {
+      // Show a dialog prompting the user to sign in
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: const Text(
+              'Sign In Required',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              'You need to sign in to add tasks. Please log in or create an account.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: Color(0xFF79A3B7)),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFF79A3B7)),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Navigate to Sign-In page or provide sign-in functionality
+                  // Implement navigation to your sign-in page here if needed
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF79A3B7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Sign In',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
   },
   backgroundColor: const Color(0xFF3B7292),
   shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(30.0), // التحكم في تدوير الزوايا
+    borderRadius: BorderRadius.circular(30.0),
   ),
   child: const Icon(Icons.add, color: Colors.white),
- 
- ),
+),
+
   
 
       ), //jjjj
@@ -1118,11 +1197,18 @@ Widget build(BuildContext context) {
           motion: const ScrollMotion(),
           children: [
             CustomSlidableAction(
-              onPressed: (_) => onEditTask(),
-              backgroundColor: const Color(0xFFC2C2C2), // تغيير لون الخلفية إلى رمادي
-              child: const Icon(
-                Icons.edit,
-                color: Colors.white,
+              onPressed: (_) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskPage(taskId: task['id']),
+      ),
+    );
+  },
+  backgroundColor: const Color(0xFFC2C2C2), // لون الخلفية
+  child: const Icon(
+    Icons.edit,
+    color: Colors.white,
               ),
             ),
             SizedBox(
@@ -1144,6 +1230,7 @@ Widget build(BuildContext context) {
         child: Column(
           children: [
             ListTile(
+              onTap: onEditTask,
            leading: Tooltip(
           message: "Mark Task as complete!",  // التلميح المطلوب
          showDuration: Duration(milliseconds: 500),
@@ -1225,6 +1312,14 @@ if (task['expanded'] && task['subtasks'] != null && task['subtasks'].isNotEmpty)
             ],
           ),
              child: ListTile(
+              onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditTaskPage(taskId: task['id']),
+      ),
+    );
+  },
   leading: Tooltip(
     message: "Mark SubTask as complete!", // التلميح الذي يظهر للمستخدم
     showDuration: Duration(milliseconds: 500), // مدة ظهور التلميح

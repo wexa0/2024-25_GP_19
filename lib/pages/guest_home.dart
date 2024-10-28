@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -195,13 +196,12 @@ class _HomePageState extends State<GuestHomePage> {
                           padding: const EdgeInsets.only(
                               left: 17, top: 10, right: 6),
                           child: GestureDetector(
-                            onTap: () {
-                              /////////////////////////////////// Today's Task Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
-                            },
+                             onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const TaskPage()),
+      );
+    },
                             child: Container(
                               height: 110,
                               width: 100,

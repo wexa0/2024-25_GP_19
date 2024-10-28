@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
-
 
 class CalendarPage extends StatefulWidget {
   CalendarPage({super.key});
@@ -20,7 +18,7 @@ class _CalendarPageState extends State<CalendarPage> {
     return GestureDetector(
       onTap: () {},
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7F8), // same background color as TaskPage
+        backgroundColor: const Color(0xFFF5F5F5), // Same background color as TaskPage
         appBar: AppBar(
           title: const Text(
             'Calendar',
@@ -32,7 +30,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
           centerTitle: true,
-          backgroundColor: const Color(0xFFEAEAEA), // same background color as TaskPage
+          backgroundColor: const Color(0xFFEAEFF0), // Same header color as TaskPage
           elevation: 0,
           actions: [
             PopupMenuButton<String>(
@@ -45,7 +43,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   showCategoryDialog();
                 }
               },
-              icon: const Icon(Icons.menu, color: Colors.black),
+              icon: const Icon(Icons.more_vert, color: Colors.black),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -137,33 +135,11 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
               ),
             ),
+            // Floating Action Button inside the fill
+            
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // Action to be performed when the button is pressed
-          },
-          backgroundColor: const Color(0xFF3B7292),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30.0), 
-          ),
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-        bottomNavigationBar: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: GNav(
-            selectedIndex: 1,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            gap: 8,
-             tabs: const [
-              GButton(icon: Icons.home, text: 'Home'),
-              GButton(icon: Icons.task, text: 'Tasks'),
-              GButton(icon: Icons.sms, text: 'Chatbot'),
-              GButton(icon: Icons.poll, text: 'Progress'),
-              GButton(icon: Icons.person, text: 'Profile'),
-            ],
-          ),
-        ),
+       
       ),
     );
   }
@@ -229,13 +205,13 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                   Navigator.of(context).pop();
-    if (selectedView == 'list') {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => TaskPage()),
-      );
-    }
-  },
+                    Navigator.of(context).pop();
+                    if (selectedView == 'list') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => TaskPage()),
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF79A3B7),
                     shape: RoundedRectangleBorder(
@@ -271,7 +247,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 children: [
                   RadioListTile<String>(
                     activeColor: const Color(0xFF79A3B7),
-                    title: const Text('Timeline'),
+                    title: const Text('Time'),
                     value: 'timeline',
                     groupValue: selectedSort,
                     onChanged: (value) {
@@ -349,7 +325,7 @@ class _CalendarPageState extends State<CalendarPage> {
               return Wrap(
                 spacing: 8.0,
                 runSpacing: 8.0,
-                children: ['All', 'Home', 'Work', 'Family']
+                children: ['All']
                     .map((category) => ChoiceChip(
                           label: Text(category),
                           selected: tempSelectedCategories.contains(category),

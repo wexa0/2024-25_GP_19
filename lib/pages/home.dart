@@ -2,6 +2,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -11,7 +13,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 
 void main() async {
@@ -21,17 +22,19 @@ void main() async {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   String? imageUrl; //iamge url
-  User? _user = FirebaseAuth.instance.currentUser; // get current user
+  final User? _user = FirebaseAuth.instance.currentUser; // get current user
   String? fName; // first name to print
   String? lName; //last name to print
   int _currentIndex = 0; // Current index for carousel
-  int _navcurrentIndex = 0; //current index of navigation bar
+  final int _navcurrentIndex = 0; //current index of navigation bar
   var now = DateTime.now(); //current date
   var formatter = DateFormat.yMMMMd('en_US'); //format date as specified
 
@@ -51,12 +54,12 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Table(children: [
-              TableRow(children: <Widget>[
+              const TableRow(children: <Widget>[
                 Padding(
-                    padding: const EdgeInsets.only(left: 25),
+                    padding: EdgeInsets.only(left: 25),
                     child: Text(
                       "Hello,",
                       style: TextStyle(
@@ -69,8 +72,8 @@ class _HomePageState extends State<HomePage> {
               TableRow(children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.only(left: 25, top: 8),
+                    const Padding(
+                        padding: EdgeInsets.only(left: 25, top: 8),
                         child: Text(
                           "",
                           style: TextStyle(
@@ -85,12 +88,13 @@ class _HomePageState extends State<HomePage> {
                       builder: (context, snapshot) {
                         //onyl run(load) once
                         if (snapshot.connectionState != ConnectionState.done &&
-                            fName == null)
-                          return Text("Loading data ... Please wait");
+                            fName == null) {
+                          return const Text("Loading data ... Please wait");
+                        }
 
                         return Text(
                           "$fName $lName",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.black,
                             fontSize: 29,
                             fontWeight: FontWeight.w700,
@@ -106,15 +110,15 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.only(left: 25),
                     child: Text(
                       formatter.format(now),
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 144, 147, 147),
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 144, 147, 147),
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
                       ),
                     )),
               ]),
             ]),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -142,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                                 .withOpacity(0.9),
                             spreadRadius: 1,
                             blurRadius: 4,
-                            offset: Offset(0, 0),
+                            offset: const Offset(0, 0),
                           ),
                         ],
                       ),
@@ -162,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                       int index = entry.key;
                       bool isSelected = _currentIndex == index;
                       return Container(
-                        margin: EdgeInsets.symmetric(horizontal: 3.0),
+                        margin: const EdgeInsets.symmetric(horizontal: 3.0),
                         width: isSelected ? 25 : 8.0,
                         height: 4.5,
                         decoration: BoxDecoration(
@@ -179,10 +183,10 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ]),
-          SizedBox(height: 15),
+          const SizedBox(height: 15),
           Column(
             children: [
-              Container(
+              SizedBox(
                 height: 240,
                 child: Table(children: [
                   TableRow(
@@ -191,15 +195,12 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.only(
                               left: 17, top: 10, right: 6),
                           child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      TaskPage(), // Navigating to TaskPage here
-                                ),
-                              );
-                            },
+                         onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const TaskPage()),
+      );
+    },
                             child: Container(
                               height: 110,
                               width: 100,
@@ -211,20 +212,20 @@ class _HomePageState extends State<HomePage> {
                                             .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 3,
-                                    offset: Offset(0, 0),
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                                 borderRadius: BorderRadius.circular(10),
                                 color: const Color.fromARGB(255, 255, 255, 255),
                               ),
                               child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
+                                columnWidths: const {0: const FractionColumnWidth(0.3)},
                                 children: [
                                   TableRow(
                                     children: [
                                       Container(
                                         margin:
-                                            EdgeInsets.only(top: 3, left: 3),
+                                            const EdgeInsets.only(top: 3, left: 3),
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -238,8 +239,8 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       Container(
-                                        margin: EdgeInsets.only(right: 40),
-                                        child: Column(
+                                        margin: const EdgeInsets.only(right: 40),
+                                        child: const Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -267,12 +268,11 @@ class _HomePageState extends State<HomePage> {
                               left: 6, top: 10, right: 17),
                           child: GestureDetector(
                             onTap: () {
+                              /////////////////////////////////// Add Task Page ////////////////////////////////
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      addTask(), // Navigating to AddTaskPage here
-                                ),
+                                    builder: (context) => addTask()),
                               );
                             },
                             child: Container(
@@ -286,20 +286,20 @@ class _HomePageState extends State<HomePage> {
                                             .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 3,
-                                    offset: Offset(0, 0),
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                                 borderRadius: BorderRadius.circular(10),
                                 color: const Color.fromARGB(255, 255, 255, 255),
                               ),
                               child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
+                                columnWidths: const {0: const FractionColumnWidth(0.3)},
                                 children: [
                                   TableRow(
                                     children: [
                                       Container(
                                         margin:
-                                            EdgeInsets.only(top: 3, left: 3),
+                                            const EdgeInsets.only(top: 3, left: 3),
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -313,8 +313,8 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       Container(
-                                        margin: EdgeInsets.only(right: 40),
-                                        child: Column(
+                                        margin: const EdgeInsets.only(right: 40),
+                                        child: const Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -339,7 +339,6 @@ class _HomePageState extends State<HomePage> {
                           ))
                     ],
                   ),
-
                   TableRow(
                     children: <Widget>[
                       Padding(
@@ -347,11 +346,13 @@ class _HomePageState extends State<HomePage> {
                               left: 17, top: 10, right: 6),
                           child: GestureDetector(
                             onTap: () {
+                              
                               /////////////////////////////////// Progress Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ProgressPage()),
+                              );
                             },
                             child: Container(
                               height: 110,
@@ -364,20 +365,20 @@ class _HomePageState extends State<HomePage> {
                                             .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 3,
-                                    offset: Offset(0, 0),
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                                 borderRadius: BorderRadius.circular(10),
                                 color: const Color.fromARGB(255, 255, 255, 255),
                               ),
                               child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
+                                columnWidths: const {0: const FractionColumnWidth(0.3)},
                                 children: [
                                   TableRow(
                                     children: [
                                       Container(
                                         margin:
-                                            EdgeInsets.only(top: 3, left: 3),
+                                            const EdgeInsets.only(top: 3, left: 3),
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -391,8 +392,8 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       Container(
-                                        margin: EdgeInsets.only(right: 30),
-                                        child: Column(
+                                        margin: const EdgeInsets.only(right: 30),
+                                        child: const Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -437,20 +438,20 @@ class _HomePageState extends State<HomePage> {
                                             .withOpacity(0.3),
                                     spreadRadius: 1,
                                     blurRadius: 3,
-                                    offset: Offset(0, 0),
+                                    offset: const Offset(0, 0),
                                   ),
                                 ],
                                 borderRadius: BorderRadius.circular(10),
                                 color: const Color.fromARGB(255, 255, 255, 255),
                               ),
                               child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
+                                columnWidths: const {0: const FractionColumnWidth(0.3)},
                                 children: [
                                   TableRow(
                                     children: [
                                       Container(
                                         margin:
-                                            EdgeInsets.only(top: 3, left: 3),
+                                            const EdgeInsets.only(top: 3, left: 3),
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -464,8 +465,8 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       Container(
-                                        margin: EdgeInsets.only(right: 24),
-                                        child: Column(
+                                        margin: const EdgeInsets.only(right: 24),
+                                        child: const Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -505,7 +506,7 @@ class _HomePageState extends State<HomePage> {
 // method of header: app bar
   AppBar appBar() {
     return AppBar(
-      title: Text(
+      title: const Text(
         'Home',
         style: TextStyle(
             color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
@@ -519,13 +520,13 @@ class _HomePageState extends State<HomePage> {
 
 // method to get fisrt and last name drom firebase
   _fetch() async {
-    final User? _user = FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
 
-    if (_user != null) {
+    if (user != null) {
       try {
         DocumentSnapshot ds = await FirebaseFirestore.instance
             .collection('User')
-            .doc(_user.uid)
+            .doc(user.uid)
             .get();
 
         if (ds.exists) {
@@ -552,13 +553,13 @@ class _HomePageState extends State<HomePage> {
 
 // method to get profile picture from firbase
   _fetchImage() async {
-    final User? _user = FirebaseAuth.instance.currentUser;
+    final User? user = FirebaseAuth.instance.currentUser;
 
-    if (_user != null) {
+    if (user != null) {
       try {
         DocumentSnapshot ds = await FirebaseFirestore.instance
             .collection('User')
-            .doc(_user.uid)
+            .doc(user.uid)
             .get();
 
         if (ds.exists) {

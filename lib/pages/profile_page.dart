@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'dart:io'; // For File type
-import 'dart:html' as html; // Import for web detection
+//import 'dart:html' as html; // Import for web detection
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,6 +48,19 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+Future<void> signOut() async {
+  await _auth.signOut(); // تسجيل الخروج من Firebase
+  setState(() {
+    user = AppUser(); // إعادة تعيين بيانات المستخدم لتصبح فارغة
+  });
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const WelcomePage()), // توجيه المستخدم إلى صفحة الترحيب (بدلاً من ProfilePage)
+  );
+}
+
+
+
   void _showTopNotification(String message) {
     OverlayState? overlayState = Overlay.of(context);
     OverlayEntry overlayEntry = OverlayEntry(
@@ -91,15 +104,19 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Text(
           'Profile',
           style: TextStyle(
-              color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+            ),
         ),
         backgroundColor: const Color.fromARGB(255, 226, 231, 234),
         elevation: 0.0,
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      bottomNavigationBar: const CustomBottomNavigationBar(),
-      backgroundColor: Color(0xFFF5F7F8),
+bottomNavigationBar: const CustomBottomNavigationBar(),
+      backgroundColor: Color(0xFFF5F5F5),
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -109,15 +126,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Column(
                       children: [
-                        Container(
-                          width: double.infinity,
-                          height: coverHeight,
-                          color: Color.fromRGBO(121, 163, 183, 1),
-                        ),
+                       
                         SizedBox(height: 50),
                         Container(
                           width: double.infinity,
-                          color: Colors.grey[300],
+                          color: const Color.fromARGB(255, 226, 231, 234),
                           padding: EdgeInsets.all(16),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -203,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         Container(
                           width: double.infinity,
-                          color: const Color.fromRGBO(200, 220, 228, 1),
+                          color: const Color.fromARGB(255, 226, 231, 234),
                           padding: EdgeInsets.all(16),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -244,7 +257,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: TextButton(
-                            onPressed: () => user.logout(context),
+                            onPressed: signOut, // استدعاء دالة تسجيل الخروج
                             style: TextButton.styleFrom(
                               backgroundColor: Color.fromRGBO(199, 217, 225, 1),
                               shape: RoundedRectangleBorder(
@@ -274,7 +287,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 20),
+                       SizedBox(height: 20),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: TextButton(
