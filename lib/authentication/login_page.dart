@@ -19,7 +19,42 @@ class _LoginPageState extends State<LoginPage> {
  final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true; 
+void _showTopNotification(String message) {
+    final overlayState =
+        Navigator.of(context).overlay; // Access the root navigator's overlay
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.1, // Top position
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
 
+    overlayState?.insert(overlayEntry);
+
+    Future.delayed(const Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
+  }
   // Function to handle the login process
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -43,19 +78,12 @@ class _LoginPageState extends State<LoginPage> {
 
         if (e.code == 'invalid-credential') {
           // Provide a generic message to prevent email enumeration attacks
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid email or password. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        
+            _showTopNotification('Invalid email or password. Please try again.');
+          
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to sign in: ${e.message}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+         
+            _showTopNotification('Failed to sign in: ${e.message}');
           print('Failed to sign in: ${e.message}');
         }
       }

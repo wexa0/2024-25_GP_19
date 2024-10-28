@@ -21,6 +21,42 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _obscurePassword = true;
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation
+  void _showTopNotification(String message) {
+    final overlayState =
+        Navigator.of(context).overlay; // Access the root navigator's overlay
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.1, // Top position
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState?.insert(overlayEntry);
+
+    Future.delayed(const Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -74,10 +110,8 @@ class _SignUpPageState extends State<SignUpPage> {
         });
 
         // Notify success
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!')),
-        );
 
+        _showTopNotification('Account created successfully!');
         // Navigate to the home page after successful registration
         Navigator.pushReplacement(
           context,
@@ -85,19 +119,14 @@ class _SignUpPageState extends State<SignUpPage> {
         );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This email is already in use.')),
-          );
+          _showTopNotification('This email is already in use.');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to sign up: ${e.message}')),
-          );
+          _showTopNotification('Failed to sign up: ${e.message}');
         }
       } catch (e) {
         print('Error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred. Please try again.')),
-        );
+
+        _showTopNotification('An error occurred. Please try again.');
       }
     }
   }
@@ -106,23 +135,27 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     final screenHeight =
         MediaQuery.of(context).size.height; // Get screen height
-
+    final bottomsize = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
-      body: Stack(
-        children: [
-          // Background image (fixed)
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/signup.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Positioned(
+              // Background image
+              top: bottomsize > 0 ? 0 : 0,
+              left: 0,
+              right: 0,
+              child: Image.asset(
+                'assets/images/signup.png',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: screenHeight, // Keep the height for the image
+              ),
             ),
-          ),
-          // Scrollable content (SignUp form)
-          SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: screenHeight),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: screenHeight,
+              ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
@@ -379,8 +412,8 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
