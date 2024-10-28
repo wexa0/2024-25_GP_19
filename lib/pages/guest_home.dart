@@ -1,37 +1,121 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
-import 'package:flutter_application/pages/addTaskForm.dart';
-import 'package:flutter_application/welcome_page.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:flutter_application/pages/task_page.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/guest_profile_page.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:flutter_application/welcome_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(GuestHomePage());
+  runApp(MaterialApp(home: GuestHomePage()));
 }
 
 class GuestHomePage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _GuestHomePageState createState() => _GuestHomePageState();
 }
 
-class _HomePageState extends State<GuestHomePage> {
-  String? imageUrl; //iamge url
-  User? _user = FirebaseAuth.instance.currentUser; // get current user
+class _GuestHomePageState extends State<GuestHomePage> {
+  int _currentIndex = 0;
+
+  // List of screens for navigation
+  final List<Widget> _pages = [
+    GuestHomePageContent(), // Guest home page content
+    TaskPage(),
+    Chatbotpage(),
+    ProgressPage(),
+    GuestProfilePage(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(), // Custom app bar
+      backgroundColor: const Color.fromARGB(255, 245, 247, 248),
+      body: _pages[_currentIndex], // Show the current page
+      bottomNavigationBar: Container(
+        color: const Color.fromARGB(
+            255, 226, 231, 234), // Background color of the navigation bar
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
+        child: GNav(
+          backgroundColor: const Color(0xFF79A3B7)
+              .withOpacity(0), // Set the background color to match your theme
+          color: const Color(
+              0xFF545454), // Inactive icons and text color (match the old inactive color)
+          activeColor: const Color(
+              0xFF104A73), // Active icon and text color (match the old active color)
+          tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(
+              0.3), // Slightly transparent background for active tab
+          gap: 8, // Gap between icon and text
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8), // Adjust the padding for visual consistency
+          tabBorderRadius:
+              15, // Optional: add rounded corners for a softer look
+          selectedIndex: _currentIndex,
+          iconSize: 24, // Adjust icon size to match the old bar
+          onTabChange: (index) {
+            setState(() {
+              _currentIndex = index; // Update the index when a tab is selected
+            });
+          },
+          tabs: const [
+            GButton(
+              icon: Icons.home,
+              text: 'Home',
+            ),
+            GButton(
+              icon: Icons.task,
+              text: 'Tasks',
+            ),
+            GButton(
+              icon: Icons.sms,
+              text: 'Chatbot',
+            ),
+            GButton(icon: Icons.poll, text: 'Progress'),
+            GButton(
+              icon: Icons.person,
+              text: 'Profile',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Custom AppBar for GuestHomePage
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: Text(
+        'Guest Home',
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+      elevation: 0.0,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+    );
+  }
+}
+
+// This is the content for the Guest HomePage
+class GuestHomePageContent extends StatefulWidget {
+  @override
+  _GuestHomePageContentState createState() => _GuestHomePageContentState();
+}
+
+class _GuestHomePageContentState extends State<GuestHomePageContent> {
   String? fName; // first name to print
-  String? lName; //last name to print
-  int _currentIndex = 0; // Current index for carousel
-  int _navcurrentIndex = 0; //current index of navigation bar
+  String? lName; // last name to print
+  int _carouselIndex = 0; // Current index for carousel
   var now = DateTime.now(); //current date
   var formatter = DateFormat.yMMMMd('en_US'); //format date as specified
   final List<String> imgList = [
@@ -41,475 +125,267 @@ class _HomePageState extends State<GuestHomePage> {
     'assets/images/chatCrousel.png',
   ]; //carousel list
 
+  // Fetch user data from Firestore
+  Future<void> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser; // get current user
+    if (user != null) {
+      try {
+        DocumentSnapshot<Map<String, dynamic>> ds = await FirebaseFirestore
+            .instance
+            .collection('User')
+            .doc(user.uid)
+            .get();
+
+        if (ds.exists) {
+          var data = ds.data();
+          if (data != null) {
+            setState(() {
+              fName = data['firstName'] ?? ''; // Ensure fName is never null
+              lName = data['lastName'] ?? ''; // Ensure lName is never null
+            });
+          }
+        } else {
+          print('Document does not exist.');
+        }
+      } catch (e) {
+        print('Error fetching data: $e');
+      }
+    } else {
+      print('No user is logged in.');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Fetch user data when the widget is initialized
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: appBar(),
-      backgroundColor: const Color.fromARGB(255, 245, 247, 248),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 36),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Table(children: [
-              TableRow(children: <Widget>[
-                Padding(
-                    padding: const EdgeInsets.only(left: 25),
-                    child: Text(
-                      "Welcome to,",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )),
-              ]),
-              TableRow(children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.only(left: 25, top: 8),
-                        child: Text(
-                          "",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )),
-                    Padding(
-                        padding: const EdgeInsets.only(left: 0, top: 2),
-                        child: Text(
-                          "AttentionLens!",
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 29,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        )),
-                  ],
-                ),
-              ]),
-              TableRow(children: <Widget>[
-                Padding(
-                    padding: const EdgeInsets.only(left: 25),
-                    child: Text(
-                      formatter.format(now),
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 144, 147, 147),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )),
-              ]),
-            ]),
-            SizedBox(height: 18),
-            Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                CarouselSlider(
-                  options: CarouselOptions(
-                    autoPlay: _currentIndex == 1,
-                    autoPlayInterval: Duration(milliseconds: 10500),
-                    enlargeCenterPage: true,
-                    aspectRatio: 16 / 8.5,
-                    viewportFraction: 0.9,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _currentIndex = index; // Update current index
-                      });
-                    },
-                  ),
-                  items: imgList.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    String item = entry.value;
-
-                    // Wrap the first image with GestureDetector
-                    return GestureDetector(
-                      onTap: () {
-                        if (index == 0) {
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => WelcomePage()));
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.only(top: 2, bottom: 2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color.fromARGB(25, 203, 203, 203)
-                                  .withOpacity(0.9),
-                              spreadRadius: 1,
-                              blurRadius: 4,
-                              offset: Offset(0, 0),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(item, fit: BoxFit.cover),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                // Indicator on top of the image
-                Positioned(
-                  bottom: 10, // Position it at the bottom of the image
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: imgList.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      bool isSelected = _currentIndex == index;
-                      return Container(
-                        margin: EdgeInsets.symmetric(horizontal: 3.0),
-                        width: isSelected ? 25 : 8.0,
-                        height: 4.5,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.circular(2),
-                          color: _currentIndex == index
-                              ? const Color.fromARGB(255, 238, 238, 238)
-                              : Colors.grey,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ]),
-          SizedBox(height: 15),
-          Column(
-            children: [
-              Container(
-                height: 240,
-                child: Table(children: [
-                  TableRow(
-                    children: <Widget>[
-                      Padding(
-                          padding: const EdgeInsets.only(
-                              left: 17, top: 10, right: 6),
-                          child: GestureDetector(
-                            onTap: () {
-                              /////////////////////////////////// Today's Task Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
-                            },
-                            child: Container(
-                              height: 110,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        const Color.fromARGB(95, 203, 203, 203)
-                                            .withOpacity(0.3),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 0),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(10),
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      Container(
-                                        margin:
-                                            EdgeInsets.only(top: 3, left: 3),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Image.asset(
-                                              'assets/images/todayTask.png',
-                                              height: 45,
-                                              width: 45,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(right: 40),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(height: 30),
-                                            Text(
-                                              "Today\'s Tasks",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )),
-                      Padding(
-                          padding: const EdgeInsets.only(
-                              left: 6, top: 10, right: 17),
-                          child: GestureDetector(
-                            onTap: () {
-                              /////////////////////////////////// Add Task Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
-                            },
-                            child: Container(
-                              height: 110,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        const Color.fromARGB(95, 203, 203, 203)
-                                            .withOpacity(0.3),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 0),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(10),
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      Container(
-                                        margin:
-                                            EdgeInsets.only(top: 3, left: 3),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Image.asset(
-                                              'assets/images/addTask.png',
-                                              height: 45,
-                                              width: 45,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(right: 40),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(height: 30),
-                                            Text(
-                                              "Add a Task",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ))
-                    ],
-                  ),
-                  TableRow(
-                    children: <Widget>[
-                      Padding(
-                          padding: const EdgeInsets.only(
-                              left: 17, top: 10, right: 6),
-                          child: GestureDetector(
-                            onTap: () {
-                              /////////////////////////////////// Progress Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
-                            },
-                            child: Container(
-                              height: 110,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        const Color.fromARGB(95, 203, 203, 203)
-                                            .withOpacity(0.3),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 0),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(10),
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      Container(
-                                        margin:
-                                            EdgeInsets.only(top: 3, left: 3),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Image.asset(
-                                              'assets/images/viewProgress.png',
-                                              height: 45,
-                                              width: 45,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(right: 30),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(height: 28),
-                                            Text(
-                                              "View Progress",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )),
-                      Padding(
-                          padding: const EdgeInsets.only(
-                              left: 6, top: 10, right: 17),
-                          child: GestureDetector(
-                            onTap: () {
-                              /////////////////////////////////// Attena (chatbot) Page ////////////////////////////////
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => SecondPage()),
-                              // );
-                            },
-                            child: Container(
-                              height: 110,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        const Color.fromARGB(95, 203, 203, 203)
-                                            .withOpacity(0.3),
-                                    spreadRadius: 1,
-                                    blurRadius: 3,
-                                    offset: Offset(0, 0),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(10),
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              child: Table(
-                                columnWidths: {0: FractionColumnWidth(0.3)},
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      Container(
-                                        margin:
-                                            EdgeInsets.only(top: 3, left: 3),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Image.asset(
-                                              'assets/images/chatWithAttena.png',
-                                              height: 45,
-                                              width: 45,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        margin: EdgeInsets.only(right: 24),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(height: 28),
-                                            Text(
-                                              "Chat with Attena",
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ))
-                    ],
-                  ),
-                ]),
-              )
-            ],
-          )
-        ],
-      ),
-      bottomNavigationBar: const GuestCustomBottomNavigationBar(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 36),
+        _buildWelcomeHeader(),
+        SizedBox(height: 18),
+        _buildCarouselSlider(),
+        SizedBox(height: 15),
+        _buildQuickActions(),
+      ],
     );
   }
 
-  AppBar appBar() {
-    return AppBar(
-      title: Text(
-        'Home',
-        style: TextStyle(
-            color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+  // Builds the welcome message and date
+  Widget _buildWelcomeHeader() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 25),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Welcome to,",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 19,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Row(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  "AttentionLens!",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 29,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(
+            formatter.format(now), // Display the formatted date
+            style: TextStyle(
+              color: const Color.fromARGB(255, 144, 147, 147),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
       ),
-      backgroundColor: const Color.fromARGB(255, 226, 231, 234),
-      elevation: 0.0,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
+    );
+  }
+
+  // Builds the carousel slider with images
+  // Builds the carousel slider with images
+  Widget _buildCarouselSlider() {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        CarouselSlider(
+          options: CarouselOptions(
+            autoPlay: true,
+            autoPlayInterval: Duration(milliseconds: 10500),
+            enlargeCenterPage: true,
+            aspectRatio: 16 / 8.5,
+            viewportFraction: 0.9,
+            onPageChanged: (index, reason) {
+              setState(() {
+                _carouselIndex = index; // Update current index
+              });
+            },
+          ),
+          items: imgList.map((item) {
+            return GestureDetector(
+              onTap: () {
+                if (_carouselIndex == 0) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => WelcomePage()),
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.only(top: 2, bottom: 2),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(25, 203, 203, 203)
+                          .withOpacity(0.9),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: Offset(0, 0),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(item, fit: BoxFit.cover),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        Positioned(
+          bottom: 10, // Position it at the bottom of the image
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: imgList.asMap().entries.map((entry) {
+              int index = entry.key;
+              return Container(
+                margin: EdgeInsets.symmetric(horizontal: 3.0),
+                width: _carouselIndex == index ? 25 : 8.0,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(2),
+                  color: _carouselIndex == index
+                      ? const Color.fromARGB(255, 238, 238, 238)
+                      : Colors.grey,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Builds the quick action buttons
+  Widget _buildQuickActions() {
+    return Container(
+      height: 240,
+      child: Table(
+        children: [
+          TableRow(
+            children: [
+              _buildQuickAction(
+                imagePath: 'assets/images/todayTask.png',
+                label: "Today's Tasks",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TaskPage()),
+                  );
+                },
+              ),
+              _buildQuickAction(
+                imagePath: 'assets/images/addTask.png',
+                label: 'Add a Task',
+                onTap: () {},
+              ),
+            ],
+          ),
+          TableRow(
+            children: [
+              _buildQuickAction(
+                imagePath: 'assets/images/viewProgress.png',
+                label: 'View Progress',
+                onTap: () {},
+              ),
+              _buildQuickAction(
+                imagePath: 'assets/images/chatWithAttena.png',
+                label: 'Chat with Attena',
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper function to build each quick action button
+  Widget _buildQuickAction({
+    required String imagePath,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 17),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 110,
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: const Color.fromARGB(95, 203, 203, 203).withOpacity(0.3),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: Offset(0, 0),
+              ),
+            ],
+            borderRadius: BorderRadius.circular(10),
+            color: const Color.fromARGB(255, 255, 255, 255),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Image.asset(imagePath, height: 45, width: 45),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

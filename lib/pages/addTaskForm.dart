@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/pages/editTask.dart';
@@ -230,7 +231,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       for (String subtask in subtasks) {
         await FirebaseFirestore.instance.collection('SubTask').add({
           'completionStatus': 0,
-          'taskID': taskRef,
+          'taskID': taskRef.id,
           'timer': '',
           'title': subtask,
         });
@@ -277,8 +278,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  EditTaskPage(taskId: 'fcOMcH9HcgGsaqTmojyI'),
+              builder: (context) => TaskPage(),
+                  // EditTaskPage(taskId: 'gVV6F5lKrD4E7lMv9vE5'),
             ),
           );
         }

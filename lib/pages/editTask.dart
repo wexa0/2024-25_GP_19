@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application/pages/task_page.dart';
 
 class EditTaskPage extends StatefulWidget {
   final String taskId;
@@ -138,10 +139,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
 
         QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
-            .where('taskID',
-                isEqualTo: FirebaseFirestore.instance
-                    .collection('Task')
-                    .doc(widget.taskId))
+            .where('taskID', isEqualTo: widget.taskId)
             .get();
 
         List<String> fetchedSubtasks = [];
@@ -208,10 +206,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
       for (String deletedSubtask in deletedSubtasks) {
         QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
-            .where('taskID',
-                isEqualTo: FirebaseFirestore.instance
-                    .collection('Task')
-                    .doc(widget.taskId))
+            .where('taskID', isEqualTo: widget.taskId)
             .where('title', isEqualTo: deletedSubtask)
             .get();
 
@@ -224,10 +219,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
         final subtaskTitle = subtaskControllers[subtask]?.text ?? subtask;
         QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
-            .where('taskID',
-                isEqualTo: FirebaseFirestore.instance
-                    .collection('Task')
-                    .doc(widget.taskId))
+            .where('taskID', isEqualTo: widget.taskId)
             .where('title', isEqualTo: subtask)
             .get();
 
@@ -239,9 +231,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
         } else {
           await FirebaseFirestore.instance.collection('SubTask').add({
             'completionStatus': 0,
-            'taskID': FirebaseFirestore.instance
-                .collection('Task')
-                .doc(widget.taskId),
+            'taskID': widget.taskId,
             'timer': '',
             'title': subtaskTitle,
           });
@@ -311,10 +301,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
 
       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
           .collection('SubTask')
-          .where('taskID',
-              isEqualTo: FirebaseFirestore.instance
-                  .collection('Task')
-                  .doc(widget.taskId))
+          .where('taskID', isEqualTo: widget.taskId)
           .get();
 
       for (var subtaskDoc in subtaskSnapshot.docs) {
@@ -343,7 +330,10 @@ class _EditTaskPageState extends State<EditTaskPage> {
         content: Text('Task and related subtasks deleted successfully!'),
       ));
 
-      Navigator.of(context).pop();
+      // Navigate to TaskPage after deletion
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => TaskPage()),
+      );
     } catch (e) {
       print('Failed to delete task and subtasks: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -441,6 +431,10 @@ class _EditTaskPageState extends State<EditTaskPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Task updated successfully!')),
         );
+        // Navigate to TaskPage after saving changes
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => TaskPage()),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update task: $e')),
@@ -478,15 +472,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
             ),
           ),
           automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () async {
-              bool shouldLeave = await _showExitConfirmationDialog();
-              if (shouldLeave) {
-                Navigator.of(context).pop();
-              }
-            },
-          ),
         ),
         body: Padding(
           padding: const EdgeInsets.all(30.0),
@@ -541,7 +526,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(180, 50), // Set width and height
+                        minimumSize: Size(160, 50), // Set width and height
                       ),
                       child: Text(
                         'Delete Task',
@@ -558,7 +543,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(180, 50), // Set width and height
+                        minimumSize: Size(160, 50), // Set width and height
                       ),
                       child: Text(
                         'Save Changes',
@@ -1239,7 +1224,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
                 ),
               ),
               trailing: IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
+                icon: Icon(Icons.delete,
+                    color: Color.fromARGB(255, 125, 125, 125)),
                 onPressed: () {
                   setState(() {
                     deletedSubtasks.add(subtask);
