@@ -21,6 +21,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _obscurePassword = true; 
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation
 
@@ -275,10 +276,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  // Password Field
+                  // Password Field with Visibility Toggle
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password *',
                       filled: true,
@@ -297,6 +298,17 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: const Color.fromARGB(255, 122, 137, 146),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
                     ),
                     validator: (value) {
@@ -357,7 +369,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           );
                         },
                         child: const Text(
-                          'Log in',
+                          'Sign In',
                           style: TextStyle(
                             fontSize: 16,
                             color: Color(0xFF3b7292),

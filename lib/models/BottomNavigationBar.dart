@@ -18,7 +18,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     HomePage(), // Home page widget
     TaskPage(), // Task page widget
-    Chatbotpage(),
+    ChatbotpageWidget(),
     ProgressPage(), // Progress page widget
     ProfilePage(), // Profile page widget
   ];

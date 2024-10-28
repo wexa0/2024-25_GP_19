@@ -26,7 +26,7 @@ class _GuestHomePageState extends State<GuestHomePage> {
   final List<Widget> _pages = [
     GuestHomePageContent(), // Guest home page content
     TaskPage(),
-    Chatbotpage(),
+    ChatbotpageWidget(),
     ProgressPage(),
     GuestProfilePage(),
   ];

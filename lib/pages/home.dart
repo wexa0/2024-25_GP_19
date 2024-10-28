@@ -9,11 +9,12 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/pages/chatbot_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,8 @@ void main() async {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -46,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     HomePageContent(), // Define a separate widget for home page content
     TaskPage(),
-    Chatbotpage(),
+    ChatbotpageWidget(),
     ProgressPage(),
     ProfilePage(),
   ];
@@ -191,7 +194,6 @@ class _HomePageState extends State<HomePage> {
       print('No user is logged in');
     }
   }
-
 }
 
 // This is the content for the homepage, separated from the main scaffold
@@ -394,8 +396,8 @@ class _HomePageContentState extends State<HomePageContent> {
                 imagePath: 'assets/images/chatWithAttena.png',
                 label: 'Chat with Attena',
                 onTap: () {
-                  // Navigate to the chatbot or another page
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage()));
+                  
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatbotpageWidget()));
                 },
               ),
             ],

@@ -16,7 +16,9 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>(); // Key for form validation
+ final _formKey = GlobalKey<FormState>();
+
+  bool _obscurePassword = true; 
 
   // Function to handle the login process
   void _handleLogin() async {
@@ -136,7 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                   // Password TextFormField with validation
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
+                   
                     decoration: InputDecoration(
                       labelText: 'Password *',
                       filled: true,
@@ -146,9 +149,8 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(
                           color: Color(0xFFE6EBEF),
-                        ),
+                         ),
                       ),
-                      // Set the focused border color
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(
@@ -158,6 +160,18 @@ class _LoginPageState extends State<LoginPage> {
                       floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
+                      // زر التحكم في رؤية كلمة المرور
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: const Color.fromARGB(255, 122, 137, 146),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword; // Toggle password visibility
+                          });
+                        },
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -166,6 +180,7 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
+                  
                   const SizedBox(height: 24),
                   // Log In Button
                   SizedBox(
@@ -180,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text(
-                        'Log In',
+                        'Sign In',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

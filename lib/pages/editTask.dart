@@ -89,9 +89,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
     if (_user == null) {
       _user = FirebaseAuth.instance.currentUser;
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No logged-in user found')),
-        );
+           _showTopNotification('No logged-in user found');
+        
       }
     }
     return _user;
@@ -182,11 +181,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
           .get();
 
       if (existingTaskSnapshot.docs.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Another task already exists with the same date and time. Please choose a different time.'),
-          ),
+          _showTopNotification(
+          'Another task already exists with the same date and time. Please choose a different time.',
         );
         return;
       }
@@ -238,16 +234,13 @@ class _EditTaskPageState extends State<EditTaskPage> {
         }
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Task updated successfully!'),
-      ));
+      _showTopNotification('Task updated successfully!');
 
       deletedSubtasks.clear();
     } catch (e) {
       print('Failed to update task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to update task. Please try again.'),
-      ));
+      _showTopNotification('Failed to update task. Please try again.');
+      
     }
   }
 
@@ -299,6 +292,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
+      // Delete subtasks
       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
           .collection('SubTask')
           .where('taskID', isEqualTo: widget.taskId)
@@ -308,6 +302,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
         await subtaskDoc.reference.delete();
       }
 
+      // Remove the task from categories
       QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
           .collection('Category')
           .where('taskIDs', arrayContains: widget.taskId)
@@ -321,26 +316,22 @@ class _EditTaskPageState extends State<EditTaskPage> {
         });
       }
 
+      // Delete the task
       await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
           .delete();
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Task and related subtasks deleted successfully!'),
-      ));
-
-      // Navigate to TaskPage after deletion
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => TaskPage()),
-      );
+     _showTopNotification('Task and related subtasks deleted successfully!');
+      // Pop back to the TaskPage
+      Navigator.pop(
+          context, true); // Passing `true` to indicate successful deletion
     } catch (e) {
       print('Failed to delete task and subtasks: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to delete task. Please try again.'),
-      ));
+     _showTopNotification('Failed to delete task. Please try again.');
     }
   }
+
 
   String _getPriorityLabel(int priorityValue) {
     switch (priorityValue) {
@@ -387,7 +378,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
     }
   }
 
-  Future<void> _validateAndSaveTask() async {
+ Future<void> _validateAndSaveTask() async {
     setState(() {
       _isTitleMissing = taskNameController.text.isEmpty;
       _isDateMissing = formattedDate == 'Select Date';
@@ -399,6 +390,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
         User? currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser == null) return;
 
+        // Create the full DateTime object using the selected date and time
         final DateTime taskDateTime = DateTime(
           selectedDate.year,
           selectedDate.month,
@@ -407,8 +399,10 @@ class _EditTaskPageState extends State<EditTaskPage> {
           selectedTime.minute,
         );
 
+        // Convert it to Firebase Timestamp
         Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
 
+        // Check for existing tasks with the same date and time
         QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
             .collection('Task')
             .where('userID', isEqualTo: currentUser.uid)
@@ -416,35 +410,58 @@ class _EditTaskPageState extends State<EditTaskPage> {
             .where(FieldPath.documentId, isNotEqualTo: widget.taskId)
             .get();
 
+        // If a task exists, show a message to the user
         if (existingTaskSnapshot.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Another task already exists with the same date and time. Please choose a different time.'),
-            ),
-          );
+          _showTopNotification(
+              'Another task already exists with the same date and time. Please choose a different time.');
           return;
         }
 
+        // Save changes to Firebase
         await _saveChangesToFirebase();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task updated successfully!')),
-        );
-        // Navigate to TaskPage after saving changes
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => TaskPage()),
-        );
+         _showTopNotification('Task updated successfully!');
+
+        // Navigate back to TaskPage
+        Navigator.pop(
+            context, true); // Returning `true` to indicate a task update
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update task: $e')),
-        );
+        _showTopNotification('Failed to update task: $e');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all mandatory fields.')),
-      );
+       _showTopNotification('Please fill in all mandatory fields.');
     }
+  }
+void _showTopNotification(String message) {
+    OverlayState? overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 50,
+        left: 0,
+        right: 0,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            margin: EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState?.insert(overlayEntry);
+    Future.delayed(Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
   }
 
   @override
@@ -455,18 +472,20 @@ class _EditTaskPageState extends State<EditTaskPage> {
         return shouldLeave;
       },
       child: Scaffold(
+         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           backgroundColor: Color(0xFFEAEFF0),
           elevation: 0,
-          iconTheme: IconThemeData(color: darkGray),
+          centerTitle: true, // لضبط العنوان في المنتصف
+          
           title: Center(
             child: Text(
               'Edit Task',
               style: TextStyle(
                 color: Colors.black,
                 fontFamily: 'Poppins',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
@@ -879,16 +898,9 @@ class _EditTaskPageState extends State<EditTaskPage> {
                                       categoryController.clear();
                                     });
                                   } else {
-                                    ScaffoldMessenger.of(scaffoldContext)
-                                        .showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'You can only create up to 7 categories.',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                        duration: Duration(seconds: 2),
-                                      ),
-                                    );
+                                   
+                                       _showTopNotification(  'You can only create up to 7 categories.');
+                                    
                                   }
                                 }
                               },
@@ -1040,9 +1052,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
       }
 
       await snapshot.docs.first.reference.delete();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Category "$categoryName" deleted successfully'),
-      ));
+     
+     _showTopNotification('Category "$categoryName" deleted successfully');
     }
   }
 

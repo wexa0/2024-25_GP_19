@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:pie_chart/pie_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';  
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,15 +31,13 @@ class ProgressPage extends StatelessWidget {
     };
 
     final colorList = <Color>[
-      Color(0xFF2F5496),  // Deep blue for "No Category"
-      Color(0xFFA5BBE3),  // Light blue for "Routine"
-      Color(0xFF3C6ABE),  // Light blue for "Home"
+      Color(0xFF2F5496),
+      Color(0xFFA5BBE3),
+      Color(0xFF3C6ABE),
     ];
 
-    // Get the current date in the desired format
     final currentDate = DateFormat('EEE, dd/MM/yyyy').format(DateTime.now());
 
-    // Apply the Google font to the entire page
     return Theme(
       data: ThemeData(
         textTheme: GoogleFonts.poppinsTextTheme(
@@ -47,7 +45,9 @@ class ProgressPage extends StatelessWidget {
         ),
       ),
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
+          
           title: const Text(
             'Progress',
             style: TextStyle(
@@ -57,23 +57,23 @@ class ProgressPage extends StatelessWidget {
               fontFamily: 'Poppins',
             ),
           ),
+          
           centerTitle: true,
-          backgroundColor: const Color(0xFFEAEAEA),
+          backgroundColor: const Color(0xFFEAEFF0),
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          automaticallyImplyLeading: false,
+          
+          
         ),
         body: Stack(
           children: [
-            SingleChildScrollView(  
+            SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 1),
-                  Text(currentDate, style: TextStyle(fontSize: 16, color: Colors.grey)),  // Display the current date in gray
+                  Text(currentDate, style: TextStyle(fontSize: 16, color: Colors.grey)),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -92,7 +92,7 @@ class ProgressPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Today", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),  // 'Today' inside the rectangle
+                        const Text("Today", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -113,7 +113,7 @@ class ProgressPage extends StatelessWidget {
                               ringStrokeWidth: 29,
                               centerText: "",
                               legendOptions: LegendOptions(
-                                showLegends: false, // Hide default legends as we are custom rendering on the left
+                                showLegends: false,
                               ),
                               chartValuesOptions: ChartValuesOptions(
                                 showChartValues: false,
@@ -124,10 +124,12 @@ class ProgressPage extends StatelessWidget {
                       ],
                     ),
                   ),
+                  
+                  // صندوق وهمي لملء المساحة المتبقية أسفل الشاشة
+                  SizedBox(height: MediaQuery.of(context).size.height / 3),
                 ],
               ),
             ),
-            // Coming Soon overlay for the bar chart section
             Positioned.fill(
               child: Container(
                 color: Colors.grey.withOpacity(0.8),
@@ -158,21 +160,6 @@ class ProgressPage extends StatelessWidget {
             ),
           ],
         ),
-        bottomNavigationBar: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: GNav(
-            selectedIndex: 3,  // Set index to the Progress page
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            gap: 8,
-            tabs: const [
-              GButton(icon: Icons.home, text: 'Home'),
-              GButton(icon: Icons.task, text: 'Tasks'),
-              GButton(icon: Icons.sms, text: 'Chatbot'),
-              GButton(icon: Icons.poll, text: 'Progress'),
-              GButton(icon: Icons.person, text: 'Profile'),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -182,8 +169,8 @@ class ProgressPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFD1D1D1),  // Light grey for task card
-        borderRadius: BorderRadius.circular(15),  // More rounded corners
+        color: Color(0xFFD1D1D1),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             color: Colors.black26,
@@ -206,8 +193,8 @@ class ProgressPage extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, color: color, size: 14),  // Circle color indicator
-        SizedBox(width: 5),  // Space between circle and text
+        Icon(Icons.circle, color: color, size: 14),
+        SizedBox(width: 5),
         Text(key, style: TextStyle(fontSize: 15)),
       ],
     );

@@ -5,6 +5,7 @@ import 'package:flutter_application/pages/task_page.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/pages/editTask.dart';
+import 'package:flutter_application/pages/task_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -133,7 +134,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
         categories = uniqueCategories;
       });
     } catch (e) {
-      print('Failed to fetch categories: $e');
+      _showTopNotification('Failed to fetch categories: $e');
     }
   }
 
@@ -141,9 +142,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     if (_user == null) {
       _user = FirebaseAuth.instance.currentUser;
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No logged-in user found')),
-        );
+        _showTopNotification('No logged-in user found');
       }
     }
     return _user;
@@ -177,7 +176,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
         });
       }
     } catch (e) {
-      print('Failed to save category or link to task: $e');
+      _showTopNotification('Failed to save category or link to task: $e');
     }
   }
 
@@ -201,18 +200,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
           .get();
 
       if (existingTaskSnapshot.docs.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'A task already exists with the same date and time. Please choose a different time.'),
-          ),
-        );
+        _showTopNotification(
+            'A task already exists with the same date and time. Please choose a different time.');
         return false;
       }
 
       DocumentReference taskRef =
           FirebaseFirestore.instance.collection('Task').doc();
-
+      String taskId = taskRef.id;  
+          
       await taskRef.set({
         'completionStatus': 0,
         'scheduledDate': Timestamp.fromDate(taskDateTime),
@@ -237,14 +233,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
         });
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Task saved successfully!')));
+      _showTopNotification('Task saved successfully!');
 
       return true;
     } catch (e) {
-      print('Failed to save task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save task. Please try again.')));
+      _showTopNotification('Failed to save task. Please try again: $e');
       return false;
     }
   }
@@ -275,24 +268,47 @@ class _AddTaskPageState extends State<AddTaskPage> {
       try {
         bool isTaskSaved = await _saveTaskToFirebase();
         if (isTaskSaved) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskPage(),
-                  // EditTaskPage(taskId: 'gVV6F5lKrD4E7lMv9vE5'),
-            ),
-          );
-        }
+          Navigator.pop(context,
+              true); // return to TaskPage
+        } 
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save task: $e')),
-        );
+        _showTopNotification('Failed to save task: $e');
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all mandatory fields.')),
-      );
+      _showTopNotification('Please fill in all mandatory fields.');
     }
+  }
+
+  void _showTopNotification(String message) {
+    OverlayState? overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 50,
+        left: 0,
+        right: 0,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            margin: EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 112, 112, 112),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState?.insert(overlayEntry);
+    Future.delayed(Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
   }
 
   @override
@@ -308,14 +324,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
             style: TextStyle(
               color: Colors.black,
               fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
         ),
         automaticallyImplyLeading: false,
       ),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Padding(
         padding: const EdgeInsets.all(30.0),
         child: SingleChildScrollView(
@@ -505,7 +522,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Icon(Icons.category, color: Color(0xFF3B7292)),
+              Icon(Icons.label, color: Color(0xFF3B7292)),
               SizedBox(width: 8),
               Text(
                 'Category',
@@ -700,16 +717,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                       categoryController.clear();
                                     });
                                   } else {
-                                    ScaffoldMessenger.of(scaffoldContext)
-                                        .showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'You can only create up to 7 categories.',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                        duration: Duration(seconds: 2),
-                                      ),
-                                    );
+                                    _showTopNotification(
+                                        'You can only create up to 7 categories.');
                                   }
                                 }
                               },
@@ -860,9 +869,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       }
 
       await snapshot.docs.first.reference.delete();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Category "$categoryName" deleted successfully'),
-      ));
+      _showTopNotification('Category "$categoryName" deleted successfully');
     }
   }
 
@@ -930,74 +937,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ) ??
         false;
   }
-
-  // Future<bool> _showDiscardConfirmation() async {
-  //   return await showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         backgroundColor: lightGray,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         title: Text(
-  //           'Are you sure?',
-  //           style: TextStyle(
-  //             fontFamily: 'Poppins',
-  //             fontSize: 18,
-  //             fontWeight: FontWeight.bold,
-  //             color: darkGray,
-  //           ),
-  //         ),
-  //         content: Text(
-  //           'Changes won\'t be saved.',
-  //           style: TextStyle(
-  //             fontFamily: 'Poppins',
-  //             fontSize: 14,
-  //             fontWeight: FontWeight.w400,
-  //             color: darkGray,
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(false);
-  //             },
-  //             style: TextButton.styleFrom(
-  //               foregroundColor: mediumBlue,
-  //             ),
-  //             child: Text(
-  //               'Cancel',
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 14,
-  //                 fontWeight: FontWeight.w600,
-  //                 color: mediumBlue,
-  //               ),
-  //             ),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(true);
-  //             },
-  //             style: TextButton.styleFrom(
-  //               foregroundColor: Colors.red,
-  //             ),
-  //             child: Text(
-  //               'Discard',
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 14,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Colors.red,
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   void _pickDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
