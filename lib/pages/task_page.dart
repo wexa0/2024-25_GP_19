@@ -84,46 +84,54 @@ void initState() {
   }
 
 void fetchTasksFromFirestore() async {
-    if (!mounted) return; // Ensure the widget is still in the tree
     setState(() {
       isLoading = true;
     });
 
-    try {
-      FirebaseFirestore firestore = FirebaseFirestore.instance;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-      // Fetch tasks for the user
-      QuerySnapshot taskSnapshot = await firestore
-          .collection('Task')
-          .where('userID',
-              isEqualTo: userID) // Filter by the logged-in user's ID
-          .get();
+    // Fetch tasks based on userID
+    QuerySnapshot taskSnapshot = await firestore
+        .collection('Task')
+        .where('userID', isEqualTo: userID) // Filter by the logged-in user's ID
+        .get();
 
-      List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
+    List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
 
-      // تحديد بداية ونهاية اليوم الحالي
-      startOfDay = DateTime.now();
-      startOfDay =
-          DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
-      endOfDay = startOfDay!
-          .add(const Duration(days: 1))
-          .subtract(const Duration(seconds: 1));
+    // Set start and end of the current day
+    startOfDay = DateTime.now();
+    startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
+    endOfDay = startOfDay!
+        .add(const Duration(days: 1))
+        .subtract(const Duration(seconds: 1));
 
-      // Fetch categories and map tasks to categories
-      QuerySnapshot categorySnapshot = await firestore
-          .collection('Category')
-          .where('userID', isEqualTo: userID)
-          .get();
+    // Fetch categories and store taskIDs for each category
+    QuerySnapshot categorySnapshot = await firestore
+        .collection('Category')
+        .where('userID', isEqualTo: userID)
+        .get();
 
+    setState(() {
+      tasks.clear();
+      availableCategories.clear();
+
+      // Use a Set to ensure unique categories
+      Set<String> categorySet = {};
+
+      // Add default categories
+      categorySet.add('All');
+      categorySet.add('Uncategorized');
+      //categorySet.add('Home');
+
+      // Fetch and add categories
       Map<String, List<String>> categoryTaskMap = {};
-
       for (var doc in categorySnapshot.docs) {
         String categoryName = doc['categoryName'];
         Map<String, dynamic> categoryData = doc.data() as Map<String, dynamic>;
         List<dynamic> taskIDs =
             categoryData.containsKey('taskIDs') ? categoryData['taskIDs'] : [];
 
-        availableCategories.add(categoryName); // Add category to the list
+        categorySet.add(categoryName); // Ensure category is added only once
 
         for (var taskId in taskIDs) {
           if (categoryTaskMap.containsKey(taskId)) {
@@ -135,8 +143,6 @@ void fetchTasksFromFirestore() async {
       }
 
       // Process and add tasks
-      List<Map<String, dynamic>> tasksList = [];
-
       for (var taskDoc in taskDocuments) {
         Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
         DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
@@ -156,50 +162,43 @@ void fetchTasksFromFirestore() async {
             'priority': taskData['priority'] as int,
             'completed': taskData['completionStatus'] == 2,
             'expanded': false,
-            'subtasks': [], // Placeholder for subtasks
+            'subtasks': [],
             'categories': categoryTaskMap[taskId] ?? ['Uncategorized'],
           };
 
           // Fetch subtasks for each task
-          QuerySnapshot subtaskSnapshot = await firestore
+          firestore
               .collection('SubTask')
               .where('taskID', isEqualTo: taskId)
-              .get();
+              .get()
+              .then((subtaskSnapshot) {
+            List<Map<String, dynamic>> subtasks =
+                subtaskSnapshot.docs.map((subDoc) {
+              Map<String, dynamic> subtaskData =
+                  subDoc.data() as Map<String, dynamic>;
+              return {
+                'id': subDoc.id,
+                'title': subtaskData['title'],
+                'completed': subtaskData['completionStatus'] == 1,
+              };
+            }).toList();
 
-          List<Map<String, dynamic>> subtasks =
-              subtaskSnapshot.docs.map((subDoc) {
-            Map<String, dynamic> subtaskData =
-                subDoc.data() as Map<String, dynamic>;
-            return {
-              'id': subDoc.id,
-              'title': subtaskData['title'],
-              'completed': subtaskData['completionStatus'] == 1,
-            };
-          }).toList();
+            setState(() {
+              task['subtasks'] = subtasks; // Update subtasks after fetching
+            });
+          });
 
-          task['subtasks'] = subtasks; // Add subtasks to the task
-
-          tasksList.add(task); // Add task to the task list
+          tasks.add(task); // Add task to the list
         }
       }
 
-      if (!mounted)
-        return; // Ensure the widget is still mounted before calling setState()
+      // Convert the Set to a List for further use
+      availableCategories = categorySet.toList();
 
-      setState(() {
-        tasks.clear();
-        tasks.addAll(tasksList); // Update tasks in the state
-        isLoading = false; // Set loading to false after processing
-      });
-    } catch (error) {
-      print('Error fetching tasks: $error');
-      if (mounted) {
-        setState(() {
-          isLoading = false; // Stop loading on error
-        });
-      }
-    }
+      isLoading = false; // Loading is done
+    });
   }
+
 
   
     String getEmptyStateMessage() {
@@ -1273,8 +1272,7 @@ class TaskCard extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-                              backgroundColor: const Color(0xFFF5F7F8),
-
+          backgroundColor:  const Color(0xFFF5F7F8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
