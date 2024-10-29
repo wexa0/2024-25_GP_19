@@ -68,9 +68,8 @@ class AppUser {
   DateTime selectedDate = DateTime.now();
   String formattedDate = '';
 
-  ValueNotifier<bool> isFirstNameEmpty = ValueNotifier<bool>(true);
-  ValueNotifier<bool> isLastNameEmpty = ValueNotifier<bool>(true);
-  ValueNotifier<bool> isFieldEmpty = ValueNotifier<bool>(true);
+  // This will track if any field has text changes
+  ValueNotifier<bool> isAnyFieldChanged = ValueNotifier<bool>(false);
 
   if (field == 'name') {
     firstNameController.text = '';
@@ -107,7 +106,7 @@ class AppUser {
     if (pickedDate != null && pickedDate != selectedDate) {
       selectedDate = pickedDate;
       formattedDate = DateFormat('MMM dd, yyyy').format(selectedDate);
-      isFieldEmpty.value = false;
+      isAnyFieldChanged.value = true; // Mark as changed
     }
   }
 
@@ -133,7 +132,7 @@ class AppUser {
                       hintText: firstName ?? 'Enter your first name',
                     ),
                     onChanged: (value) {
-                      isFirstNameEmpty.value = value.isEmpty;
+                      isAnyFieldChanged.value = true; // Mark as changed
                     },
                   ),
                   TextField(
@@ -143,7 +142,7 @@ class AppUser {
                       hintText: lastName ?? 'Enter your last name',
                     ),
                     onChanged: (value) {
-                      isLastNameEmpty.value = value.isEmpty;
+                      isAnyFieldChanged.value = true; // Mark as changed
                     },
                   ),
                 ]
@@ -170,7 +169,7 @@ class AppUser {
                           hintText: email ?? 'Enter your $field',
                         ),
                         onChanged: (value) {
-                          isFieldEmpty.value = value.isEmpty;
+                          isAnyFieldChanged.value = true; // Mark as changed
                         },
                       ),
                     ],
@@ -194,58 +193,50 @@ class AppUser {
             ),
           ),
           ValueListenableBuilder<bool>(
-            valueListenable: isFirstNameEmpty,
-            builder: (context, firstNameValue, child) {
-              return ValueListenableBuilder<bool>(
-                valueListenable: isLastNameEmpty,
-                builder: (context, lastNameValue, child) {
-                  return ElevatedButton(
-                    onPressed: (field == 'name' &&
-                                firstNameController.text.isEmpty &&
-                                lastNameController.text.isEmpty) ||
-                            (field != 'name' && isFieldEmpty.value)
-                        ? null
-                        : () async {
-                            Map<String, dynamic> updateData = {};
+            valueListenable: isAnyFieldChanged,
+            builder: (context, isChanged, child) {
+              return ElevatedButton(
+                onPressed: isChanged
+                    ? () async {
+                        Map<String, dynamic> updateData = {};
 
-                            if (field == 'name') {
-                              if (firstNameController.text.isNotEmpty) {
-                                updateData['firstName'] = firstNameController.text;
-                              }
-                              if (lastNameController.text.isNotEmpty) {
-                                updateData['lastName'] = lastNameController.text;
-                              }
-                            } else if (field == 'dateOfBirth') {
-                              updateData['dateOfBirth'] = DateFormat('MMM dd, yyyy').format(selectedDate);
-                            } else {
-                              updateData[field] = fieldController.text;
-                            }
+                        if (field == 'name') {
+                          if (firstNameController.text.isNotEmpty) {
+                            updateData['firstName'] = firstNameController.text;
+                          }
+                          if (lastNameController.text.isNotEmpty) {
+                            updateData['lastName'] = lastNameController.text;
+                          }
+                        } else if (field == 'dateOfBirth') {
+                          updateData['dateOfBirth'] = DateFormat('MMM dd, yyyy').format(selectedDate);
+                        } else {
+                          updateData[field] = fieldController.text;
+                        }
 
-                            if (updateData.isNotEmpty) {
-                              await _firestore
-                                  .collection('User')
-                                  .doc(_auth.currentUser!.uid)
-                                  .update(updateData);
-                              await loadUserData(); // Reload user data after update
-                              onUpdate(); // Trigger UI refresh callback
-                            }
+                        if (updateData.isNotEmpty) {
+                          await _firestore
+                              .collection('User')
+                              .doc(_auth.currentUser!.uid)
+                              .update(updateData);
+                          await loadUserData(); // Reload user data after update
+                          onUpdate(); // Trigger UI refresh callback
+                        }
 
-                            // Show notification and close dialog
-                            _showTopNotification(context, '$field updated successfully!');
-                            Navigator.of(context).pop(); // Close the dialog
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF79A3B7),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    child: const Text(
-                      'Save',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  );
-                },
+                        // Show notification and close dialog
+                        _showTopNotification(context, '$field updated successfully!');
+                        Navigator.of(context).pop(); // Close the dialog
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF79A3B7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Save',
+                  style: TextStyle(color: Colors.white),
+                ),
               );
             },
           ),
@@ -254,7 +245,6 @@ class AppUser {
     },
   );
 }
-
 
 
   Future<void> showChangePasswordDialog(BuildContext context) async {
@@ -313,16 +303,16 @@ class AppUser {
           ElevatedButton(
             onPressed: () async {
               try {
-                User? currentUser = _auth.currentUser;
-                if (currentUser == null) throw Exception('No user is signed in.');
+                User? currentUser  = _auth.currentUser ;
+                if (currentUser  == null) throw Exception('No user is signed in.');
 
                 // Authenticate the current password
                 final credential = EmailAuthProvider.credential(
-                  email: currentUser.email!,
+                  email: currentUser .email!,
                   password: currentPasswordController.text,
                 );
 
-                await currentUser.reauthenticateWithCredential(credential);
+                await currentUser .reauthenticateWithCredential(credential);
 
                 // Validate the new password
                 String newPassword = newPasswordController.text;
@@ -333,13 +323,34 @@ class AppUser {
                 }
 
                 // Update the password in Firebase Authentication
-                await currentUser.updatePassword(newPassword);
+                await currentUser .updatePassword(newPassword);
 
                 // Close the dialog and show confirmation
                 Navigator.of(context).pop();
                 _showTopNotification(context, 'Password changed successfully!');
               } catch (e) {
-                _showTopNotification(context, 'Error: ${e.toString()}');
+                String errorMessage;
+
+                if (e is FirebaseAuthException) {
+                  switch (e.code) {
+                    case 'wrong-password':
+                      errorMessage = 'The current password is incorrect. Please try again.';
+                      break;
+                    case 'weak-password':
+                      errorMessage = 'The new password is too weak. Please choose a stronger password.';
+                      break;
+                    case 'requires-recent-login':
+                      errorMessage = 'Please re-login to change your password.';
+                      break;
+                    default:
+                      errorMessage = 'An error occurred. Please try again.';
+                      break;
+                  }
+                } else {
+                  errorMessage = 'An error occurred. Please try again.';
+                }
+
+                _showTopNotification(context, errorMessage);
               }
             },
             style: ElevatedButton.styleFrom(
