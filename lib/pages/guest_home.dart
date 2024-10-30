@@ -16,20 +16,32 @@ void main() async {
 
 class GuestHomePage extends StatefulWidget {
   @override
-  _GuestHomePageState createState() => _GuestHomePageState();
+  GuestHomePageState createState() => GuestHomePageState();
 }
 
-class _GuestHomePageState extends State<GuestHomePage> {
+class GuestHomePageState extends State<GuestHomePage> {
   int _currentIndex = 0;
 
   // List of screens for navigation
-  final List<Widget> _pages = [
-    GuestHomePageContent(), // Guest home page content
-    TaskPage(),
-    ChatbotpageWidget(),
-    ProgressPage(),
-    GuestProfilePage(),
-  ];
+  final List<Widget> _pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _pages.addAll([
+      GuestHomePageContent(onTabChange: onTabChange), // Pass the callback here
+      TaskPage(),
+      ChatbotpageWidget(),
+      ProgressPage(),
+      GuestProfilePage(),
+    ]);
+  }
+
+  void onTabChange(int index) {
+    setState(() {
+      _currentIndex = index; // Update the index when a tab is selected
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +56,8 @@ class _GuestHomePageState extends State<GuestHomePage> {
         child: GNav(
           backgroundColor: const Color(0xFF79A3B7)
               .withOpacity(0), // Set the background color to match your theme
-          color: const Color(
-              0xFF545454), // Inactive icons and text color (match the old inactive color)
-          activeColor: const Color(
-              0xFF104A73), // Active icon and text color (match the old active color)
+          color: const Color(0xFF545454), // Inactive icons and text color
+          activeColor: const Color(0xFF104A73), // Active icon and text color
           tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(
               0.3), // Slightly transparent background for active tab
           gap: 8, // Gap between icon and text
@@ -58,29 +68,14 @@ class _GuestHomePageState extends State<GuestHomePage> {
               15, // Optional: add rounded corners for a softer look
           selectedIndex: _currentIndex,
           iconSize: 24, // Adjust icon size to match the old bar
-          onTabChange: (index) {
-            setState(() {
-              _currentIndex = index; // Update the index when a tab is selected
-            });
-          },
+          onTabChange:
+              onTabChange, // Use the public onTabChange method for bottom navigation
           tabs: const [
-            GButton(
-              icon: Icons.home,
-              text: 'Home',
-            ),
-            GButton(
-              icon: Icons.task,
-              text: 'Tasks',
-            ),
-            GButton(
-              icon: Icons.sms,
-              text: 'Chatbot',
-            ),
+            GButton(icon: Icons.home, text: 'Home'),
+            GButton(icon: Icons.task, text: 'Tasks'),
+            GButton(icon: Icons.sms, text: 'Chatbot'),
             GButton(icon: Icons.poll, text: 'Progress'),
-            GButton(
-              icon: Icons.person,
-              text: 'Profile',
-            ),
+            GButton(icon: Icons.person, text: 'Profile'),
           ],
         ),
       ),
@@ -108,22 +103,26 @@ class _GuestHomePageState extends State<GuestHomePage> {
 
 // This is the content for the Guest HomePage
 class GuestHomePageContent extends StatefulWidget {
+  final Function(int) onTabChange; // Callback to change tabs
+
+  GuestHomePageContent({required this.onTabChange}); // Constructor
+
   @override
-  _GuestHomePageContentState createState() => _GuestHomePageContentState();
+  GuestHomePageContentState createState() => GuestHomePageContentState();
 }
 
-class _GuestHomePageContentState extends State<GuestHomePageContent> {
+class GuestHomePageContentState extends State<GuestHomePageContent> {
   String? fName; // first name to print
   String? lName; // last name to print
   int _carouselIndex = 0; // Current index for carousel
-  var now = DateTime.now(); //current date
-  var formatter = DateFormat.yMMMMd('en_US'); //format date as specified
+  var now = DateTime.now(); // current date
+  var formatter = DateFormat.yMMMMd('en_US'); // format date as specified
   final List<String> imgList = [
     'assets/images/signUpForFeatures.png',
     'assets/images/managaTasksCrousel.png',
     'assets/images/setRemindersCrousel.png',
-    'assets/images/chatCrousel.png',
-  ]; //carousel list
+    'assets/images/chatCrou sel.png',
+  ]; // carousel list
 
   // Fetch user data from Firestore
   Future<void> _fetchUserData() async {
@@ -171,7 +170,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
         SizedBox(height: 18),
         _buildCarouselSlider(),
         SizedBox(height: 15),
-        _buildQuickActions(),
+        buildQuickActions(),
       ],
     );
   }
@@ -220,14 +219,12 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
   }
 
   // Builds the carousel slider with images
-  // Builds the carousel slider with images
   Widget _buildCarouselSlider() {
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
         CarouselSlider(
           options: CarouselOptions(
-           
             enlargeCenterPage: true,
             aspectRatio: 16 / 8.5,
             viewportFraction: 0.9,
@@ -295,7 +292,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
   }
 
   // Builds the quick action buttons
-  Widget _buildQuickActions() {
+  Widget buildQuickActions() {
     return Column(
       children: [
         SizedBox(
@@ -307,11 +304,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const TaskPage()),
-                        );
+                        widget.onTabChange(1); // Navigate to TaskPage
                       },
                       child: Container(
                         height: 110,
@@ -378,12 +371,60 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        /////////////////////////////////// Add Task Page ////////////////////////////////
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //       builder: (context) => TaskPage()),
-                        // );
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              backgroundColor: const Color(0xFFF5F7F8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              title: const Text(
+                                'Sign In Required',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              content: const Text(
+                                'You need to sign in to add tasks. Please log in or create an account.',
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      side: const BorderSide(
+                                          color: Color(0xFF79A3B7)),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(color: Color(0xFF79A3B7)),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    // Navigate to Sign-In page or provide sign-in functionality
+                                    // Implement navigation to your sign-in page here if needed
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF79A3B7),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Sign In',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
                       child: Container(
                         height: 110,
@@ -445,7 +486,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                           ],
                         ),
                       ),
-                    ))
+                    )),
               ],
             ),
             TableRow(
@@ -454,12 +495,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        /////////////////////////////////// Progress Page ////////////////////////////////
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ProgressPage()),
-                        );
+                        widget.onTabChange(3); // Navigate to ProgressPage
                       },
                       child: Container(
                         height: 110,
@@ -526,12 +562,7 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        ///////////////////////////////// Attena (chatbot) Page ////////////////////////////////
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ChatbotpageWidget()),
-                        );
+                        widget.onTabChange(2); // Navigate to ChatbotpageWidget
                       },
                       child: Container(
                         height: 110,
@@ -593,11 +624,11 @@ class _GuestHomePageContentState extends State<GuestHomePageContent> {
                           ],
                         ),
                       ),
-                    ))
+                    )),
               ],
             ),
           ]),
-        )
+        ),
       ],
     );
   }
