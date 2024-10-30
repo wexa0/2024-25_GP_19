@@ -30,55 +30,61 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
             centerTitle: true,
-            backgroundColor:
-                const Color(0xFFEAEFF0), // Same header color as TaskPage
+            backgroundColor: const Color.fromARGB(
+                255, 226, 231, 234), // Same header color as TaskPage
             elevation: 0,
             actions: [
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'view') {
-                    showViewDialog();
-                  } else if (value == 'sort') {
-                    showSortDialog();
-                  } else if (value == 'categorize') {
-                    showCategoryDialog();
-                  }
-                },
-                icon: const Icon(Icons.more_vert, color: Colors.black),
-                itemBuilder: (BuildContext context) {
-                  return [
-                    PopupMenuItem<String>(
-                      value: 'view',
-                      child: Row(
-                        children: const [
-                          Icon(Icons.list, size: 24),
-                          SizedBox(width: 10),
-                          Text('View', style: TextStyle(fontSize: 18)),
-                        ],
+              PopupMenuTheme(
+                data: PopupMenuThemeData(
+                  color: Color(
+                      0xFFF5F7F8), // Set the background color for the popup menu
+                ),
+                child: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'view') {
+                      showViewDialog();
+                    } else if (value == 'sort') {
+                      showSortDialog();
+                    } else if (value == 'categorize') {
+                      showCategoryDialog();
+                    }
+                  },
+                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      PopupMenuItem<String>(
+                        value: 'view',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.list, size: 24),
+                            SizedBox(width: 10),
+                            Text('View', style: TextStyle(fontSize: 18)),
+                          ],
+                        ),
                       ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'sort',
-                      child: Row(
-                        children: const [
-                          Icon(Icons.sort, size: 24),
-                          SizedBox(width: 10),
-                          Text('Sort', style: TextStyle(fontSize: 18)),
-                        ],
+                      PopupMenuItem<String>(
+                        value: 'sort',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.sort, size: 24),
+                            SizedBox(width: 10),
+                            Text('Sort', style: TextStyle(fontSize: 18)),
+                          ],
+                        ),
                       ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'categorize',
-                      child: Row(
-                        children: const [
-                          Icon(Icons.label, size: 24),
-                          SizedBox(width: 10),
-                          Text('Categorize', style: TextStyle(fontSize: 18)),
-                        ],
+                      PopupMenuItem<String>(
+                        value: 'categorize',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.label, size: 24),
+                            SizedBox(width: 10),
+                            Text('Categorize', style: TextStyle(fontSize: 18)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ];
-                },
+                    ];
+                  },
+                ),
               ),
             ],
             automaticallyImplyLeading: false),
@@ -152,6 +158,7 @@ class _CalendarPageState extends State<CalendarPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Color(0xFFF5F7F8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -247,6 +254,7 @@ class _CalendarPageState extends State<CalendarPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Color(0xFFF5F7F8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -338,6 +346,7 @@ class _CalendarPageState extends State<CalendarPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Color(0xFFF5F7F8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),

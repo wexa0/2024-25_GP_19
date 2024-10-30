@@ -16,21 +16,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
 
-@override
+  @override
   _TaskPageState createState() => _TaskPageState();
 }
 
-  
 class _TaskPageState extends State<TaskPage> {
-    String selectedSort = 'timeline';
+  String selectedSort = 'timeline';
   bool showEmptyState = true;
-    String? userID;
+  String? userID;
 
-   
-
-
-
-  
   //list for empty list state.
   final List<String> emptyStateMessages = [
     "You have no tasks for today. Start planning!",
@@ -39,38 +33,36 @@ class _TaskPageState extends State<TaskPage> {
     "All set! Want to add more tasks for today?"
   ];
 
-
   final List<Map<String, dynamic>> tasks = []; // store task from Firestore.
- List<String> availableCategories = []; // store categories from Firestore.
-
+  List<String> availableCategories = []; // store categories from Firestore.
 
   DateTime? startOfDay;
   DateTime? endOfDay;
   bool isLoading = true;
   @override
-void dispose() {
-  tasks.clear(); 
-  userID = null; 
-  super.dispose();
-}
-
- @override
-void initState() {
-  super.initState();
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    // إذا كان المستخدم غير مسجل الدخول، قم بتعيين userID إلى null ووقف جلب المهام
-    setState(() {
-      userID = null;
-      isLoading = false;
-    });
-  } else {
-    // إذا كان المستخدم مسجل الدخول، قم بجلب المهام
-    userID = user.uid;
-    selectedCategories = ['All']; // تعيين "All" كالفئة الافتراضية
-    fetchTasksFromFirestore();
+  void dispose() {
+    tasks.clear();
+    userID = null;
+    super.dispose();
   }
-}
+
+  @override
+  void initState() {
+    super.initState();
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      // إذا كان المستخدم غير مسجل الدخول، قم بتعيين userID إلى null ووقف جلب المهام
+      setState(() {
+        userID = null;
+        isLoading = false;
+      });
+    } else {
+      // إذا كان المستخدم مسجل الدخول، قم بجلب المهام
+      userID = user.uid;
+      selectedCategories = ['All']; // تعيين "All" كالفئة الافتراضية
+      fetchTasksFromFirestore();
+    }
+  }
 
   Future<void> _fetchUserID() async {
     // Get the current user from FirebaseAuth
@@ -83,7 +75,7 @@ void initState() {
     }
   }
 
-void fetchTasksFromFirestore() async {
+  void fetchTasksFromFirestore() async {
     setState(() {
       isLoading = true;
     });
@@ -199,33 +191,29 @@ void fetchTasksFromFirestore() async {
     });
   }
 
-
-  
-    String getEmptyStateMessage() {
-    return emptyStateMessages[DateTime.now().weekday % emptyStateMessages.length];
+  String getEmptyStateMessage() {
+    return emptyStateMessages[
+        DateTime.now().weekday % emptyStateMessages.length];
   }
 
-bool areAllTasksCompleted() {
-  return tasks.every((task) => task['completed'] ?? false); // If null, default to false
-}
+  bool areAllTasksCompleted() {
+    return tasks.every(
+        (task) => task['completed'] ?? false); // If null, default to false
+  }
 
- 
-void deleteTask(Map<String, dynamic> task) async {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  void deleteTask(Map<String, dynamic> task) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  // Delete the task from Firestore
-  await firestore.collection('Task').doc(task['id']).delete(); 
+    // Delete the task from Firestore
+    await firestore.collection('Task').doc(task['id']).delete();
 
-  setState(() {
-    tasks.remove(task); // Remove task from the local list
-  });
-  _showTopNotification("Task deleted successfully.");
-}
+    setState(() {
+      tasks.remove(task); // Remove task from the local list
+    });
+    _showTopNotification("Task deleted successfully.");
+  }
 
-
-
-
-void editTask(Map<String, dynamic> task) async {
+  void editTask(Map<String, dynamic> task) async {
     bool? result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -239,14 +227,9 @@ void editTask(Map<String, dynamic> task) async {
     }
   }
 
-
-
-
-
   List<String> selectedCategories = [];
 
   // Functions for Hamburger Menu options
- 
 
   String getFormattedDate() {
     final now = DateTime.now();
@@ -254,23 +237,22 @@ void editTask(Map<String, dynamic> task) async {
     return formatter.format(now);
   }
 
-Color getPriorityColor(int priority) {
-  switch (priority) {
-    case 4:
-      return const Color(0xFFEFB1B1); // urgent
-    case 3:
-      return const Color(0xFFEBC591); // high
-    case 2:
-      return const Color(0xFF9ABEF1); // normal
-    case 1:
-      return const Color(0xFF969696); // low
-    default:
-      return const Color(0xFF9ABEF1); // default to normal
+  Color getPriorityColor(int priority) {
+    switch (priority) {
+      case 4:
+        return const Color(0xFFEFB1B1); // urgent
+      case 3:
+        return const Color(0xFFEBC591); // high
+      case 2:
+        return const Color(0xFF9ABEF1); // normal
+      case 1:
+        return const Color(0xFF969696); // low
+      default:
+        return const Color(0xFF9ABEF1); // default to normal
+    }
   }
-}
 
-
-void showViewDialog() {
+  void showViewDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -386,9 +368,7 @@ void showViewDialog() {
     );
   }
 
-  
-
- void showSortDialog() {
+  void showSortDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -498,36 +478,36 @@ void showViewDialog() {
     );
   }
 
-
-bool isValidTimeFormat(String time) {
-  final timePattern = RegExp(r'^[1-9]|1[0-2]:[0-5][0-9] (AM|PM)$', caseSensitive: false);
-  return timePattern.hasMatch(time);
-}
-
-void sortTasks() {
-  if (selectedSort == 'priority') {
-    // فرز المهام بناءً على القيم العددية للأولوية (4 = urgent، 1 = low)
-    tasks.sort((a, b) => b['priority'].compareTo(a['priority'])); // ترتيب تنازلي حسب الأولوية
-  } else if (selectedSort == 'timeline') {
-    try {
-      tasks.sort((a, b) {
-        DateTime timeA = a['time'] is DateTime ? a['time'] : DateTime.parse(a['time'].toString());
-        DateTime timeB = b['time'] is DateTime ? b['time'] : DateTime.parse(b['time'].toString());
-        return timeA.compareTo(timeB); // ترتيب تصاعدي حسب الوقت
-      });
-    } catch (e) {
-      print('General error: $e');
-    }
+  bool isValidTimeFormat(String time) {
+    final timePattern =
+        RegExp(r'^[1-9]|1[0-2]:[0-5][0-9] (AM|PM)$', caseSensitive: false);
+    return timePattern.hasMatch(time);
   }
-  setState(() {}); // تحديث الواجهة بعد الفرز
-}
 
+  void sortTasks() {
+    if (selectedSort == 'priority') {
+      // فرز المهام بناءً على القيم العددية للأولوية (4 = urgent، 1 = low)
+      tasks.sort((a, b) =>
+          b['priority'].compareTo(a['priority'])); // ترتيب تنازلي حسب الأولوية
+    } else if (selectedSort == 'timeline') {
+      try {
+        tasks.sort((a, b) {
+          DateTime timeA = a['time'] is DateTime
+              ? a['time']
+              : DateTime.parse(a['time'].toString());
+          DateTime timeB = b['time'] is DateTime
+              ? b['time']
+              : DateTime.parse(b['time'].toString());
+          return timeA.compareTo(timeB); // ترتيب تصاعدي حسب الوقت
+        });
+      } catch (e) {
+        print('General error: $e');
+      }
+    }
+    setState(() {}); // تحديث الواجهة بعد الفرز
+  }
 
-
-
-
-
-void showCategoryDialog() {
+  void showCategoryDialog() {
     List<String> tempSelectedCategories = List.from(selectedCategories);
 
     showDialog(
@@ -556,7 +536,8 @@ void showCategoryDialog() {
                     labelStyle: TextStyle(
                       color: tempSelectedCategories.contains(category)
                           ? Colors.white
-                          : const Color.fromARGB(255, 20, 20, 20), // Text color changes based on selection
+                          : const Color.fromARGB(255, 20, 20,
+                              20), // Text color changes based on selection
                     ),
                     selected: tempSelectedCategories.contains(category),
                     selectedColor:
@@ -634,10 +615,6 @@ void showCategoryDialog() {
     );
   }
 
-
-
-
-
   void closeAllSubtasks() {
     setState(() {
       for (var task in tasks) {
@@ -646,135 +623,147 @@ void showCategoryDialog() {
     });
   }
 
-void toggleTaskCompletion(Map<String, dynamic> task) async {
-  bool newTaskCompletionStatus = !task['completed']; // عكس حالة الإكمال للمهمة الرئيسية
+  void toggleTaskCompletion(Map<String, dynamic> task) async {
+    bool newTaskCompletionStatus =
+        !task['completed']; // عكس حالة الإكمال للمهمة الرئيسية
 
-  setState(() {
-    task['completed'] = newTaskCompletionStatus;
-  });
+    setState(() {
+      task['completed'] = newTaskCompletionStatus;
+    });
 
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  if (newTaskCompletionStatus) {
-    // إذا كانت المهمة الرئيسية مكتملة، اجعل جميع المهام الفرعية مكتملة
-    for (var subtask in task['subtasks']) {
-      subtask['completed'] = true;
-      await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': 1});
+    if (newTaskCompletionStatus) {
+      // إذا كانت المهمة الرئيسية مكتملة، اجعل جميع المهام الفرعية مكتملة
+      for (var subtask in task['subtasks']) {
+        subtask['completed'] = true;
+        await firestore
+            .collection('SubTask')
+            .doc(subtask['id'])
+            .update({'completionStatus': 1});
+      }
+      // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"مكتملة"
+      await firestore
+          .collection('Task')
+          .doc(task['id'])
+          .update({'completionStatus': 2});
+    } else {
+      // إذا كانت المهمة الرئيسية غير مكتملة، اجعل جميع المهام الفرعية غير مكتملة
+      for (var subtask in task['subtasks']) {
+        subtask['completed'] = false;
+        await firestore
+            .collection('SubTask')
+            .doc(subtask['id'])
+            .update({'completionStatus': 0});
+      }
+      // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"غير مكتملة"
+      await firestore
+          .collection('Task')
+          .doc(task['id'])
+          .update({'completionStatus': 0});
     }
-    // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"مكتملة"
-    await firestore.collection('Task').doc(task['id']).update({'completionStatus': 2});
-  } else {
-    // إذا كانت المهمة الرئيسية غير مكتملة، اجعل جميع المهام الفرعية غير مكتملة
-    for (var subtask in task['subtasks']) {
-      subtask['completed'] = false;
-      await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': 0});
+
+    if (mounted) {
+      setState(() {}); // تحديث واجهة المستخدم
     }
-    // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"غير مكتملة"
-    await firestore.collection('Task').doc(task['id']).update({'completionStatus': 0});
   }
 
-  if (mounted) {
-    setState(() {}); // تحديث واجهة المستخدم
+  void toggleSubtaskCompletion(
+      Map<String, dynamic> task, Map<String, dynamic> subtask) async {
+    bool newSubtaskCompletionStatus =
+        !subtask['completed']; // عكس حالة إكمال المهام الفرعية
+
+    setState(() {
+      subtask['completed'] = newSubtaskCompletionStatus;
+    });
+
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // تحديث حالة المهمة الفرعية في قاعدة البيانات
+    await firestore
+        .collection('SubTask')
+        .doc(subtask['id'])
+        .update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
+
+    // التحقق مما إذا كانت جميع المهام الفرعية مكتملة أو على الأقل واحدة مكتملة
+    bool allSubtasksComplete =
+        task['subtasks'].every((s) => s['completed'] == true);
+    bool anySubtaskComplete =
+        task['subtasks'].any((s) => s['completed'] == true);
+
+    int newTaskStatus;
+    if (allSubtasksComplete) {
+      newTaskStatus = 2; // المهمة الرئيسية مكتملة
+      task['completed'] = true;
+    } else if (anySubtaskComplete) {
+      newTaskStatus = 1; // المهمة الرئيسية قيد التنفيذ
+      task['completed'] = false;
+    } else {
+      newTaskStatus = 0; // المهمة الرئيسية غير مكتملة
+      task['completed'] = false;
+    }
+    if (mounted) {
+      setState(() {}); // تحديث واجهة المستخدم
+    }
+
+    // تحديث حالة المهمة الرئيسية في قاعدة البيانات
+    await firestore
+        .collection('Task')
+        .doc(task['id'])
+        .update({'completionStatus': newTaskStatus});
   }
-}
-
-
-
-
-void toggleSubtaskCompletion(Map<String, dynamic> task, Map<String, dynamic> subtask) async {
-  bool newSubtaskCompletionStatus = !subtask['completed']; // عكس حالة إكمال المهام الفرعية
-
-  setState(() {
-    subtask['completed'] = newSubtaskCompletionStatus;
-  });
-
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-  // تحديث حالة المهمة الفرعية في قاعدة البيانات
-  await firestore.collection('SubTask').doc(subtask['id']).update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
-
-  // التحقق مما إذا كانت جميع المهام الفرعية مكتملة أو على الأقل واحدة مكتملة
-  bool allSubtasksComplete = task['subtasks'].every((s) => s['completed'] == true);
-  bool anySubtaskComplete = task['subtasks'].any((s) => s['completed'] == true);
-
-  int newTaskStatus;
-  if (allSubtasksComplete) {
-    newTaskStatus = 2; // المهمة الرئيسية مكتملة
-    task['completed'] = true;
-  } else if (anySubtaskComplete) {
-    newTaskStatus = 1; // المهمة الرئيسية قيد التنفيذ
-    task['completed'] = false;
-  } else {
-    newTaskStatus = 0; // المهمة الرئيسية غير مكتملة
-    task['completed'] = false;
-  }
-  if (mounted) {
-    setState(() {}); // تحديث واجهة المستخدم
-  }
-
-  // تحديث حالة المهمة الرئيسية في قاعدة البيانات
-  await firestore.collection('Task').doc(task['id']).update({'completionStatus': newTaskStatus});
-
-  
-}
-
-
-
-
-
 
   void showDeleteConfirmationDialog(Map<String, dynamic> task) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-         backgroundColor: Color(0xFFF5F7F8), 
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        title: const Text(
-          'Are you sure you want to delete this task?',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // إغلاق النافذة بدون حذف
-            },
-            style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(color: Color(0xFF79A3B7)),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Color(0xFF79A3B7)),
-                  ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFFF5F7F8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
           ),
-
-
-          ElevatedButton(
-            onPressed: () {
-              deleteTask(task);
-              Navigator.of(context).pop(); // إغلاق النافذة بعد الحذف
-            },
-            style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+          title: const Text(
+            'Are you sure you want to delete this task?',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // إغلاق النافذة بدون حذف
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF79A3B7)),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      );
-    },
-  );
-}
+            ElevatedButton(
+              onPressed: () {
+                deleteTask(task);
+                Navigator.of(context).pop(); // إغلاق النافذة بعد الحذف
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child:
+                  const Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-void _showTopNotification(String message) {
+  void _showTopNotification(String message) {
     OverlayState? overlayState = Overlay.of(context);
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -806,37 +795,35 @@ void _showTopNotification(String message) {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    
     bool hasTodayTasks = tasks.any((task) =>
-      task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!));
+        task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!));
 
-  // التحقق إذا كانت الفئة المختارة لا تحتوي على أي مهام
- bool noTasksInSelectedCategory = !tasks.any((task) =>
-  selectedCategories.contains('All') ||
-  (selectedCategories.contains('Uncategorized') && task['categories'].contains('Uncategorized')) ||
-  selectedCategories.any((category) => task['categories'].contains(category))
-);
+    // التحقق إذا كانت الفئة المختارة لا تحتوي على أي مهام
+    bool noTasksInSelectedCategory = !tasks.any((task) =>
+        selectedCategories.contains('All') ||
+        (selectedCategories.contains('Uncategorized') &&
+            task['categories'].contains('Uncategorized')) ||
+        selectedCategories
+            .any((category) => task['categories'].contains(category)));
 
- 
     return GestureDetector(
-      onTap: closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
+      onTap:
+          closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
-         title: Text(
+          title: Text(
             'Tasks page',
-           style: TextStyle(
+            style: TextStyle(
               color: Colors.black,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           centerTitle: true,
-          backgroundColor:  const Color.fromARGB(255, 226, 231, 234),
+          backgroundColor: const Color.fromARGB(255, 226, 231, 234),
           elevation: 0,
           automaticallyImplyLeading: false,
 
@@ -915,251 +902,308 @@ void _showTopNotification(String message) {
                   ),
                 ];
               },
+              // Set the background color for the popup menu
+              color: Color(0xFFF5F7F8),
             ),
           ],
-
         ),
 
         // Body content
-       body: Padding(
-  padding: const EdgeInsets.all(16.0),
-  child: isLoading
-      ? Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/logo.png', // شعار التطبيق الخاص بك
-                width: 170,
-                height: 170,
-              ),
-              const SizedBox(height: 0),
-              Lottie.asset(
-                'assets/animations/loading.json', // ملف الأنيميشن Lottie
-                width: 150,
-                height: 150,
-              ),
-            ],
-          ),
-        )
-      : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              getFormattedDate(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Today',
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-                fontFamily: 'Poppins',
-              ),
-            ),
-             
-             if (tasks.isEmpty || !tasks.any((task) => task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!)))
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 80), // إضافة مسافة رأسية قبل الصورة
-                    Image.asset(
-                      'assets/images/empty_list.png', // المسار الصحيح للصورة
-                      width: 150,  // عرض الصورة
-                      height: 150, // ارتفاع الصورة
-                    ),
-                    const SizedBox(height: 20), // المسافة بين الصورة والنص
-                    Text(
-                      getEmptyStateMessage(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF3B7292),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 50), // إضافة مسافة رأسية بعد النص
-                  ],
-                ),
-              )
-             
-// Existing Expanded widget for displaying tasks
-else
-            Expanded(
-              child: (!tasks.any((task) =>
-                      selectedCategories.contains('All') ||
-                      (selectedCategories.contains('Uncategorized') &&
-                          task['categories'].contains('Uncategorized')) ||
-                      selectedCategories.any((category) =>
-                          task['categories'].contains(category))))
-                  ? Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 30),
-            Center(
-              child: Image.asset(
-                'assets/images/empty_list.png', // تأكد من وجود الصورة في المسار المحدد
-                width: 100,
-                height: 110,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                'There are no tasks in this category\.',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3B7292),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        )
-      : ListView(
-      
-          children: [
-      // Show Pending Tasks section if there are any uncompleted tasks
-    if (tasks.any((task) => !task['completed'] && 
-        (selectedCategories.contains('All') || 
-         (selectedCategories.contains('Uncategorized') && (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
-         selectedCategories.any((category) => task['categories'].contains(category)))))
-      Row(
-        children: const [
-          Expanded(child: Divider(thickness: 1)),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Text(
-              'Pending Tasks',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-            Expanded(child: Divider(thickness: 1)),
-          ],
-        ),
-       ...tasks.where((task) {
-        if (selectedCategories.contains('All')) {
-          return !task['completed'];
-        } else if (selectedCategories.contains('Uncategorized')) {
-          return !task['completed'] && (task['categories'] == null || task['categories'].contains('Uncategorized'));
-        }
-        return !task['completed'] && selectedCategories.any((category) => task['categories'].contains(category));
-      }).map(
-        (task) => TaskCard(
-          task: task,
-          onTaskToggle: () => toggleTaskCompletion(task),
-          onExpandToggle: () {
-            setState(() {
-              task['expanded'] = !task['expanded'];
-            });
-          },
-          onSubtaskToggle: (subtask) => toggleSubtaskCompletion(task, subtask),
-          onSubtaskDeleted: (subtask) async {
-            await FirebaseFirestore.instance.collection('SubTask').doc(subtask['id']).delete();
-            task['subtasks'].remove(subtask);
-            setState(() {}); // تحديث الواجهة بعد الحذف
-            _showTopNotification("Subtask deleted successfully.");
-          },
-            getPriorityColor: getPriorityColor,
-            onDeleteTask: () => showDeleteConfirmationDialog(task),
-            onEditTask: () => editTask(task),
-          ),
-        ),
-      const SizedBox(height: 16),
-
-  if (areAllTasksCompleted() && selectedCategories.contains('All'))
-                Center(
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: isLoading
+              ? Center(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-          const SizedBox(height: 70),                      
                       Image.asset(
-        'assets/images/done.png', // عرض الصورة
-        height: 110, // ارتفاع الصورة
-      ),
-      const SizedBox(height: 20), // المسافة بين الصورة والنص
-                      const Text(
-                        'Awesome job! You\'ve conquered your\n to-do list today!',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3B7292),
-                        ),
-                        textAlign: TextAlign.center,
+                        'assets/images/logo.png', // شعار التطبيق الخاص بك
+                        width: 170,
+                        height: 170,
+                      ),
+                      const SizedBox(height: 0),
+                      Lottie.asset(
+                        'assets/animations/loading.json', // ملف الأنيميشن Lottie
+                        width: 150,
+                        height: 150,
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      getFormattedDate(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Today',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    if (tasks.isEmpty ||
+                        !tasks.any((task) =>
+                            task['time'].isAfter(startOfDay!) &&
+                            task['time'].isBefore(endOfDay!)))
+                      Center(
+                        child: Column(
+                          children: [
+                            const SizedBox(
+                                height: 80), // إضافة مسافة رأسية قبل الصورة
+                            Image.asset(
+                              'assets/images/empty_list.png', // المسار الصحيح للصورة
+                              width: 150, // عرض الصورة
+                              height: 150, // ارتفاع الصورة
+                            ),
+                            const SizedBox(
+                                height: 20), // المسافة بين الصورة والنص
+                            Text(
+                              getEmptyStateMessage(),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF3B7292),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(
+                                height: 50), // إضافة مسافة رأسية بعد النص
                           ],
                         ),
-                      ),
-                      
-       // Show Completed Tasks section if there are any completed tasks
-      if (tasks.any((task) => task['completed'] && 
-        (selectedCategories.contains('All') || 
-         (selectedCategories.contains('Uncategorized') && (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
-         selectedCategories.any((category) => task['categories'].contains(category)))))
-      Row(
-          children: const [
-            Expanded(child: Divider(thickness: 1)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                'Completed Tasks',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Expanded(child: Divider(thickness: 1)),
-          ],
-        ),
+                      )
 
-       ...tasks.where((task) {
-        // شرط عرض المهام المكتملة للفئة المحددة
-        if (selectedCategories.contains('All')) {
-          return task['completed'];
-        } else if (selectedCategories.contains('Uncategorized')) {
-          return task['completed'] && (task['categories'] == null || task['categories'].contains('Uncategorized'));
-        }
-        return task['completed'] && selectedCategories.any((category) => task['categories'].contains(category));
-      }).map(
-          (task) => TaskCard(
-            task: task,
-            onTaskToggle: () => toggleTaskCompletion(task),
-            onExpandToggle: () {
-              setState(() {
-                task['expanded'] = !task['expanded'];
-              });
-            },
-            onSubtaskToggle: (subtask) => toggleSubtaskCompletion(task, subtask),
-            onSubtaskDeleted: (subtask) async {
-              await FirebaseFirestore.instance.collection('SubTask').doc(subtask['id']).delete();
-              task['subtasks'].remove(subtask);
-              setState(() {}); // تحديث الواجهة بعد الحذف
-              _showTopNotification("Subtask deleted successfully.");
-            },
-            getPriorityColor: getPriorityColor,
-            onDeleteTask: () => showDeleteConfirmationDialog(task),
-            onEditTask: () => editTask(task),
-           ),
+// Existing Expanded widget for displaying tasks
+                    else
+                      Expanded(
+                        child: (!tasks.any((task) =>
+                                selectedCategories.contains('All') ||
+                                (selectedCategories.contains('Uncategorized') &&
+                                    task['categories']
+                                        .contains('Uncategorized')) ||
+                                selectedCategories.any((category) =>
+                                    task['categories'].contains(category))))
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const SizedBox(height: 30),
+                                  Center(
+                                    child: Image.asset(
+                                      'assets/images/empty_list.png', // تأكد من وجود الصورة في المسار المحدد
+                                      width: 100,
+                                      height: 110,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const Center(
+                                    child: Text(
+                                      'There are no tasks in this category\.',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3B7292),
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView(
+                                children: [
+                                  // Show Pending Tasks section if there are any uncompleted tasks
+                                  if (tasks.any((task) =>
+                                      !task['completed'] &&
+                                      (selectedCategories.contains('All') ||
+                                          (selectedCategories
+                                                  .contains('Uncategorized') &&
+                                              (task['categories'] == null ||
+                                                  task['categories'].contains(
+                                                      'Uncategorized'))) ||
+                                          selectedCategories.any((category) =>
+                                              task['categories']
+                                                  .contains(category)))))
+                                    Row(
+                                      children: const [
+                                        Expanded(child: Divider(thickness: 1)),
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: Text(
+                                            'Pending Tasks',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(child: Divider(thickness: 1)),
+                                      ],
+                                    ),
+                                  ...tasks.where((task) {
+                                    if (selectedCategories.contains('All')) {
+                                      return !task['completed'];
+                                    } else if (selectedCategories
+                                        .contains('Uncategorized')) {
+                                      return !task['completed'] &&
+                                          (task['categories'] == null ||
+                                              task['categories']
+                                                  .contains('Uncategorized'));
+                                    }
+                                    return !task['completed'] &&
+                                        selectedCategories.any((category) =>
+                                            task['categories']
+                                                .contains(category));
+                                  }).map(
+                                    (task) => TaskCard(
+                                      task: task,
+                                      onTaskToggle: () =>
+                                          toggleTaskCompletion(task),
+                                      onExpandToggle: () {
+                                        setState(() {
+                                          task['expanded'] = !task['expanded'];
+                                        });
+                                      },
+                                      onSubtaskToggle: (subtask) =>
+                                          toggleSubtaskCompletion(
+                                              task, subtask),
+                                      onSubtaskDeleted: (subtask) async {
+                                        await FirebaseFirestore.instance
+                                            .collection('SubTask')
+                                            .doc(subtask['id'])
+                                            .delete();
+                                        task['subtasks'].remove(subtask);
+                                        setState(
+                                            () {}); // تحديث الواجهة بعد الحذف
+                                        _showTopNotification(
+                                            "Subtask deleted successfully.");
+                                      },
+                                      getPriorityColor: getPriorityColor,
+                                      onDeleteTask: () =>
+                                          showDeleteConfirmationDialog(task),
+                                      onEditTask: () => editTask(task),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  if (areAllTasksCompleted() &&
+                                      selectedCategories.contains('All'))
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 70),
+                                          Image.asset(
+                                            'assets/images/done.png', // عرض الصورة
+                                            height: 110, // ارتفاع الصورة
+                                          ),
+                                          const SizedBox(
+                                              height:
+                                                  20), // المسافة بين الصورة والنص
+                                          const Text(
+                                            'Awesome job! You\'ve conquered your\n to-do list today!',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF3B7292),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
+                                      ),
+                                    ),
+
+                                  // Show Completed Tasks section if there are any completed tasks
+                                  if (tasks.any((task) =>
+                                      task['completed'] &&
+                                      (selectedCategories.contains('All') ||
+                                          (selectedCategories
+                                                  .contains('Uncategorized') &&
+                                              (task['categories'] == null ||
+                                                  task['categories'].contains(
+                                                      'Uncategorized'))) ||
+                                          selectedCategories.any((category) =>
+                                              task['categories']
+                                                  .contains(category)))))
+                                    Row(
+                                      children: const [
+                                        Expanded(child: Divider(thickness: 1)),
+                                        Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 8.0),
+                                          child: Text(
+                                            'Completed Tasks',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(child: Divider(thickness: 1)),
+                                      ],
+                                    ),
+
+                                  ...tasks.where((task) {
+                                    // شرط عرض المهام المكتملة للفئة المحددة
+                                    if (selectedCategories.contains('All')) {
+                                      return task['completed'];
+                                    } else if (selectedCategories
+                                        .contains('Uncategorized')) {
+                                      return task['completed'] &&
+                                          (task['categories'] == null ||
+                                              task['categories']
+                                                  .contains('Uncategorized'));
+                                    }
+                                    return task['completed'] &&
+                                        selectedCategories.any((category) =>
+                                            task['categories']
+                                                .contains(category));
+                                  }).map(
+                                    (task) => TaskCard(
+                                      task: task,
+                                      onTaskToggle: () =>
+                                          toggleTaskCompletion(task),
+                                      onExpandToggle: () {
+                                        setState(() {
+                                          task['expanded'] = !task['expanded'];
+                                        });
+                                      },
+                                      onSubtaskToggle: (subtask) =>
+                                          toggleSubtaskCompletion(
+                                              task, subtask),
+                                      onSubtaskDeleted: (subtask) async {
+                                        await FirebaseFirestore.instance
+                                            .collection('SubTask')
+                                            .doc(subtask['id'])
+                                            .delete();
+                                        task['subtasks'].remove(subtask);
+                                        setState(
+                                            () {}); // تحديث الواجهة بعد الحذف
+                                        _showTopNotification(
+                                            "Subtask deleted successfully.");
+                                      },
+                                      getPriorityColor: getPriorityColor,
+                                      onDeleteTask: () =>
+                                          showDeleteConfirmationDialog(task),
+                                      onEditTask: () => editTask(task),
+                                    ),
+                                  ),
+                                ],
                               ),
-                        ],
                       ),
-                    ), 
                   ],
-                ), 
+                ),
         ),
-floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton(
           onPressed: () async {
             if (userID != null) {
               // Navigate to AddTaskPage if the user is logged in
@@ -1237,9 +1281,6 @@ floatingActionButton: FloatingActionButton(
           ),
           child: const Icon(Icons.add, color: Colors.white),
         ),
-
-  
-
       ), //jjjj
     ); //jjjj
   }
@@ -1250,14 +1291,15 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onTaskToggle;
   final VoidCallback onExpandToggle;
   final Function(Map<String, dynamic>) onSubtaskToggle;
-  final Function(Map<String, dynamic>) onSubtaskDeleted; // Callback for deletion
- final Color Function(int) getPriorityColor;
+  final Function(Map<String, dynamic>)
+      onSubtaskDeleted; // Callback for deletion
+  final Color Function(int) getPriorityColor;
   final VoidCallback onDeleteTask;
   final VoidCallback onEditTask;
 
   const TaskCard({
     Key? key,
-      required this.task,
+    required this.task,
     required this.onTaskToggle,
     required this.onExpandToggle,
     required this.onSubtaskToggle,
@@ -1267,12 +1309,13 @@ class TaskCard extends StatelessWidget {
     required this.onEditTask,
   }) : super(key: key);
 
-  void showDeleteConfirmationDialog(BuildContext context, Map<String, dynamic> subtask) {
+  void showDeleteConfirmationDialog(
+      BuildContext context, Map<String, dynamic> subtask) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor:  const Color(0xFFF5F7F8),
+          backgroundColor: const Color(0xFFF5F7F8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
@@ -1280,173 +1323,88 @@ class TaskCard extends StatelessWidget {
             'Are you sure you want to delete this subtask?',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog without deleting
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF79A3B7)),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog before deletion
 
-          
-            actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog without deleting
-            },
-             style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(color: Color(0xFF79A3B7)),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Color(0xFF79A3B7)),
-                  ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog before deletion
-              
-              // Call the onSubtaskDeleted callback to handle the deletion in TaskPage
-              onSubtaskDeleted(subtask);
-            },
-             style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(color: Colors.red),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(color: Colors.white),
-                  ),
-          ),
+                // Call the onSubtaskDeleted callback to handle the deletion in TaskPage
+                onSubtaskDeleted(subtask);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Colors.red),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           ],
         );
       },
     );
   }
 
-
-@override
-Widget build(BuildContext context) {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(16.0), // إضافة الحواف المستديرة إلى بطاقة المهام بأكملها
-    child: Card(
-      color: Colors.white,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0), // إضافة الحواف المستديرة لبطاقة المهام
-      ),
-      child: Slidable(
-        key: ValueKey(task['title']),
-        endActionPane: ActionPane(
-          motion: const ScrollMotion(),
-          children: [
-            CustomSlidableAction(
-              onPressed: (_) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTaskPage(taskId: task['id']),
-      ),
-    );
-  },
-  backgroundColor: const Color(0xFFC2C2C2), // لون الخلفية
-  child: const Icon(
-    Icons.edit,
-    color: Colors.white,
-              ),
-            ),
-            SizedBox(
-              width: 1,
-              child: Container(
-                color: Colors.grey, // اللون الرمادي للفاصل
-              ),
-            ),
-            CustomSlidableAction(
-              onPressed: (_) => onDeleteTask(),
-              backgroundColor: const Color(0xFFC2C2C2),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
-              ),
-            ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(
+          16.0), // إضافة الحواف المستديرة إلى بطاقة المهام بأكملها
+      child: Card(
+        color: Colors.white,
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+              16.0), // إضافة الحواف المستديرة لبطاقة المهام
         ),
-        child: Column(
-          children: [
-            ListTile(
-              onTap: onEditTask,
-           leading: Tooltip(
-          message: "Mark Task as complete!",  // التلميح المطلوب
-         showDuration: Duration(milliseconds: 500),
-    child: InkWell(
-      onTap: onTaskToggle,  // يحافظ على الـ onTap لتنفيذ الإجراء عند النقر
-      child: Container(
-        width: 24,
-        height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: task['completed']
-              ? Colors.grey
-              : getPriorityColor(task['priority']),
-          width: 4.0,
-        ),
-        color: task['completed'] ? Colors.grey : Colors.white,
-      ),
-      child: task['completed']
-          ? const Icon(Icons.check, size: 16, color: Colors.white)
-          : null,
-    ),
-  ),
-),
-
-              title: Text(
-                task['title'],
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  decoration: task['completed']
-                      ? TextDecoration.lineThrough
-                      : TextDecoration.none,
-                ),
-              ),
-              subtitle: Text(
-              DateFormat('h:mm a').format(task['time']), // Display the time in "10 AM" format
-                ),
-
- trailing: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    IconButton(
-      icon: const Icon(Icons.play_arrow),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TimerPage()),
-        );
-      },
-    ),
-    if (task['subtasks'] != null && task['subtasks'].isNotEmpty) // Show arrow if subtasks are present
-      IconButton(
-        icon: Icon(task['expanded'] ? Icons.expand_less : Icons.expand_more),
-        onPressed: onExpandToggle,
-      ),
-  ],
-),
-
-
-            ),
-if (task['expanded'] && task['subtasks'] != null && task['subtasks'].isNotEmpty)
-  Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Column(
-      children: task['subtasks'].map<Widget>((subtask) {
-        return Slidable(
-          key: ValueKey(subtask['id']),
+        child: Slidable(
+          key: ValueKey(task['title']),
           endActionPane: ActionPane(
             motion: const ScrollMotion(),
             children: [
               CustomSlidableAction(
-                onPressed: (_) => showDeleteConfirmationDialog(context, subtask),
+                onPressed: (_) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditTaskPage(taskId: task['id']),
+                    ),
+                  );
+                },
+                backgroundColor: const Color(0xFFC2C2C2), // لون الخلفية
+                child: const Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(
+                width: 1,
+                child: Container(
+                  color: Colors.grey, // اللون الرمادي للفاصل
+                ),
+              ),
+              CustomSlidableAction(
+                onPressed: (_) => onDeleteTask(),
                 backgroundColor: const Color(0xFFC2C2C2),
                 child: const Icon(
                   Icons.delete,
@@ -1455,53 +1413,154 @@ if (task['expanded'] && task['subtasks'] != null && task['subtasks'].isNotEmpty)
               ),
             ],
           ),
-             child: ListTile(
-              onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditTaskPage(taskId: task['id']),
-      ),
-    );
-  },
-  leading: Tooltip(
-    message: "Mark SubTask as complete!", // التلميح الذي يظهر للمستخدم
-    showDuration: Duration(milliseconds: 500), // مدة ظهور التلميح
-    child: GestureDetector(
-      onTap: () {
-        onSubtaskToggle(subtask);
-      },
-      child: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: subtask['completed'] ? Colors.grey : Colors.grey,
-            width: 4.0,
-          ),
-          color: subtask['completed'] ? Colors.grey : Colors.white,
-        ),
-        child: subtask['completed']
-            ? const Icon(Icons.check, size: 16, color: Colors.white)
-            : null,
-            ),
+          child: Column(
+            children: [
+              ListTile(
+                onTap: onEditTask,
+                leading: Tooltip(
+                  message: "Mark Task as complete!", // التلميح المطلوب
+                  showDuration: Duration(milliseconds: 500),
+                  child: InkWell(
+                    onTap:
+                        onTaskToggle, // يحافظ على الـ onTap لتنفيذ الإجراء عند النقر
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: task['completed']
+                              ? Colors.grey
+                              : getPriorityColor(task['priority']),
+                          width: 4.0,
+                        ),
+                        color: task['completed'] ? Colors.grey : Colors.white,
+                      ),
+                      child: task['completed']
+                          ? const Icon(Icons.check,
+                              size: 16, color: Colors.white)
+                          : null,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  task['title'],
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    decoration: task['completed']
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                  ),
+                ),
+                subtitle: Text(
+                  DateFormat('h:mm a').format(
+                      task['time']), // Display the time in "10 AM" format
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.play_arrow),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TimerPage()),
+                        );
+                      },
+                    ),
+                    if (task['subtasks'] != null &&
+                        task['subtasks']
+                            .isNotEmpty) // Show arrow if subtasks are present
+                      IconButton(
+                        icon: Icon(task['expanded']
+                            ? Icons.expand_less
+                            : Icons.expand_more),
+                        onPressed: onExpandToggle,
+                      ),
+                  ],
+                ),
               ),
-            ),
-             title: Text(
-              subtask['title'],
-              style: TextStyle(
-                decoration: subtask['completed'] ? TextDecoration.lineThrough : TextDecoration.none,
-              ),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.play_arrow),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TimerPage()),
-                );
-               },
+              if (task['expanded'] &&
+                  task['subtasks'] != null &&
+                  task['subtasks'].isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: task['subtasks'].map<Widget>((subtask) {
+                      return Slidable(
+                        key: ValueKey(subtask['id']),
+                        endActionPane: ActionPane(
+                          motion: const ScrollMotion(),
+                          children: [
+                            CustomSlidableAction(
+                              onPressed: (_) => showDeleteConfirmationDialog(
+                                  context, subtask),
+                              backgroundColor: const Color(0xFFC2C2C2),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditTaskPage(taskId: task['id']),
+                              ),
+                            );
+                          },
+                          leading: Tooltip(
+                            message:
+                                "Mark SubTask as complete!", // التلميح الذي يظهر للمستخدم
+                            showDuration:
+                                Duration(milliseconds: 500), // مدة ظهور التلميح
+                            child: GestureDetector(
+                              onTap: () {
+                                onSubtaskToggle(subtask);
+                              },
+                              child: Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: subtask['completed']
+                                        ? Colors.grey
+                                        : Colors.grey,
+                                    width: 4.0,
+                                  ),
+                                  color: subtask['completed']
+                                      ? Colors.grey
+                                      : Colors.white,
+                                ),
+                                child: subtask['completed']
+                                    ? const Icon(Icons.check,
+                                        size: 16, color: Colors.white)
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            subtask['title'],
+                            style: TextStyle(
+                              decoration: subtask['completed']
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.play_arrow),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => TimerPage()),
+                              );
+                            },
                           ),
                         ),
                       );
