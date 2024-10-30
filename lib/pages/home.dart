@@ -25,10 +25,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   String? imageUrl; //image url
   User? _user = FirebaseAuth.instance.currentUser; // get current user
   String? fName; // first name to print
@@ -45,13 +45,29 @@ class _HomePageState extends State<HomePage> {
   ]; //carousel list
 
   // List of screens for navigation
-  final List<Widget> _pages = [
-    HomePageContent(), // Define a separate widget for home page content
-    TaskPage(),
-    ChatbotpageWidget(),
-    ProgressPage(),
-    ProfilePage(),
-  ];
+  final List<Widget> _pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData(); // Fetch user data when the widget is initialized
+
+    super.initState();
+    _pages.addAll([
+      HomePageContent(onTabChange: onTabChange), // Pass the callback here
+      TaskPage(),
+      ChatbotpageWidget(),
+      ProgressPage(),
+      ProfilePage(),
+    ]);
+  }
+
+  void onTabChange(int index) {
+    setState(() {
+      _currentIndex = index; // Update the index when a tab is selected
+    });
+  }
+
 // Fetch user data from Firestore
   Future<void> _fetchUserData() async {
     if (_user != null) {
@@ -80,12 +96,6 @@ class _HomePageState extends State<HomePage> {
     } else {
       print('No user is logged in.');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserData(); // Fetch user data when the widget is initialized
   }
 
   @override
@@ -197,11 +207,14 @@ class _HomePageState extends State<HomePage> {
 
 // This is the content for the homepage, separated from the main scaffold
 class HomePageContent extends StatefulWidget {
+  final Function(int) onTabChange; // Callback to change tabs
+
+  HomePageContent({required this.onTabChange}); // Constructor
   @override
-  _HomePageContentState createState() => _HomePageContentState();
+  HomePageContentState createState() => HomePageContentState();
 }
 
-class _HomePageContentState extends State<HomePageContent> {
+class HomePageContentState extends State<HomePageContent> {
   int _carouselIndex = 0;
   var now = DateTime.now();
   var formatter = DateFormat.yMMMMd('en_US');
@@ -223,7 +236,7 @@ class _HomePageContentState extends State<HomePageContent> {
         SizedBox(height: 15),
         _buildCarouselSlider(),
         SizedBox(height: 15),
-        _buildQuickActions(),
+        buildQuickActions(),
       ],
     );
   }
@@ -350,7 +363,7 @@ class _HomePageContentState extends State<HomePageContent> {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget buildQuickActions() {
     return Column(
       children: [
         SizedBox(
@@ -362,11 +375,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const TaskPage()),
-                        );
+                        widget.onTabChange(1); // Navigate to TaskPage
                       },
                       child: Container(
                         height: 110,
@@ -433,10 +442,11 @@ class _HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        /////////////////////////////////// Add Task Page ////////////////////////////////
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => addTask()),
+                          MaterialPageRoute(
+                            builder: (context) => AddTaskPage(),
+                          ),
                         );
                       },
                       child: Container(
@@ -499,7 +509,7 @@ class _HomePageContentState extends State<HomePageContent> {
                           ],
                         ),
                       ),
-                    ))
+                    )),
               ],
             ),
             TableRow(
@@ -508,12 +518,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        /////////////////////////////////// Progress Page ////////////////////////////////
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ProgressPage()),
-                        );
+                        widget.onTabChange(3); // Navigate to ProgressPage
                       },
                       child: Container(
                         height: 110,
@@ -580,12 +585,7 @@ class _HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        ///////////////////////////////// Attena (chatbot) Page ////////////////////////////////
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ChatbotpageWidget()),
-                        );
+                        widget.onTabChange(2); // Navigate to ChatbotpageWidget
                       },
                       child: Container(
                         height: 110,
@@ -647,15 +647,16 @@ class _HomePageContentState extends State<HomePageContent> {
                           ],
                         ),
                       ),
-                    ))
+                    )),
               ],
             ),
           ]),
-        )
+        ),
       ],
     );
   }
 
+  // Helper function to build each quick action button
   Widget _buildQuickAction({
     required String imagePath,
     required String label,
