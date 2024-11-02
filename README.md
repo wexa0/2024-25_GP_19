@@ -30,6 +30,55 @@ AttentionLens is an Android mobile application designed to assist adults with At
 
 ---
 
-##  Launching Instructions
-TBD
+## Launching Instructions
+
+### Launching Instructions for AttentionLens
+
+1. **Clone the Repository**
+   - Open the Command Prompt or Terminal.
+   - Clone the project to your local machine by using the following command and specifying the correct path:
+
+     ```bash
+     git clone https://github.com/username/attentionlens.git "C:\Users\wexa0\OneDrive\Documents\GitHub\AttensionLens-App"
+     cd "C:\Users\wexa0\OneDrive\Documents\GitHub\AttensionLens-App"
+     ```
+
+   **Note:** Replace `"username"` with your GitHub username.
+
+2. **Install Prerequisites**
+   - Ensure you have installed [Flutter](https://flutter.dev/docs/get-started/install), [Dart](https://dart.dev/get-dart), and [Android Studio](https://developer.android.com/studio).
+   - Add Flutter and Dart to your system path.
+   - Have an Android device with Developer Mode enabled or an Android emulator running via Android Studio.
+
+3. **Install Dependencies**
+   - In the project directory, run the following command to fetch all necessary packages:
+
+     ```bash
+     flutter pub get
+     ```
+
+4. **Run the App**
+   - To launch the app on an Android device or emulator, use:
+
+     ```bash
+     flutter run
+     ```
+
+5. **Build for Release**
+   - To build a release version for Android, use:
+
+     ```bash
+     flutter build apk
+     ```
+
+---
+
+### Troubleshooting
+
+- **Flutter and Dart not found**: Ensure both Flutter and Dart are installed and added to your system path. Verify by running:
+  ```bash
+  flutter --version
+  dart --version
+
+
 
