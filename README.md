@@ -32,7 +32,6 @@ AttentionLens is an Android mobile application designed to assist adults with At
 
 ## Launching Instructions
 
-### Launching Instructions for AttentionLens
 
 1. **Clone the Repository**
    - Open the Command Prompt or Terminal.
@@ -64,13 +63,6 @@ AttentionLens is an Android mobile application designed to assist adults with At
      flutter run
      ```
 
-5. **Build for Release**
-   - To build a release version for Android, use:
-
-     ```bash
-     flutter build apk
-     ```
-
 ---
 
 ### Troubleshooting
@@ -79,6 +71,3 @@ AttentionLens is an Android mobile application designed to assist adults with At
   ```bash
   flutter --version
   dart --version
-
-
-
