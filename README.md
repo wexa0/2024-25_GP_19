@@ -35,12 +35,12 @@ AttentionLens is an Android mobile application designed to assist adults with At
 
 1. **Clone the Repository**
    - Open the Command Prompt or Terminal.
-   - Clone the project to your local machine by using the following command and specifying the correct path:
+   - Clone this repository by running the following command:
 
      ```bash
-     git clone https://github.com/username/attentionlens.git "C:\Users\wexa0\OneDrive\Documents\GitHub\AttensionLens-App"
-     cd "C:\Users\wexa0\OneDrive\Documents\GitHub\AttensionLens-App"
+     git clone https://github.com/wexa0/2024-25_GP_19
      ```
+
 
    **Note:** Replace `"username"` with your GitHub username.
 
