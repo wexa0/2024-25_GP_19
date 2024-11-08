@@ -189,6 +189,13 @@ class _TaskPageState extends State<TaskPage> {
 
       isLoading = false; // Loading is done
     });
+    Map<String, bool> categoryCompletionStatus = {};
+
+for (String category in availableCategories) {
+  bool allTasksComplete = tasks.where((task) => task['categories'].contains(category))
+                               .every((task) => task['completed']);
+  categoryCompletionStatus[category] = allTasksComplete;
+}
   }
 
   String getEmptyStateMessage() {
@@ -507,113 +514,125 @@ class _TaskPageState extends State<TaskPage> {
     setState(() {}); // تحديث الواجهة بعد الفرز
   }
 
-  void showCategoryDialog() {
-    List<String> tempSelectedCategories = List.from(selectedCategories);
+void showCategoryDialog() {
+  List<String> tempSelectedCategories = List.from(selectedCategories);
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFFF5F7F8), // Light gray background
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: const Color(0xFFF5F7F8), // Light gray background
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: const Text(
+          'Category',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color.fromARGB(255, 6, 6, 6), // Dark blue text color
           ),
-          title: const Text(
-            'Category',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 6, 6, 6), // Dark blue text color
-            ),
-          ),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children: availableCategories.map((category) {
-                  return ChoiceChip(
-                    label: Text(category),
-                    labelStyle: TextStyle(
-                      color: tempSelectedCategories.contains(category)
-                          ? Colors.white
-                          : const Color.fromARGB(255, 20, 20,
-                              20), // Text color changes based on selection
-                    ),
-                    selected: tempSelectedCategories.contains(category),
-                    selectedColor:
-                        const Color(0xFF79A3B7), // Light blue when selected
-                    backgroundColor: const Color(0xFFC7D9E1), // Lightest blue
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          if (category == 'All') {
-                            tempSelectedCategories.clear();
-                            tempSelectedCategories.add('All');
-                          } else if (category == 'Uncategorized') {
-                            tempSelectedCategories.clear();
-                            tempSelectedCategories.add('Uncategorized');
-                          } else {
-                            tempSelectedCategories.remove('All');
-                            tempSelectedCategories.remove('Uncategorized');
-                            tempSelectedCategories.add(category);
-                          }
+        ),
+        content: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            // التحقق من اكتمال كل فئة من المهام
+            bool allTasksComplete = tasks.every((task) => task['completed'] == true);
+
+            return Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: availableCategories.map((category) {
+                bool isSelected = tempSelectedCategories.contains(category);
+                bool isAllCategory = category == 'All';
+                Color chipColor;
+
+                // تحديد اللون بناءً على حالة المهام
+                if (isAllCategory) {
+                  chipColor = allTasksComplete
+                      ? Colors.green
+                      : const Color(0xFF79A3B7); // أخضر إذا اكتملت كل المهام، وإلا أزرق
+                } else {
+                  bool categoryComplete = tasks
+                      .where((task) =>
+                          task['categories'] != null &&
+                          task['categories'].contains(category))
+                      .every((task) => task['completed'] == true);
+                  chipColor = categoryComplete ? Colors.green : const Color(0xFF79A3B7);
+                }
+
+                return ChoiceChip(
+                  label: Text(category),
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
+                  selected: isSelected,
+                  selectedColor: chipColor, // اللون المحدد بناءً على الشرط
+                  backgroundColor: chipColor, // اللون يظهر مباشرة حسب الحالة
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        if (category == 'All') {
+                          tempSelectedCategories.clear();
+                          tempSelectedCategories.add('All');
                         } else {
-                          tempSelectedCategories.remove(category);
+                          tempSelectedCategories.remove('All');
+                          tempSelectedCategories.add(category);
                         }
-                      });
-                    },
-                  );
-                }).toList(),
-              );
+                      } else {
+                        tempSelectedCategories.remove(category);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            );
+          },
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF5F7F8), // Light gray background
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0xFF79A3B7)),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF79A3B7)),
+            ),
           ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFFF5F7F8), // Light gray background
-                shape: RoundedRectangleBorder(
-                  side: const BorderSide(
-                      color: Color(0xFF79A3B7)), // Light blue border
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Color(0xFF79A3B7), // Light blue text color
-                ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                selectedCategories = tempSelectedCategories;
+              });
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF79A3B7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  selectedCategories = tempSelectedCategories;
-                });
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFF79A3B7), // Light blue background
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              child: const Text(
-                'Apply',
-                style: TextStyle(
-                  color: Colors.white, // White text color
-                ),
-              ),
+            child: const Text(
+              'Apply',
+              style: TextStyle(color: Colors.white),
             ),
-          ],
-        );
-      },
-    );
-  }
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+
+
+
+
 
   void closeAllSubtasks() {
     setState(() {
@@ -1020,6 +1039,29 @@ class _TaskPageState extends State<TaskPage> {
                               )
                             : ListView(
                                 children: [
+                                   SizedBox(height: 18),
+                                  if (selectedCategories.isNotEmpty && selectedCategories.first != 'All')
+  Wrap(
+    spacing: 8.0,
+    children: selectedCategories.map((category) {
+      return ActionChip(
+        label: Text(category),
+        onPressed: () {
+          // Remove specific category on tap
+          setState(() {
+            selectedCategories.remove(category);
+            if (selectedCategories.isEmpty) {
+              selectedCategories = ['All']; // Reset to "All" if no categories remain
+            }
+          });
+        },
+        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+        backgroundColor: const Color(0xFF79A3B7),
+        labelStyle: const TextStyle(color: Colors.white),
+      );
+    }).toList(),
+  ),
+const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
                                       !task['completed'] &&
@@ -1032,6 +1074,11 @@ class _TaskPageState extends State<TaskPage> {
                                           selectedCategories.any((category) =>
                                               task['categories']
                                                   .contains(category)))))
+                                    // Add this snippet above the pending tasks section to show multiple selected categories
+// Ensure category chips are always displayed if there are selected categories
+
+
+
                                     Row(
                                       children: const [
                                         Expanded(child: Divider(thickness: 1)),

@@ -1,0 +1,70 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class Task {
+  // Task properties
+  String taskID;  
+  String title;  
+  String userID; 
+  String note;    
+  int priority;   
+  bool timer;    
+  bool isComplete;  
+  DateTime scheduledDate; 
+  DateTime? reminder;    
+  // Constructor
+  Task({
+    required this.taskID,
+    required this.title,
+    required this.userID,
+    required this.note,
+    required this.priority,
+    required this.timer,
+    required this.isComplete,
+    required this.scheduledDate,
+    this.reminder,
+  });
+
+  // Static method to create a Task from a Firestore document
+  factory Task.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    return Task(
+      taskID: doc.id,
+      title: data['title'] ?? 'Untitled',
+      userID: data['userID'],
+      note: data['note'] ?? '',
+      priority: data['priority'] ?? 1,
+      timer: data['timer'] ?? false,
+      isComplete: data['completionStatus'] == 2, // Assuming 2 means complete
+      scheduledDate: (data['scheduledDate'] as Timestamp).toDate(),
+      reminder: data['reminder'] != null
+          ? (data['reminder'] as Timestamp).toDate()
+          : null,
+    );
+  }
+
+  // Method to update task details in Firestore
+  Future<void> updateTask() async {
+    await FirebaseFirestore.instance.collection('Task').doc(taskID).update({
+      'title': title,
+      'userID': userID,
+      'note': note,
+      'priority': priority,
+      'timer': timer,
+      'completionStatus': isComplete ? 2 : 0, // Assuming 2 means complete, 0 means not complete
+      'scheduledDate': scheduledDate,
+      'reminder': reminder,
+    });
+  }
+
+  // Method to delete the task
+  Future<void> deleteTask() async {
+    await FirebaseFirestore.instance.collection('Task').doc(taskID).delete();
+  }
+
+  // Method to mark the task as complete
+  Future<void> markDone() async {
+    isComplete = true;
+    await updateTask();
+  }
+}
