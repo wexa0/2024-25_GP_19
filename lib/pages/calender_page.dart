@@ -12,82 +12,83 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   String selectedSort = 'timeline';
   List<String> selectedCategories = [];
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+
+  DateTime _focusedDay = DateTime.now(); // استخدم هذا لتحديث اليوم المركّز
+  DateTime? _selectedDay; // استخدم هذا لتحديد اليوم الذي يختاره المستخدم
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {},
       child: Scaffold(
-        backgroundColor:
-            const Color(0xFFF5F5F5), // Same background color as TaskPage
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
-            title: const Text(
-              'Calendar',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+          title: const Text(
+            'Calendar',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+          elevation: 0,
+          actions: [
+            PopupMenuTheme(
+              data: PopupMenuThemeData(
+                color: Color(0xFFF5F7F8),
+              ),
+              child: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'view') {
+                    showViewDialog();
+                  } else if (value == 'sort') {
+                    showSortDialog();
+                  } else if (value == 'categorize') {
+                    showCategoryDialog();
+                  }
+                },
+                icon: const Icon(Icons.more_vert, color: Colors.black),
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      value: 'view',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.list, size: 24),
+                          SizedBox(width: 10),
+                          Text('View', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'sort',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.sort, size: 24),
+                          SizedBox(width: 10),
+                          Text('Sort', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'categorize',
+                      child: Row(
+                        children: const [
+                          Icon(Icons.label, size: 24),
+                          SizedBox(width: 10),
+                          Text('Categorize', style: TextStyle(fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
               ),
             ),
-            centerTitle: true,
-            backgroundColor: const Color.fromARGB(
-                255, 226, 231, 234), // Same header color as TaskPage
-            elevation: 0,
-            actions: [
-              PopupMenuTheme(
-                data: PopupMenuThemeData(
-                  color: Color(
-                      0xFFF5F7F8), // Set the background color for the popup menu
-                ),
-                child: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'view') {
-                      showViewDialog();
-                    } else if (value == 'sort') {
-                      showSortDialog();
-                    } else if (value == 'categorize') {
-                      showCategoryDialog();
-                    }
-                  },
-                  icon: const Icon(Icons.more_vert, color: Colors.black),
-                  itemBuilder: (BuildContext context) {
-                    return [
-                      PopupMenuItem<String>(
-                        value: 'view',
-                        child: Row(
-                          children: const [
-                            Icon(Icons.list, size: 24),
-                            SizedBox(width: 10),
-                            Text('View', style: TextStyle(fontSize: 18)),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'sort',
-                        child: Row(
-                          children: const [
-                            Icon(Icons.sort, size: 24),
-                            SizedBox(width: 10),
-                            Text('Sort', style: TextStyle(fontSize: 18)),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'categorize',
-                        child: Row(
-                          children: const [
-                            Icon(Icons.label, size: 24),
-                            SizedBox(width: 10),
-                            Text('Categorize', style: TextStyle(fontSize: 18)),
-                          ],
-                        ),
-                      ),
-                    ];
-                  },
-                ),
-              ),
-            ],
-            automaticallyImplyLeading: false),
+          ],
+        ),
         body: Stack(
           children: [
             Padding(
@@ -97,58 +98,62 @@ class _CalendarPageState extends State<CalendarPage> {
                   TableCalendar(
                     firstDay: DateTime.utc(2010, 10, 16),
                     lastDay: DateTime.utc(2030, 3, 14),
-                    focusedDay: DateTime.now(),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) {
+                      // للتحقق ما إذا كان اليوم هو اليوم المحدد
+                      return isSameDay(_selectedDay, day);
+                    },
+                   onDaySelected: (selectedDay, focusedDay) {
+  if (selectedDay.isBefore(DateTime.utc(2030, 3, 14)) &&
+      selectedDay.isAfter(DateTime.utc(2010, 10, 16))) {
+    setState(() {
+      _selectedDay = selectedDay;
+      _focusedDay = focusedDay;
+    });
+  }
+},
+
+                    calendarFormat: _calendarFormat,
                     availableCalendarFormats: const {
                       CalendarFormat.month: 'Month',
+                      CalendarFormat.week: 'Week',
+                    },
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      // تحديث اليوم المركّز عند تغيير الشهر
+                      _focusedDay = focusedDay;
                     },
                     calendarStyle: CalendarStyle(
                       defaultTextStyle: const TextStyle(color: Colors.black),
                       weekendTextStyle: const TextStyle(color: Colors.black),
-                      todayDecoration: BoxDecoration(
-                        color: const Color(0xFF3B7292),
-                        borderRadius: BorderRadius.circular(30),
+                     todayDecoration: BoxDecoration(
+  shape: BoxShape.circle,
+  border: Border.all(color: Color(0xFF3B7292), width: 2), // اللون والحجم للحواف
+),
+ todayTextStyle: TextStyle(color: Colors.black), // لضبط لون النص داخل الدائرة
+                      selectedDecoration: BoxDecoration(
+                         color: const Color(0xFF3B7292),
+  shape: BoxShape.circle, // استخدام الدائرة هنا
+  // أو إذا كنت تفضل الشكل المستطيل بزوايا مستديرة، استخدم هذا السطر بدلًا من ذلك:
+  // borderRadius: BorderRadius.circular(30),
+),
                       ),
                     ),
-                  ),
+                  
                 ],
               ),
             ),
-            // Coming Soon overlay
-            Positioned.fill(
-              child: Container(
-                color: Colors.grey.withOpacity(0.8),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.hourglass_empty,
-                          size: 80, color: Colors.white),
-                      SizedBox(height: 20),
-                      Text(
-                        'Coming Soon',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'This feature is not available yet.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Floating Action Button inside the fill
           ],
         ),
       ),
     );
   }
+
+  
 
   void showViewDialog() {
     showDialog(

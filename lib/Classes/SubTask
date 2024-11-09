@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
+class SubTask {
+  String subTaskID;
+  String title;
+  bool reminder;
+  int timer;
+  int completionStatus;
+
+  SubTask({
+    required this.subTaskID,
+    required this.title,
+    required this.reminder,
+    required this.timer,
+    required this.completionStatus,
+  });
+
+  // Method to add a subtask
+  void addSubTask(String title, bool reminder, int timer) {
+    // Add subtask logic here
+  }
+
+  // Method to delete a subtask
+  void deleteSubTask(String subTaskID) {
+    // Delete subtask logic here
+  }
+
+  // Method to mark subtask as complete
+  void markAsComplete() {
+    completionStatus = 1; // 1 for complete
+  }
+
+  // Method to set a timer for the subtask
+  void setTimer(int newTimer) {
+    timer = newTimer;
+  }
+}

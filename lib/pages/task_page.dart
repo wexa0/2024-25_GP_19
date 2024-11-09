@@ -12,6 +12,7 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application/Classes/Task';
 
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
@@ -276,8 +277,7 @@ for (String category in availableCategories) {
                 'View Options',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 20, // Adjust font size for title
-                  color: Color(0xFF104A73), // Title color
+                  color: Color.fromARGB(255, 6, 6, 6),// Title color
                 ),
               ),
               content: Column(
@@ -391,8 +391,7 @@ for (String category in availableCategories) {
                 'Sort by',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 20, // Adjust font size
-                  color: Color(0xFF104A73), // Text color matching your theme
+                  color: Color.fromARGB(255, 6, 6, 6), // Text color matching your theme
                 ),
               ),
               content: Column(
@@ -514,6 +513,24 @@ for (String category in availableCategories) {
     setState(() {}); // تحديث الواجهة بعد الفرز
   }
 
+Widget _buildLegendCircle(Color color, String label) {
+  return Row(
+    children: [
+      CircleAvatar(
+        radius: 5,
+        backgroundColor: color,
+      ),
+      const SizedBox(width: 4),
+      Text(
+        label,
+        style: const TextStyle(fontSize: 12),
+      ),
+    ],
+  );
+}
+
+
+
 void showCategoryDialog() {
   List<String> tempSelectedCategories = List.from(selectedCategories);
 
@@ -534,56 +551,94 @@ void showCategoryDialog() {
         ),
         content: StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
-            // التحقق من اكتمال كل فئة من المهام
-            bool allTasksComplete = tasks.every((task) => task['completed'] == true);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
+                  children: availableCategories.map((category) {
+                    bool isSelected = tempSelectedCategories.contains(category);
+                    bool isAllCategory = category == 'All';
+                    Color chipColor;
 
-            return Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: availableCategories.map((category) {
-                bool isSelected = tempSelectedCategories.contains(category);
-                bool isAllCategory = category == 'All';
-                Color chipColor;
+                    // تحديد اللون بناءً على حالة المهام
+                    bool allTasksComplete = tasks.isNotEmpty && tasks.every((task) => task['completed'] == true);
+                    bool categoryComplete = tasks
+                        .where((task) => task['categories'] != null && task['categories'].contains(category))
+                        .every((task) => task['completed'] == true);
 
-                // تحديد اللون بناءً على حالة المهام
-                if (isAllCategory) {
-                  chipColor = allTasksComplete
-                      ? Colors.green
-                      : const Color(0xFF79A3B7); // أخضر إذا اكتملت كل المهام، وإلا أزرق
-                } else {
-                  bool categoryComplete = tasks
-                      .where((task) =>
-                          task['categories'] != null &&
-                          task['categories'].contains(category))
-                      .every((task) => task['completed'] == true);
-                  chipColor = categoryComplete ? Colors.green : const Color(0xFF79A3B7);
-                }
+                    // تحديث لون "All" بناءً على المهام المتاحة
+                    if (isAllCategory) {
+                      chipColor = tasks.isEmpty
+                          ? Colors.grey // اللون الرمادي إذا لم توجد أي مهام
+                          : (allTasksComplete ? Colors.green : const Color(0xFF79A3B7)); // أخضر إذا كانت كل المهام مكتملة، أزرق إذا لم تكن مكتملة
+                    } else if (!tasks.any((task) => task['categories'].contains(category))) {
+                      chipColor = Colors.grey; // اللون الرمادي إذا لم توجد مهام في هذه الفئة
+                    } else {
+                      chipColor = categoryComplete ? Colors.green : const Color(0xFF79A3B7);
+                    }
 
-                return ChoiceChip(
-                  label: Text(category),
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black,
+                    return Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          // إضافة ظل خارجي
+                          BoxShadow(
+                            color: Color(0xFFFAFBFF).withOpacity(1.0), // 100% opacity
+                            offset: Offset(-5, -5),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: ChoiceChip(
+                        label: Text(
+                          category,
+                          style: const TextStyle(
+                            color: Colors.white, // لون النص الأبيض
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: chipColor,
+                        backgroundColor: chipColor,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              if (category == 'All') {
+                                // إذا تم اختيار "All"، قم بتحديدها وإلغاء تحديد الفئات الأخرى
+                                tempSelectedCategories.clear();
+                                tempSelectedCategories.add('All');
+                              } else {
+                                // إذا تم اختيار فئة أخرى، قم بإلغاء تحديد "All" وأضف الفئة المحددة
+                                tempSelectedCategories.remove('All');
+                                tempSelectedCategories.add(category);
+                              }
+                            } else {
+                              tempSelectedCategories.remove(category);
+                              if (tempSelectedCategories.isEmpty) {
+                                // إذا كانت الفئات فارغة، قم بتحديد "All" تلقائيًا
+                                tempSelectedCategories.add('All');
+                              }
+                            }
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                // Legend for color codes in a vertical column
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLegendCircle(Colors.grey, 'No Tasks'),
+                      _buildLegendCircle(const Color(0xFF79A3B7), 'Incomplete Tasks'),
+                      _buildLegendCircle(Colors.green, 'All Completed'),
+                    ],
                   ),
-                  selected: isSelected,
-                  selectedColor: chipColor, // اللون المحدد بناءً على الشرط
-                  backgroundColor: chipColor, // اللون يظهر مباشرة حسب الحالة
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        if (category == 'All') {
-                          tempSelectedCategories.clear();
-                          tempSelectedCategories.add('All');
-                        } else {
-                          tempSelectedCategories.remove('All');
-                          tempSelectedCategories.add(category);
-                        }
-                      } else {
-                        tempSelectedCategories.remove(category);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+                ),
+              ],
             );
           },
         ),
@@ -627,6 +682,7 @@ void showCategoryDialog() {
     },
   );
 }
+
 
 
 
@@ -1040,7 +1096,7 @@ void showCategoryDialog() {
                             : ListView(
                                 children: [
                                    SizedBox(height: 18),
-                                  if (selectedCategories.isNotEmpty && selectedCategories.first != 'All')
+                                  if (selectedCategories.first != 'All')
   Wrap(
     spacing: 8.0,
     children: selectedCategories.map((category) {
@@ -1064,16 +1120,12 @@ void showCategoryDialog() {
 const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
-                                      !task['completed'] &&
-                                      (selectedCategories.contains('All') ||
-                                          (selectedCategories
-                                                  .contains('Uncategorized') &&
-                                              (task['categories'] == null ||
-                                                  task['categories'].contains(
-                                                      'Uncategorized'))) ||
-                                          selectedCategories.any((category) =>
-                                              task['categories']
-                                                  .contains(category)))))
+    !task['completed'] &&
+    (selectedCategories.contains('All') ||
+        (selectedCategories.contains('Uncategorized') &&
+            (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
+        selectedCategories.any((category) => task['categories'].contains(category)))))
+
                                     // Add this snippet above the pending tasks section to show multiple selected categories
 // Ensure category chips are always displayed if there are selected categories
 
@@ -1096,20 +1148,18 @@ const SizedBox(height: 1),
                                         Expanded(child: Divider(thickness: 1)),
                                       ],
                                     ),
-                                  ...tasks.where((task) {
-                                    if (selectedCategories.contains('All')) {
-                                      return !task['completed'];
-                                    } else if (selectedCategories
-                                        .contains('Uncategorized')) {
-                                      return !task['completed'] &&
-                                          (task['categories'] == null ||
-                                              task['categories']
-                                                  .contains('Uncategorized'));
-                                    }
-                                    return !task['completed'] &&
-                                        selectedCategories.any((category) =>
-                                            task['categories']
-                                                .contains(category));
+                            ...tasks.where((task) {
+  // تحقق إذا كانت الفئة المختارة تحتوي على "All"، قم بإظهار جميع المهام الغير مكتملة
+  if (selectedCategories.contains('All')) {
+    return !task['completed'];
+  }
+  // تحقق إذا كانت الفئة المختارة تحتوي على "Uncategorized"، وأي فئات أخرى
+  else {
+    return !task['completed'] &&
+        (selectedCategories.contains('Uncategorized') &&
+            (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
+        selectedCategories.any((category) => task['categories'].contains(category)));
+  }
                                   }).map(
                                     (task) => TaskCard(
                                       task: task,
@@ -1199,21 +1249,17 @@ const SizedBox(height: 1),
                                       ],
                                     ),
 
-                                  ...tasks.where((task) {
-                                    // شرط عرض المهام المكتملة للفئة المحددة
-                                    if (selectedCategories.contains('All')) {
-                                      return task['completed'];
-                                    } else if (selectedCategories
-                                        .contains('Uncategorized')) {
-                                      return task['completed'] &&
-                                          (task['categories'] == null ||
-                                              task['categories']
-                                                  .contains('Uncategorized'));
-                                    }
-                                    return task['completed'] &&
-                                        selectedCategories.any((category) =>
-                                            task['categories']
-                                                .contains(category));
+                                  
+                                   ...tasks.where((task) {
+  if (selectedCategories.contains('All')) {
+    return task['completed'];
+  }
+  else {
+    return task['completed'] &&
+        (selectedCategories.contains('Uncategorized') &&
+            (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
+        selectedCategories.any((category) => task['categories'].contains(category)));
+  }
                                   }).map(
                                     (task) => TaskCard(
                                       task: task,

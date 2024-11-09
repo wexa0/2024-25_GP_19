@@ -1,70 +1,56 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
+
 class Task {
-  // Task properties
-  String taskID;  
-  String title;  
-  String userID; 
-  String note;    
-  int priority;   
-  bool timer;    
-  bool isComplete;  
-  DateTime scheduledDate; 
-  DateTime? reminder;    
-  // Constructor
+  String taskID;
+  String title;
+  DateTime scheduledDate;
+  int priority;
+  bool reminder;
+  List<int> timer;
+  String note;
+  int completionStatus;
+
   Task({
     required this.taskID,
     required this.title,
-    required this.userID,
-    required this.note,
-    required this.priority,
-    required this.timer,
-    required this.isComplete,
     required this.scheduledDate,
-    this.reminder,
+    required this.priority,
+    required this.reminder,
+    required this.timer,
+    required this.note,
+    required this.completionStatus,
   });
 
-  // Static method to create a Task from a Firestore document
-  factory Task.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-    return Task(
-      taskID: doc.id,
-      title: data['title'] ?? 'Untitled',
-      userID: data['userID'],
-      note: data['note'] ?? '',
-      priority: data['priority'] ?? 1,
-      timer: data['timer'] ?? false,
-      isComplete: data['completionStatus'] == 2, // Assuming 2 means complete
-      scheduledDate: (data['scheduledDate'] as Timestamp).toDate(),
-      reminder: data['reminder'] != null
-          ? (data['reminder'] as Timestamp).toDate()
-          : null,
-    );
+  // Method to add a task
+  void addTask(String title, DateTime scheduledDate, int priority, bool reminder, List<int> timer, String note) {
+    // Add task logic here
   }
 
-  // Method to update task details in Firestore
-  Future<void> updateTask() async {
-    await FirebaseFirestore.instance.collection('Task').doc(taskID).update({
-      'title': title,
-      'userID': userID,
-      'note': note,
-      'priority': priority,
-      'timer': timer,
-      'completionStatus': isComplete ? 2 : 0, // Assuming 2 means complete, 0 means not complete
-      'scheduledDate': scheduledDate,
-      'reminder': reminder,
-    });
+  // Method to delete a task
+  void deleteTask(String taskID) {
+    // Delete task logic here
   }
 
-  // Method to delete the task
-  Future<void> deleteTask() async {
-    await FirebaseFirestore.instance.collection('Task').doc(taskID).delete();
+  // Method to update task details
+  void updateTask(String title, DateTime scheduledDate, int priority, bool reminder, List<int> timer, String note) {
+    this.title = title;
+    this.scheduledDate = scheduledDate;
+    this.priority = priority;
+    this.reminder = reminder;
+    this.timer = timer;
+    this.note = note;
   }
 
-  // Method to mark the task as complete
-  Future<void> markDone() async {
-    isComplete = true;
-    await updateTask();
+  // Method to set a reminder
+  void setReminder(DateTime date) {
+    // Logic to set reminder
+  }
+
+  // Method to mark the task as done
+  void markDone() {
+    completionStatus = 1; // 1 for complete
   }
 }
