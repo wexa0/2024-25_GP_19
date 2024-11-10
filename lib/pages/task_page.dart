@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
-import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';

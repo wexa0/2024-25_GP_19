@@ -1,0 +1,45 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
+
+class Category {
+  final String categoryID;
+  final String categoryName;
+  final String userID;
+
+  Category({
+    required this.categoryID,
+    required this.categoryName,
+    required this.userID,
+  });
+
+  // Add a new category
+  static Future<void> addCategory(Category category) async {
+    await FirebaseFirestore.instance.collection('Category').doc(category.categoryID).set({
+      'categoryName': category.categoryName,
+      'userID': category.userID,
+    });
+  }
+
+  // Delete a category
+  static Future<void> deleteCategory(String categoryID) async {
+    await FirebaseFirestore.instance.collection('Category').doc(categoryID).delete();
+  }
+
+  // Fetch categories for a user
+  static Future<List<Category>> fetchCategories(String userID) async {
+    QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('userID', isEqualTo: userID)
+        .get();
+
+    return categorySnapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      return Category(
+        categoryID: doc.id,
+        categoryName: data['categoryName'],
+        userID: data['userID'],
+      );
+    }).toList();
+  }
+}

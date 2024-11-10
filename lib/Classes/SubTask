@@ -1,39 +1,57 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
+
 class SubTask {
-  String subTaskID;
+  final String subTaskID;
+  final String taskID;
   String title;
-  bool reminder;
-  int timer;
   int completionStatus;
 
   SubTask({
     required this.subTaskID,
+    required this.taskID,
     required this.title,
-    required this.reminder,
-    required this.timer,
     required this.completionStatus,
   });
 
-  // Method to add a subtask
-  void addSubTask(String title, bool reminder, int timer) {
-    // Add subtask logic here
+  // Add a new subtask
+  static Future<void> addSubtask(SubTask subtask) async {
+    await FirebaseFirestore.instance.collection('SubTask').doc(subtask.subTaskID).set({
+      'taskID': subtask.taskID,
+      'title': subtask.title,
+      'completionStatus': subtask.completionStatus,
+    });
   }
 
-  // Method to delete a subtask
-  void deleteSubTask(String subTaskID) {
-    // Delete subtask logic here
+  // Delete a subtask
+  static Future<void> deleteSubtask(String subTaskID) async {
+    await FirebaseFirestore.instance.collection('SubTask').doc(subTaskID).delete();
   }
 
-  // Method to mark subtask as complete
-  void markAsComplete() {
-    completionStatus = 1; // 1 for complete
+  // Toggle subtask completion
+  Future<void> toggleCompletion() async {
+    completionStatus = (completionStatus == 1) ? 0 : 1;
+    await FirebaseFirestore.instance.collection('SubTask').doc(subTaskID).update({
+      'completionStatus': completionStatus,
+    });
   }
 
-  // Method to set a timer for the subtask
-  void setTimer(int newTimer) {
-    timer = newTimer;
+  // Fetch subtasks for a specific task
+  static Future<List<SubTask>> fetchSubtasks(String taskID) async {
+    QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskID)
+        .get();
+
+    return subtaskSnapshot.docs.map((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      return SubTask(
+        subTaskID: doc.id,
+        taskID: data['taskID'],
+        title: data['title'],
+        completionStatus: data['completionStatus'],
+      );
+    }).toList();
   }
 }
