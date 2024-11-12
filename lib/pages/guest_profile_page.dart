@@ -7,7 +7,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_application/services/user.dart';
+import 'package:flutter_application/Classes/User';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

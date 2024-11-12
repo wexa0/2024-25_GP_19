@@ -22,24 +22,32 @@ class Category {
   }
 
   // Delete a category
-  static Future<void> deleteCategory(String categoryID) async {
-    await FirebaseFirestore.instance.collection('Category').doc(categoryID).delete();
+  static Future<Map<String, dynamic>> fetchCategoriesForUser(String userID) async {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  QuerySnapshot categorySnapshot = await firestore
+      .collection('Category')
+      .where('userID', isEqualTo: userID)
+      .get();
+
+  Map<String, List<String>> categoryTaskMap = {};
+  Set<String> categorySet = {'All', 'Uncategorized'};
+
+  for (var doc in categorySnapshot.docs) {
+    String categoryName = doc['categoryName'];
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    List<dynamic> taskIDs = data['taskIDs'] ?? [];
+
+    categorySet.add(categoryName);
+
+    for (var taskId in taskIDs) {
+      categoryTaskMap.putIfAbsent(taskId, () => []).add(categoryName);
+    }
   }
 
-  // Fetch categories for a user
-  static Future<List<Category>> fetchCategories(String userID) async {
-    QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('userID', isEqualTo: userID)
-        .get();
+  return {
+    'categories': categorySet.toList() as List<String>,  // Ensure this is a List<String>
+    'taskCategoryMap': categoryTaskMap as Map<String, List<String>>,  // Ensure this is a Map<String, List<String>>
+  };
+}
 
-    return categorySnapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      return Category(
-        categoryID: doc.id,
-        categoryName: data['categoryName'],
-        userID: data['userID'],
-      );
-    }).toList();
-  }
 }

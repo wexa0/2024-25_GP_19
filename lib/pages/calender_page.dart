@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_application/pages/timer_page';
 import 'package:flutter_application/pages/addTaskForm.dart';
@@ -21,6 +22,7 @@ class _CalendarPageState extends State<CalendarPage> {
   String selectedSort = 'timeline';
   List<String> selectedCategories = ['All'];
   CalendarFormat _calendarFormat = CalendarFormat.month;
+  int _currentIndex = 1; // تعيين الفهرس إلى "المهام"
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now(); // اليوم المحدد
@@ -207,9 +209,13 @@ class _CalendarPageState extends State<CalendarPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          //
+          
+          
           centerTitle: true,
           backgroundColor: const Color.fromARGB(255, 226, 231, 234),
           elevation: 0,
+          
           actions: [
             PopupMenuButton<String>(
               onSelected: (value) {
@@ -222,6 +228,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 }
               },
               icon: const Icon(Icons.more_vert, color: Colors.black),
+              
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -255,10 +262,13 @@ class _CalendarPageState extends State<CalendarPage> {
                     ),
                   ),
                 ];
+                
               },
             ),
           ],
+          
         ),
+        
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -306,6 +316,48 @@ class _CalendarPageState extends State<CalendarPage> {
           backgroundColor: const Color(0xFF3B7292),
           child: const Icon(Icons.add, color: Colors.white),
         ),
+         bottomNavigationBar: Container(
+          color: const Color.fromARGB(255, 226, 231, 234),
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+          child: GNav(
+            backgroundColor: Colors.transparent,
+            color: const Color(0xFF545454),
+            activeColor: const Color(0xFF104A73),
+            tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(0.3),
+            gap: 8,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            tabBorderRadius: 15,
+            selectedIndex: _currentIndex,
+            iconSize: 24,
+            onTabChange: (index) {
+              setState(() {
+                _currentIndex = index;
+                if (index == 1) {
+                  Navigator.pop(context); // الرجوع إلى صفحة "المهام"
+                }
+              });
+            },
+            tabs: const [
+              GButton(
+                icon: Icons.home,
+                text: 'Home',
+              ),
+              GButton(
+                icon: Icons.task,
+                text: 'Tasks',
+              ),
+              GButton(
+                icon: Icons.sms,
+                text: 'Chatbot',
+              ),
+              GButton(icon: Icons.poll, text: 'Progress'),
+              GButton(
+                icon: Icons.person,
+                text: 'Profile',
+              ),
+            ],
+          ),
+      ),
       ),
     );
   }

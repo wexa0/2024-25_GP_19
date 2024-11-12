@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application/Classes/SubTask';
 
 class Task {
   final String taskID;
   String title;
   DateTime scheduledDate;
   int priority;
-  bool reminder;
-  List<int> timer;
+  List<DateTime> reminder;
+  DateTime timer;
   String note;
   int completionStatus;
-  String userID;
+  String userID; // Foreign key to reference the user
 
   Task({
     required this.taskID,
@@ -29,60 +30,134 @@ class Task {
       'title': task.title,
       'scheduledDate': task.scheduledDate,
       'priority': task.priority,
-      'reminder': task.reminder,
-      'timer': task.timer,
+      'reminder': task.reminder.map((date) => date.toIso8601String()).toList(),
+      'timer': task.timer.toIso8601String(),
       'note': task.note,
       'completionStatus': task.completionStatus,
       'userID': task.userID,
     });
   }
 
-  // Delete a task
-  static Future<void> deleteTask(String taskID) async {
-    await FirebaseFirestore.instance.collection('Task').doc(taskID).delete();
+ static Task fromMap(Map<String, dynamic> taskData) {
+    return Task(
+      taskID: taskData['id'],
+      title: taskData['title'],
+      scheduledDate: taskData['time'],
+      priority: taskData['priority'],
+      reminder: [], // تعديل حسب الحاجة
+      timer: DateTime.now(), // تعديل حسب الحاجة
+      note: '', // تعديل حسب الحاجة
+      completionStatus: taskData['completed'] ? 2 : 0,
+      userID: '', // تعديل حسب الحاجة
+    );
   }
 
+  Future<void> updateCompletionStatus(int status) async {
+    await FirebaseFirestore.instance.collection('Task').doc(taskID).update({
+      'completionStatus': status,
+    });
+  }
+
+
+
+
   // Update a task
-  static Future<void> updateTask(Task task) async {
+   Future<void> updateTask(Task task) async {
     await FirebaseFirestore.instance.collection('Task').doc(task.taskID).update({
       'title': task.title,
       'scheduledDate': task.scheduledDate,
       'priority': task.priority,
-      'reminder': task.reminder,
-      'timer': task.timer,
+      'reminder': task.reminder.map((date) => date.toIso8601String()).toList(),
+      'timer': task.timer.toIso8601String(),
       'note': task.note,
       'completionStatus': task.completionStatus,
     });
   }
+  static Future<void> deleteTask(String taskID) async {
+    // Fetch subtasks and delete each one
+    List<SubTask> subtasks = await SubTask.fetchSubtasksForTask(taskID);
+    for (var subtask in subtasks) {
+      await subtask.deleteSubTask();
+    }
 
-  // Toggle task completion status
-  Future<void> toggleCompletion() async {
-    completionStatus = (completionStatus == 2) ? 0 : 2;
-    await FirebaseFirestore.instance.collection('Task').doc(taskID).update({
-      'completionStatus': completionStatus,
-    });
+    // Delete the main task
+    await FirebaseFirestore.instance.collection('Task').doc(taskID).delete();
   }
-
   // Fetch tasks for a user
-  static Future<List<Task>> fetchTasks(String userID) async {
-    QuerySnapshot taskSnapshot = await FirebaseFirestore.instance
-        .collection('Task')
-        .where('userID', isEqualTo: userID)
-        .get();
+static Future<List<Task>> fetchTasksForUser(String userID) async {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  QuerySnapshot taskSnapshot = await firestore
+      .collection('Task')
+      .where('userID', isEqualTo: userID)
+      .get();
 
-    return taskSnapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      return Task(
-        taskID: doc.id,
-        title: data['title'],
-        scheduledDate: (data['scheduledDate'] as Timestamp).toDate(),
-        priority: data['priority'],
-        reminder: data['reminder'],
-        timer: List<int>.from(data['timer']),
-        note: data['note'],
-        completionStatus: data['completionStatus'],
-        userID: data['userID'],
-      );
-    }).toList();
+  return taskSnapshot.docs.map<Task>((doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+   List<DateTime> reminder = [];
+if (data['reminder'] != null) {
+  if (data['reminder'] is List) {
+    reminder = (data['reminder'] as List).where((date) {
+      // Only keep dates that can be converted
+      return date is Timestamp || date is String || date is DateTime;
+    }).map<DateTime>((date) {
+      if (date is Timestamp) {
+        return date.toDate(); // Convert Firestore Timestamp to DateTime
+      } else if (date is String) {
+        try {
+          return DateTime.parse(date); // Parse string if in ISO 8601 format
+        } catch (e) {
+          print("Invalid date format in reminder list: $date");
+          return null as DateTime; // This will be filtered out
+        }
+      } else if (date is DateTime) {
+        return date; // Already a DateTime
+      } else {
+        return null as DateTime; // Should never reach here, filtered above
+      }
+    }).whereType<DateTime>().toList(); // Filters out null entries
+  } else if (data['reminder'] is Timestamp) {
+    reminder = [(data['reminder'] as Timestamp).toDate()];
+  } else if (data['reminder'] is String) {
+    try {
+      reminder = [DateTime.parse(data['reminder'])];
+    } catch (e) {
+      print("Invalid date format in single reminder string: ${data['reminder']}");
+    }
+  } else if (data['reminder'] is DateTime) {
+    reminder = [data['reminder'] as DateTime];
   }
+}
+
+return Task(
+  taskID: doc.id,
+  title: data['title'] ?? 'Untitled',
+  scheduledDate: (data['scheduledDate'] as Timestamp).toDate(),
+  priority: data['priority'],
+  reminder: reminder,
+  timer: (() {
+    // Attempt to parse timer field
+    if (data['timer'] is Timestamp) {
+      return (data['timer'] as Timestamp).toDate();
+    } else if (data['timer'] is String) {
+      try {
+        return DateTime.parse(data['timer']);
+      } catch (e) {
+        print("Invalid date format in timer field: ${data['timer']}");
+        return DateTime.now(); // Default value if parsing fails
+      }
+    } else {
+      print("Unexpected format for timer field: ${data['timer']}");
+      return DateTime.now(); // Default to current date/time
+    }
+  })(),
+  note: data['note'],
+  completionStatus: data['completionStatus'],
+  userID: data['userID'],
+);
+
+  }).toList();
+}
+
+
 }

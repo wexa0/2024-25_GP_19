@@ -12,6 +12,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/Classes/Task';
+import 'package:flutter_application/Classes/SubTask';
+import 'package:flutter_application/Classes/Category';
+
 
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
@@ -76,127 +79,47 @@ class _TaskPageState extends State<TaskPage> {
   }
 
   void fetchTasksFromFirestore() async {
-    setState(() {
-      isLoading = true;
-    });
+  setState(() {
+    isLoading = true;
+  });
 
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+  List<Task> fetchedTasks = await Task.fetchTasksForUser(userID!);
+ Map<String, dynamic> categoryData = await Category.fetchCategoriesForUser(userID!);
+Map<String, List<String>> categoryTaskMap = categoryData['taskCategoryMap'] as Map<String, List<String>>;
+availableCategories = categoryData['categories'] as List<String>;
 
-    // Fetch tasks based on userID
-    QuerySnapshot taskSnapshot = await firestore
-        .collection('Task')
-        .where('userID', isEqualTo: userID) // Filter by the logged-in user's ID
-        .get();
+  startOfDay = DateTime.now();
+  startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
+  endOfDay = startOfDay!.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
 
-    List<QueryDocumentSnapshot> taskDocuments = taskSnapshot.docs;
+  tasks.clear();
+  for (Task task in fetchedTasks) {
+    DateTime taskTime = task.scheduledDate;
 
-    // Set start and end of the current day
-    startOfDay = DateTime.now();
-    startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
-    endOfDay = startOfDay!
-        .add(const Duration(days: 1))
-        .subtract(const Duration(seconds: 1));
+    if (taskTime.isAfter(startOfDay!) && taskTime.isBefore(endOfDay!)) {
+      List<SubTask> subtasks = await SubTask.fetchSubtasksForTask(task.taskID);
 
-    // Fetch categories and store taskIDs for each category
-    QuerySnapshot categorySnapshot = await firestore
-        .collection('Category')
-        .where('userID', isEqualTo: userID)
-        .get();
-
-    setState(() {
-      tasks.clear();
-      availableCategories.clear();
-
-      // Use a Set to ensure unique categories
-      Set<String> categorySet = {};
-
-      // Add default categories
-      categorySet.add('All');
-      categorySet.add('Uncategorized');
-      //categorySet.add('Home');
-
-      // Fetch and add categories
-      Map<String, List<String>> categoryTaskMap = {};
-      for (var doc in categorySnapshot.docs) {
-        String categoryName = doc['categoryName'];
-        Map<String, dynamic> categoryData = doc.data() as Map<String, dynamic>;
-        List<dynamic> taskIDs =
-            categoryData.containsKey('taskIDs') ? categoryData['taskIDs'] : [];
-
-        categorySet.add(categoryName); // Ensure category is added only once
-
-        for (var taskId in taskIDs) {
-          if (categoryTaskMap.containsKey(taskId)) {
-            categoryTaskMap[taskId]?.add(categoryName);
-          } else {
-            categoryTaskMap[taskId] = [categoryName];
-          }
-        }
-      }
-
-      // Process and add tasks
-      for (var taskDoc in taskDocuments) {
-        Map<String, dynamic> taskData = taskDoc.data() as Map<String, dynamic>;
-        DateTime taskTime = (taskData['scheduledDate'] as Timestamp).toDate();
-
-        // Check if the task falls within the current day
-        if (taskTime.year == startOfDay!.year &&
-            taskTime.month == startOfDay!.month &&
-            taskTime.day == startOfDay!.day) {
-          print(
-              "Task Date: $taskTime, Start of Day: $startOfDay, End of Day: $endOfDay");
-
-          String taskId = taskDoc.id;
-          Map<String, dynamic> task = {
-            'id': taskId,
-            'title': taskData['title'] ?? 'Untitled',
-            'time': taskTime,
-            'priority': taskData['priority'] as int,
-            'completed': taskData['completionStatus'] == 2,
-            'expanded': false,
-            'subtasks': [],
-            'categories': categoryTaskMap[taskId] ?? ['Uncategorized'],
-          };
-
-          // Fetch subtasks for each task
-          firestore
-              .collection('SubTask')
-              .where('taskID', isEqualTo: taskId)
-              .get()
-              .then((subtaskSnapshot) {
-            List<Map<String, dynamic>> subtasks =
-                subtaskSnapshot.docs.map((subDoc) {
-              Map<String, dynamic> subtaskData =
-                  subDoc.data() as Map<String, dynamic>;
-              return {
-                'id': subDoc.id,
-                'title': subtaskData['title'],
-                'completed': subtaskData['completionStatus'] == 1,
-              };
-            }).toList();
-
-            setState(() {
-              task['subtasks'] = subtasks; // Update subtasks after fetching
-            });
-          });
-
-          tasks.add(task); // Add task to the list
-        }
-      }
-
-      // Convert the Set to a List for further use
-      availableCategories = categorySet.toList();
-
-      isLoading = false; // Loading is done
-    });
-    Map<String, bool> categoryCompletionStatus = {};
-
-for (String category in availableCategories) {
-  bool allTasksComplete = tasks.where((task) => task['categories'].contains(category))
-                               .every((task) => task['completed']);
-  categoryCompletionStatus[category] = allTasksComplete;
-}
+      tasks.add({
+        'id': task.taskID,
+        'title': task.title,
+        'time': taskTime,
+        'priority': task.priority,
+        'completed': task.completionStatus == 2,
+        'expanded': false,
+        'subtasks': subtasks.map((sub) => {
+              'id': sub.subTaskID,
+              'title': sub.title,
+              'completed': sub.completionStatus == 1,
+            }).toList(),
+        'categories': categoryTaskMap[task.taskID] ?? ['Uncategorized'],
+      });
+    }
   }
+
+  setState(() {
+    isLoading = false;
+  });
+}
 
   String getEmptyStateMessage() {
     return emptyStateMessages[
@@ -208,17 +131,47 @@ for (String category in availableCategories) {
         (task) => task['completed'] ?? false); // If null, default to false
   }
 
-  void deleteTask(Map<String, dynamic> task) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+void deleteTask(Map<String, dynamic> taskData) async {
+  // Call the static deleteTask method on the Task class
+  await Task.deleteTask(taskData['id']);
 
-    // Delete the task from Firestore
-    await firestore.collection('Task').doc(task['id']).delete();
+  // Remove the task locally and update the UI
+  setState(() {
+    tasks.removeWhere((t) => t['id'] == taskData['id']);
+  });
 
-    setState(() {
-      tasks.remove(task); // Remove task from the local list
-    });
-    _showTopNotification("Task deleted successfully.");
-  }
+  // Show notification
+  _showTopNotification("Task deleted successfully.");
+}
+
+void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskData) async {
+  // Create an instance of SubTask using the provided data
+  SubTask subtask = SubTask(
+    subTaskID: subtaskData['id'],
+    taskID: taskData['id'],
+    title: subtaskData['title'],
+    completionStatus: subtaskData['completed'] ? 1 : 0,
+  );
+
+  // Call the instance method deleteSubTask
+  await subtask.deleteSubTask();
+
+  // Remove the subtask locally and update the UI
+  setState(() {
+    final taskIndex = tasks.indexWhere((t) => t['id'] == taskData['id']);
+    if (taskIndex != -1) {
+      tasks[taskIndex]['subtasks'].removeWhere((s) => s['id'] == subtask.subTaskID);
+    }
+  });
+
+  // Show notification
+  _showTopNotification("Subtask deleted successfully.");
+}
+
+
+
+
+
 
   void editTask(Map<String, dynamic> task) async {
     bool? result = await Navigator.push(
@@ -571,11 +524,11 @@ void showCategoryDialog() {
                     if (isAllCategory) {
                       chipColor = tasks.isEmpty
                           ? Colors.grey // اللون الرمادي إذا لم توجد أي مهام
-                          : (allTasksComplete ? Colors.green : const Color(0xFF79A3B7)); // أخضر إذا كانت كل المهام مكتملة، أزرق إذا لم تكن مكتملة
+                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFF79A3B7)); // أخضر إذا كانت كل المهام مكتملة، أزرق إذا لم تكن مكتملة
                     } else if (!tasks.any((task) => task['categories'].contains(category))) {
                       chipColor = Colors.grey; // اللون الرمادي إذا لم توجد مهام في هذه الفئة
                     } else {
-                      chipColor = categoryComplete ? Colors.green : const Color(0xFF79A3B7);
+                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFF79A3B7);
                     }
 
                     return Container(
@@ -633,7 +586,7 @@ void showCategoryDialog() {
                     children: [
                       _buildLegendCircle(Colors.grey, 'No Tasks'),
                       _buildLegendCircle(const Color(0xFF79A3B7), 'Incomplete Tasks'),
-                      _buildLegendCircle(Colors.green, 'All Completed'),
+                      _buildLegendCircle(Color(0xFF24AB79) , 'All Completed'),
                     ],
                   ),
                 ),
@@ -696,51 +649,42 @@ void showCategoryDialog() {
       }
     });
   }
+void toggleTaskCompletion(Map<String, dynamic> taskData) async {
+  Task task = Task.fromMap(taskData);
+  bool newTaskCompletionStatus = !taskData['completed'];
 
-  void toggleTaskCompletion(Map<String, dynamic> task) async {
-    bool newTaskCompletionStatus =
-        !task['completed']; // عكس حالة الإكمال للمهمة الرئيسية
+  setState(() {
+    taskData['completed'] = newTaskCompletionStatus;
+  });
 
-    setState(() {
-      task['completed'] = newTaskCompletionStatus;
-    });
-
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    if (newTaskCompletionStatus) {
-      // إذا كانت المهمة الرئيسية مكتملة، اجعل جميع المهام الفرعية مكتملة
-      for (var subtask in task['subtasks']) {
-        subtask['completed'] = true;
-        await firestore
-            .collection('SubTask')
-            .doc(subtask['id'])
-            .update({'completionStatus': 1});
-      }
-      // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"مكتملة"
-      await firestore
-          .collection('Task')
-          .doc(task['id'])
-          .update({'completionStatus': 2});
-    } else {
-      // إذا كانت المهمة الرئيسية غير مكتملة، اجعل جميع المهام الفرعية غير مكتملة
-      for (var subtask in task['subtasks']) {
-        subtask['completed'] = false;
-        await firestore
-            .collection('SubTask')
-            .doc(subtask['id'])
-            .update({'completionStatus': 0});
-      }
-      // تحديث حالة المهمة الرئيسية في قاعدة البيانات كـ"غير مكتملة"
-      await firestore
-          .collection('Task')
-          .doc(task['id'])
-          .update({'completionStatus': 0});
+  if (newTaskCompletionStatus) {
+    for (var subtask in taskData['subtasks']) {
+      subtask['completed'] = true;
+      await SubTask(
+        subTaskID: subtask['id'], 
+        taskID: task.taskID, 
+        title: subtask['title'], 
+        completionStatus: 1
+      ).updateCompletionStatus(1);
     }
-
-    if (mounted) {
-      setState(() {}); // تحديث واجهة المستخدم
+    await task.updateCompletionStatus(2);
+  } else {
+    for (var subtask in taskData['subtasks']) {
+      subtask['completed'] = false;
+      await SubTask(
+        subTaskID: subtask['id'], 
+        taskID: task.taskID, 
+        title: subtask['title'], 
+        completionStatus: 0
+      ).updateCompletionStatus(0);
     }
+    await task.updateCompletionStatus(0);
   }
+
+  if (mounted) {
+    setState(() {});
+  }
+}
 
   void toggleSubtaskCompletion(
       Map<String, dynamic> task, Map<String, dynamic> subtask) async {
@@ -785,7 +729,7 @@ void showCategoryDialog() {
         .collection('Task')
         .doc(task['id'])
         .update({'completionStatus': newTaskStatus});
-  }
+  } 
 
   void showDeleteConfirmationDialog(Map<String, dynamic> task) {
     showDialog(

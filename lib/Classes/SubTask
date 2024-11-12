@@ -1,45 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-
 class SubTask {
-  final String subTaskID;
+  final String subTaskID;  // Make sure this is 'subTaskID' with an uppercase 'T'
   final String taskID;
   String title;
   int completionStatus;
 
   SubTask({
-    required this.subTaskID,
+    required this.subTaskID,  // Use 'subTaskID' here, matching the property name
     required this.taskID,
     required this.title,
     required this.completionStatus,
   });
 
-  // Add a new subtask
-  static Future<void> addSubtask(SubTask subtask) async {
-    await FirebaseFirestore.instance.collection('SubTask').doc(subtask.subTaskID).set({
-      'taskID': subtask.taskID,
-      'title': subtask.title,
-      'completionStatus': subtask.completionStatus,
-    });
-  }
 
-  // Delete a subtask
-  static Future<void> deleteSubtask(String subTaskID) async {
-    await FirebaseFirestore.instance.collection('SubTask').doc(subTaskID).delete();
-  }
-
-  // Toggle subtask completion
-  Future<void> toggleCompletion() async {
-    completionStatus = (completionStatus == 1) ? 0 : 1;
+  
+   // Method to toggle completion of subtask and update in Firestore
+ Future<void> updateCompletionStatus(int status) async {
     await FirebaseFirestore.instance.collection('SubTask').doc(subTaskID).update({
-      'completionStatus': completionStatus,
+      'completionStatus': status,
     });
   }
+
+
+   // Method to delete a specific subtask from Firestore
+    Future<void> deleteSubTask() async {
+    await FirebaseFirestore.instance.collection('SubTask').doc(this.subTaskID).delete();
+  }
+
 
   // Fetch subtasks for a specific task
-  static Future<List<SubTask>> fetchSubtasks(String taskID) async {
-    QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+  static Future<List<SubTask>> fetchSubtasksForTask(String taskID) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    QuerySnapshot subtaskSnapshot = await firestore
         .collection('SubTask')
         .where('taskID', isEqualTo: taskID)
         .get();
@@ -48,7 +42,7 @@ class SubTask {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       return SubTask(
         subTaskID: doc.id,
-        taskID: data['taskID'],
+        taskID: taskID,
         title: data['title'],
         completionStatus: data['completionStatus'],
       );
