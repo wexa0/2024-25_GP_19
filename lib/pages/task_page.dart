@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
+import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 
 
 class TaskPage extends StatefulWidget {
@@ -27,6 +29,11 @@ class _TaskPageState extends State<TaskPage> {
   String selectedSort = 'timeline';
   bool showEmptyState = true;
   String? userID;
+  int _currentIndex = 1;
+  bool isCalendarView = false;
+  DateTime? startOfDay;
+  DateTime? endOfDay;
+  bool isLoading = true;
 
   //list for empty list state.
   final List<String> emptyStateMessages = [
@@ -39,13 +46,10 @@ class _TaskPageState extends State<TaskPage> {
   final List<Map<String, dynamic>> tasks = []; // store task from Firestore.
   List<String> availableCategories = []; // store categories from Firestore.
 
-  DateTime? startOfDay;
-  DateTime? endOfDay;
-  bool isLoading = true;
   @override
   void dispose() {
-    tasks.clear();
-    userID = null;
+    tasks.clear(); // Clear the list of tasks to free up memory.
+    userID = null;// Reset the user ID to null, removing any user-specific information from this widget.
     super.dispose();
   }
 
@@ -53,16 +57,14 @@ class _TaskPageState extends State<TaskPage> {
   void initState() {
     super.initState();
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      // إذا كان المستخدم غير مسجل الدخول، قم بتعيين userID إلى null ووقف جلب المهام
+    if (user == null) { //if it is guest user
       setState(() {
         userID = null;
         isLoading = false;
       });
-    } else {
-      // إذا كان المستخدم مسجل الدخول، قم بجلب المهام
+    } else { // for login user 
       userID = user.uid;
-      selectedCategories = ['All']; // تعيين "All" كالفئة الافتراضية
+      selectedCategories = ['All']; //add All category 
       fetchTasksFromFirestore();
     }
   }
@@ -83,11 +85,12 @@ class _TaskPageState extends State<TaskPage> {
     isLoading = true;
   });
 
-  List<Task> fetchedTasks = await Task.fetchTasksForUser(userID!);
- Map<String, dynamic> categoryData = await Category.fetchCategoriesForUser(userID!);
-Map<String, List<String>> categoryTaskMap = categoryData['taskCategoryMap'] as Map<String, List<String>>;
-availableCategories = categoryData['categories'] as List<String>;
+  List<Task> fetchedTasks = await Task.fetchTasksForUser(userID!);   // Fetch the list of tasks specific to the user from Firestore.
+  Map<String, dynamic> categoryData = await Category.fetchCategoriesForUser(userID!);
+  Map<String, List<String>> categoryTaskMap = categoryData['taskCategoryMap'] as Map<String, List<String>>;
+  availableCategories = categoryData['categories'] as List<String>;
 
+  // Set start and end of the day for filtering tasks that belong to the current day.
   startOfDay = DateTime.now();
   startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
   endOfDay = startOfDay!.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
@@ -98,7 +101,7 @@ availableCategories = categoryData['categories'] as List<String>;
 
     if (taskTime.isAfter(startOfDay!) && taskTime.isBefore(endOfDay!)) {
       List<SubTask> subtasks = await SubTask.fetchSubtasksForTask(task.taskID);
-
+      // Add the task to the list, including its details and associated subtasks.
       tasks.add({
         'id': task.taskID,
         'title': task.title,
@@ -171,8 +174,6 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
 
 
 
-
-
   void editTask(Map<String, dynamic> task) async {
     bool? result = await Navigator.push(
       context,
@@ -190,7 +191,6 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
   List<String> selectedCategories = [];
 
   // Functions for Hamburger Menu options
-
   String getFormattedDate() {
     final now = DateTime.now();
     final formatter = DateFormat('EEE, d MMM yyyy');
@@ -636,12 +636,6 @@ void showCategoryDialog() {
 }
 
 
-
-
-
-
-
-
   void closeAllSubtasks() {
     setState(() {
       for (var task in tasks) {
@@ -815,17 +809,6 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
   @override
   Widget build(BuildContext context) {
-    bool hasTodayTasks = tasks.any((task) =>
-        task['time'].isAfter(startOfDay!) && task['time'].isBefore(endOfDay!));
-
-    // التحقق إذا كانت الفئة المختارة لا تحتوي على أي مهام
-    bool noTasksInSelectedCategory = !tasks.any((task) =>
-        selectedCategories.contains('All') ||
-        (selectedCategories.contains('Uncategorized') &&
-            task['categories'].contains('Uncategorized')) ||
-        selectedCategories
-            .any((category) => task['categories'].contains(category)));
-
     return GestureDetector(
       onTap:
           closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
@@ -858,7 +841,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                 }
               },
               icon: const Icon(Icons.more_vert,
-                  color: Color(0xFF104A73)), // Adjusted icon color
+                  color: Color(0xFF104A73)), 
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -867,14 +850,14 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                       children: const [
                         Icon(Icons.list,
                             size: 24,
-                            color: Color(0xFF545454)), // Adjust icon color
+                            color: Color(0xFF545454)), 
                         SizedBox(width: 10),
                         Text(
                           'View',
                           style: TextStyle(
                             fontSize: 18,
                             color:
-                                Color(0xFF545454), // Text color matching theme
+                                Color(0xFF545454), 
                           ),
                         ),
                       ],
@@ -886,14 +869,14 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                       children: const [
                         Icon(Icons.sort,
                             size: 24,
-                            color: Color(0xFF545454)), // Adjust icon color
+                            color: Color(0xFF545454)), 
                         SizedBox(width: 10),
                         Text(
                           'Sort',
                           style: TextStyle(
                             fontSize: 18,
                             color:
-                                Color(0xFF545454), // Text color matching theme
+                                Color(0xFF545454), 
                           ),
                         ),
                       ],
@@ -905,14 +888,14 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                       children: const [
                         Icon(Icons.label,
                             size: 24,
-                            color: Color(0xFF545454)), // Adjust icon color
+                            color: Color(0xFF545454)), 
                         SizedBox(width: 10),
                         Text(
                           'Categorize',
                           style: TextStyle(
                             fontSize: 18,
                             color:
-                                Color(0xFF545454), // Text color matching theme
+                                Color(0xFF545454), 
                           ),
                         ),
                       ],
@@ -926,22 +909,22 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
           ],
         ),
 
-        // Body content
-        body: Padding(
+          body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: isLoading
               ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    //loading 
                     children: [
                       Image.asset(
-                        'assets/images/logo.png', // شعار التطبيق الخاص بك
+                        'assets/images/logo.png', 
                         width: 170,
                         height: 170,
                       ),
                       const SizedBox(height: 0),
                       Lottie.asset(
-                        'assets/animations/loading.json', // ملف الأنيميشن Lottie
+                        'assets/animations/loading.json',
                         width: 150,
                         height: 150,
                       ),
@@ -970,6 +953,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                         fontFamily: 'Poppins',
                       ),
                     ),
+                    //If no tasks for today
                     if (tasks.isEmpty ||
                         !tasks.any((task) =>
                             task['time'].isAfter(startOfDay!) &&
@@ -978,14 +962,14 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                         child: Column(
                           children: [
                             const SizedBox(
-                                height: 80), // إضافة مسافة رأسية قبل الصورة
+                                height: 80), 
                             Image.asset(
-                              'assets/images/empty_list.png', // المسار الصحيح للصورة
-                              width: 150, // عرض الصورة
-                              height: 150, // ارتفاع الصورة
+                              'assets/images/empty_list.png', 
+                              width: 150, 
+                              height: 150, 
                             ),
                             const SizedBox(
-                                height: 20), // المسافة بين الصورة والنص
+                                height: 20), 
                             Text(
                               getEmptyStateMessage(),
                               style: const TextStyle(
@@ -995,14 +979,11 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(
-                                height: 50), // إضافة مسافة رأسية بعد النص
-                          ],
+                            const SizedBox(height: 50),
+                           ],
                         ),
                       )
-
-// Existing Expanded widget for displaying tasks
-                    else
+                      else
                       Expanded(
                         child: (!tasks.any((task) =>
                                 selectedCategories.contains('All') ||
@@ -1017,7 +998,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                   const SizedBox(height: 30),
                                   Center(
                                     child: Image.asset(
-                                      'assets/images/empty_list.png', // تأكد من وجود الصورة في المسار المحدد
+                                      'assets/images/empty_list.png', 
                                       width: 100,
                                       height: 110,
                                     ),
@@ -1040,39 +1021,34 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                 children: [
                                    SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-  Wrap(
-    spacing: 8.0,
-    children: selectedCategories.map((category) {
-      return ActionChip(
-        label: Text(category),
-        onPressed: () {
-          // Remove specific category on tap
-          setState(() {
-            selectedCategories.remove(category);
-            if (selectedCategories.isEmpty) {
-              selectedCategories = ['All']; // Reset to "All" if no categories remain
-            }
-          });
-        },
-        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-        backgroundColor: const Color(0xFF79A3B7),
-        labelStyle: const TextStyle(color: Colors.white),
-      );
-    }).toList(),
-  ),
-const SizedBox(height: 1),
+                                    Wrap( //wrap for show selected category on the page
+                                      spacing: 8.0,
+                                      children: selectedCategories.map((category) {
+                                        return ActionChip(
+                                          label: Text(category),
+                                          onPressed: () {
+                                            // Remove specific category on tap
+                                            setState(() {
+                                              selectedCategories.remove(category);
+                                              if (selectedCategories.isEmpty) {
+                                                selectedCategories = ['All']; 
+                                              }
+                                            });
+                                          },
+                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+                                          backgroundColor: const Color(0xFF79A3B7),
+                                          labelStyle: const TextStyle(color: Colors.white),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
-    !task['completed'] &&
-    (selectedCategories.contains('All') ||
-        (selectedCategories.contains('Uncategorized') &&
-            (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
-        selectedCategories.any((category) => task['categories'].contains(category)))))
-
-                                    // Add this snippet above the pending tasks section to show multiple selected categories
-// Ensure category chips are always displayed if there are selected categories
-
-
+                                    !task['completed'] &&
+                                    (selectedCategories.contains('All') ||
+                                        (selectedCategories.contains('Uncategorized') &&
+                                            (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
+                                        selectedCategories.any((category) => task['categories'].contains(category)))))
 
                                     Row(
                                       children: const [
@@ -1092,12 +1068,10 @@ const SizedBox(height: 1),
                                       ],
                                     ),
                             ...tasks.where((task) {
-  // تحقق إذا كانت الفئة المختارة تحتوي على "All"، قم بإظهار جميع المهام الغير مكتملة
-  if (selectedCategories.contains('All')) {
+  if (selectedCategories.contains('All')) {// If the "All" category is selected, return tasks that are not completed.
     return !task['completed'];
   }
-  // تحقق إذا كانت الفئة المختارة تحتوي على "Uncategorized"، وأي فئات أخرى
-  else {
+  else {  // If "All" is not selected, filter tasks based on more specific conditions:
     return !task['completed'] &&
         (selectedCategories.contains('Uncategorized') &&
             (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
@@ -1114,19 +1088,20 @@ const SizedBox(height: 1),
                                         });
                                       },
                                       onSubtaskToggle: (subtask) =>
-                                          toggleSubtaskCompletion(
-                                              task, subtask),
-                                      onSubtaskDeleted: (subtask) async {
-                                        await FirebaseFirestore.instance
-                                            .collection('SubTask')
-                                            .doc(subtask['id'])
-                                            .delete();
+                                          toggleSubtaskCompletion(task, subtask),
+                                     onSubtaskDeleted: (subtask) async {
+                                        // Create an instance of SubTask from the subtask data
+                                        SubTask subtaskInstance = SubTask(
+                                          subTaskID: subtask['id'],
+                                          taskID: task['id'], 
+                                          title: subtask['title'],
+                                          completionStatus: subtask['completed'] ? 1 : 0,
+                                        );
+                                        await subtaskInstance.deleteSubTask();
                                         task['subtasks'].remove(subtask);
-                                        setState(
-                                            () {}); // تحديث الواجهة بعد الحذف
-                                        _showTopNotification(
-                                            "Subtask deleted successfully.");
+                                        _showTopNotification("Subtask deleted successfully.");
                                       },
+
                                       getPriorityColor: getPriorityColor,
                                       onDeleteTask: () =>
                                           showDeleteConfirmationDialog(task),
@@ -1135,19 +1110,16 @@ const SizedBox(height: 1),
                                   ),
                                   const SizedBox(height: 16),
 
-                                  if (areAllTasksCompleted() &&
-                                      selectedCategories.contains('All'))
+                                  if (areAllTasksCompleted() && selectedCategories.contains('All')) //if all tasks completed.
                                     Center(
                                       child: Column(
                                         children: [
                                           const SizedBox(height: 70),
                                           Image.asset(
-                                            'assets/images/done.png', // عرض الصورة
-                                            height: 110, // ارتفاع الصورة
+                                            'assets/images/done.png', 
+                                            height: 110, 
                                           ),
-                                          const SizedBox(
-                                              height:
-                                                  20), // المسافة بين الصورة والنص
+                                          const SizedBox(height: 20), 
                                           const Text(
                                             'Awesome job! You\'ve conquered your\n to-do list today!',
                                             style: TextStyle(
@@ -1162,7 +1134,7 @@ const SizedBox(height: 1),
                                       ),
                                     ),
 
-                                  // Show Completed Tasks section if there are any completed tasks
+                                  // Show Completed Tasks section if all tasks completed.
                                   if (tasks.any((task) =>
                                       task['completed'] &&
                                       (selectedCategories.contains('All') ||
@@ -1191,18 +1163,17 @@ const SizedBox(height: 1),
                                         Expanded(child: Divider(thickness: 1)),
                                       ],
                                     ),
-
                                   
                                    ...tasks.where((task) {
-  if (selectedCategories.contains('All')) {
-    return task['completed'];
-  }
-  else {
-    return task['completed'] &&
-        (selectedCategories.contains('Uncategorized') &&
-            (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
-        selectedCategories.any((category) => task['categories'].contains(category)));
-  }
+                                    if (selectedCategories.contains('All')) {
+                                      return task['completed'];
+                                    }
+                                    else {
+                                      return task['completed'] &&
+                                          (selectedCategories.contains('Uncategorized') &&
+                                              (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
+                                          selectedCategories.any((category) => task['categories'].contains(category)));
+                                    }
                                   }).map(
                                     (task) => TaskCard(
                                       task: task,
@@ -1239,7 +1210,7 @@ const SizedBox(height: 1),
                   ],
                 ),
         ),
-        floatingActionButton: FloatingActionButton(
+        floatingActionButton: FloatingActionButton( //Add button
           onPressed: () async {
             if (userID != null) {
               // Navigate to AddTaskPage if the user is logged in
@@ -1250,12 +1221,12 @@ const SizedBox(height: 1),
                 ),
               );
 
-              // Check if a task was added (i.e., result is true) and refresh tasks
+              // Check if a task was added and refresh tasks
               if (result == true) {
                 fetchTasksFromFirestore();
               }
             } else {
-              // Show a dialog prompting the user to sign in
+              // Show a dialog prompting the user to sign in (for guest user).
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
@@ -1265,11 +1236,11 @@ const SizedBox(height: 1),
                       borderRadius: BorderRadius.circular(16.0),
                     ),
                     title: const Text(
-                      'Sign In Required',
+                      'Login & Explor!',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     content: const Text(
-                      'You need to sign in to add tasks. Please log in or create an account.',
+                      'Ready to add tasks? Sign in or create an account to access all features.',
                     ),
                     actions: [
                       ElevatedButton(
@@ -1291,8 +1262,10 @@ const SizedBox(height: 1),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
-                          // Navigate to Sign-In page or provide sign-in functionality
-                          // Implement navigation to your sign-in page here if needed
+                           Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => WelcomePage()),
+                        );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF79A3B7),
@@ -1301,7 +1274,7 @@ const SizedBox(height: 1),
                           ),
                         ),
                         child: const Text(
-                          'Sign In',
+                          'Join Now',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -1317,8 +1290,8 @@ const SizedBox(height: 1),
           ),
           child: const Icon(Icons.add, color: Colors.white),
         ),
-      ), //jjjj
-    ); //jjjj
+      ), 
+    ); 
   }
 }
 
@@ -1328,7 +1301,7 @@ class TaskCard extends StatelessWidget {
   final VoidCallback onExpandToggle;
   final Function(Map<String, dynamic>) onSubtaskToggle;
   final Function(Map<String, dynamic>)
-      onSubtaskDeleted; // Callback for deletion
+  onSubtaskDeleted; 
   final Color Function(int) getPriorityColor;
   final VoidCallback onDeleteTask;
   final VoidCallback onEditTask;
@@ -1339,7 +1312,7 @@ class TaskCard extends StatelessWidget {
     required this.onTaskToggle,
     required this.onExpandToggle,
     required this.onSubtaskToggle,
-    required this.onSubtaskDeleted, // Add this line to the constructor
+    required this.onSubtaskDeleted, 
     required this.getPriorityColor,
     required this.onDeleteTask,
     required this.onEditTask,
@@ -1362,7 +1335,7 @@ class TaskCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog without deleting
+                Navigator.of(context).pop(); 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -1378,9 +1351,7 @@ class TaskCard extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop(); // Close dialog before deletion
-
-                // Call the onSubtaskDeleted callback to handle the deletion in TaskPage
+                Navigator.of(context).pop(); 
                 onSubtaskDeleted(subtask);
               },
               style: ElevatedButton.styleFrom(
@@ -1404,16 +1375,14 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(
-          16.0), // إضافة الحواف المستديرة إلى بطاقة المهام بأكملها
+      borderRadius: BorderRadius.circular(16.0), 
       child: Card(
         color: Colors.white,
         margin: const EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-              16.0), // إضافة الحواف المستديرة لبطاقة المهام
+          borderRadius: BorderRadius.circular(16.0), 
         ),
-        child: Slidable(
+        child: Slidable( //Slidable(swap) to show edit and delete each task .
           key: ValueKey(task['title']),
           endActionPane: ActionPane(
             motion: const ScrollMotion(),
@@ -1427,7 +1396,7 @@ class TaskCard extends StatelessWidget {
                     ),
                   );
                 },
-                backgroundColor: const Color(0xFFC2C2C2), // لون الخلفية
+                backgroundColor: const Color(0xFFC2C2C2), 
                 child: const Icon(
                   Icons.edit,
                   color: Colors.white,
@@ -1436,7 +1405,7 @@ class TaskCard extends StatelessWidget {
               SizedBox(
                 width: 1,
                 child: Container(
-                  color: Colors.grey, // اللون الرمادي للفاصل
+                  color: Colors.grey, 
                 ),
               ),
               CustomSlidableAction(
@@ -1454,11 +1423,11 @@ class TaskCard extends StatelessWidget {
               ListTile(
                 onTap: onEditTask,
                 leading: Tooltip(
-                  message: "Mark Task as complete!", // التلميح المطلوب
+                  message: "Mark Task as complete!", //hint
                   showDuration: Duration(milliseconds: 500),
                   child: InkWell(
                     onTap:
-                        onTaskToggle, // يحافظ على الـ onTap لتنفيذ الإجراء عند النقر
+                        onTaskToggle, 
                     child: Container(
                       width: 24,
                       height: 24,
@@ -1490,7 +1459,7 @@ class TaskCard extends StatelessWidget {
                 ),
                 subtitle: Text(
                   DateFormat('h:mm a').format(
-                      task['time']), // Display the time in "10 AM" format
+                      task['time']), // Display the time (i.e. 10 AM) format.
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1551,9 +1520,9 @@ class TaskCard extends StatelessWidget {
                           },
                           leading: Tooltip(
                             message:
-                                "Mark SubTask as complete!", // التلميح الذي يظهر للمستخدم
+                                "Mark SubTask as complete!", //hint
                             showDuration:
-                                Duration(milliseconds: 500), // مدة ظهور التلميح
+                                Duration(milliseconds: 500), 
                             child: GestureDetector(
                               onTap: () {
                                 onSubtaskToggle(subtask);

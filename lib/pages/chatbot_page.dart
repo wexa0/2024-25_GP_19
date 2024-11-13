@@ -23,7 +23,9 @@ class ChatbotpageWidget extends StatelessWidget {
         elevation: 0.0,
         centerTitle: true,
         automaticallyImplyLeading: false,
+        
       ),
+      
       backgroundColor: const Color.fromRGBO(245, 247, 248, 1),
 
       // استخدام Stack لعرض محتوى الصفحة مع طبقة "Coming Soon"
@@ -318,6 +320,7 @@ class ChatbotpageWidget extends StatelessWidget {
           ),
         ],
       ),
+      
     );
   }
 }

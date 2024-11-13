@@ -45,9 +45,8 @@ class Category {
   }
 
   return {
-    'categories': categorySet.toList() as List<String>,  // Ensure this is a List<String>
-    'taskCategoryMap': categoryTaskMap as Map<String, List<String>>,  // Ensure this is a Map<String, List<String>>
+    'categories': categorySet.toList(), // Ensure this is a List<String>
+    'taskCategoryMap': categoryTaskMap, // This is Map<String, List<String>>
   };
 }
-
 }

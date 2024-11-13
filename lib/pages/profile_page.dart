@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
 Future<void> signOut() async {
-  await _auth.signOut(); // تسجيل الخروج من Firebase
+  await FirebaseAuth.instance.signOut(); // تسجيل الخروج من Firebase
   setState(() {
     user = AppUser(); // إعادة تعيين بيانات المستخدم لتصبح فارغة
   });
