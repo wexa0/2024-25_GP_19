@@ -16,6 +16,7 @@ import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'dart:math';
 
 
 class TaskPage extends StatefulWidget {
@@ -34,14 +35,45 @@ class _TaskPageState extends State<TaskPage> {
   DateTime? startOfDay;
   DateTime? endOfDay;
   bool isLoading = true;
+  String? selectedCompletionMessage;
 
   //list for empty list state.
-  final List<String> emptyStateMessages = [
-    "You have no tasks for today. Start planning!",
-    "Nothing on your to-do list today. Add your tasks!",
-    "You're free today! Add new tasks to stay organized.",
-    "All set! Want to add more tasks for today?"
-  ];
+final List<String> emptyStateMessages = [
+  "A new day, a new opportunity to achieve your goals!✨",
+  "Today is a blank canvas – make it\n productive!🚀",
+  "No tasks yet! Ready to conquer new challenges?🌟",
+  "Set your intentions for the day and take the first step!🎯",
+  "Every small step counts. What will you accomplish today?✨",
+  "Organize your day, and see\n the magic unfold!📅",
+  "Great things come to those who plan. Start adding your tasks!💡",
+  "A goal without a plan is just a wish. Start planning!🌟",
+  "Don’t wait for inspiration. Start planning and watch it come!🚀",
+];
+
+ //list for complete list state.
+final List<String> completionMessages = [
+  "Awesome job! You've conquered your to-do list today! 🌟",
+  "Way to go! Every task is completed. Keep up the great work! 🎉",
+  "You did it! Take a break, you've earned it. ✨",
+  "Mission accomplished! You're unstoppable! 🚀",
+  "All tasks completed! Time to relax and recharge. 🏆",
+  "Great job! You've been super productive today. 🎈",
+  "Excellent! Every task is ticked off. Keep this momentum going! 💪",
+  "Fantastic work! Enjoy some free time, you've earned it! 🌈",
+  "Brilliant effort! You've completed everything for today! 🙌",
+  "Amazing! Your to-do list is empty. Relax and enjoy your success! 🎊",
+  "Success! You've wrapped up all your tasks. Keep it going! 🎯",
+  "Wonderful! You've achieved all your goals for today. 🌟",
+  "Outstanding! All tasks done and dusted. Keep shining! 🔥",
+  "Phenomenal! You rocked your to-do list. Take a well-deserved break. 💼",
+  "You nailed it! No tasks left, you've been productive! 🥳",
+  "Victory! You've completed every task on your list. Great job! 🏅",
+  "Unstoppable! You've checked off everything for today. Celebrate! 🎉",
+  "Champion! All tasks are done. You're on a roll! 🥇",
+  "Incredible! Every single task is completed. Enjoy the day! 🌞",
+  "You’re a superstar! No tasks left. Keep being awesome! 🌟"
+];
+
 
   final List<Map<String, dynamic>> tasks = []; // store task from Firestore.
   List<String> availableCategories = []; // store categories from Firestore.
@@ -124,10 +156,21 @@ class _TaskPageState extends State<TaskPage> {
   });
 }
 
-  String getEmptyStateMessage() {
-    return emptyStateMessages[
-        DateTime.now().weekday % emptyStateMessages.length];
+String getEmptyStateMessage() {
+  final randomIndex = Random().nextInt(emptyStateMessages.length);
+  return emptyStateMessages[randomIndex];
+}
+
+String getCompletionMessage() {
+  if (selectedCompletionMessage == null) {
+    final randomIndex = Random().nextInt(completionMessages.length);
+    selectedCompletionMessage = completionMessages[randomIndex];
   }
+  return selectedCompletionMessage!;
+}
+
+
+
 
   bool areAllTasksCompleted() {
     return tasks.every(
@@ -216,7 +259,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String selectedView = 'list'; // Default view selection
+        String selectedView = isCalendarView ? 'calendar' : 'list'; // Default view selection
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -647,8 +690,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
   Task task = Task.fromMap(taskData);
   bool newTaskCompletionStatus = !taskData['completed'];
 
-  setState(() {
+   setState(() {
     taskData['completed'] = newTaskCompletionStatus;
+    selectedCompletionMessage = null; // إعادة تعيين الرسالة
   });
 
   if (newTaskCompletionStatus) {
@@ -971,7 +1015,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                             const SizedBox(
                                 height: 20), 
                             Text(
-                              getEmptyStateMessage(),
+                              getEmptyStateMessage(), // استخدم الدالة لجلب رسالة عشوائية
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -979,6 +1023,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                               ),
                               textAlign: TextAlign.center,
                             ),
+
                             const SizedBox(height: 50),
                            ],
                         ),
@@ -1110,29 +1155,30 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  if (areAllTasksCompleted() && selectedCategories.contains('All')) //if all tasks completed.
-                                    Center(
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(height: 70),
-                                          Image.asset(
-                                            'assets/images/done.png', 
-                                            height: 110, 
-                                          ),
-                                          const SizedBox(height: 20), 
-                                          const Text(
-                                            'Awesome job! You\'ve conquered your\n to-do list today!',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF3B7292),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 20),
-                                        ],
-                                      ),
-                                    ),
+                                 if (areAllTasksCompleted() && selectedCategories.contains('All'))
+  Center(
+    child: Column(
+      children: [
+        const SizedBox(height: 70),
+        Image.asset(
+          'assets/images/done.png',
+          height: 110,
+        ),
+        const SizedBox(height: 20),
+        Text(
+          getCompletionMessage(), // استخدم الدالة لجلب رسالة تهنئة عشوائية
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF3B7292),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+      ],
+    ),
+  ),
+
 
                                   // Show Completed Tasks section if all tasks completed.
                                   if (tasks.any((task) =>

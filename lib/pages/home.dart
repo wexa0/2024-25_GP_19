@@ -14,7 +14,6 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
-import 'package:flutter_application/models/BottomNavigationBar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,13 +53,13 @@ class HomePageState extends State<HomePage> {
     _fetchUserData(); // Fetch user data when the widget is initialized
 
     super.initState();
-     final List<Widget> _pages = [
-    HomePage(), // الصفحة الرئيسية
-    TaskPage(), // صفحة المهام
-    ChatbotpageWidget(), // صفحة الشات بوت
-    ProgressPage(), // صفحة التقدم
-    ProfilePage(), // صفحة الملف الشخصي
-  ];
+    _pages.addAll([
+      HomePageContent(onTabChange: onTabChange), // Pass the callback here
+      TaskPage(),
+      ChatbotpageWidget(),
+      ProgressPage(),
+      ProfilePage(),
+    ]);
   }
 
   void onTabChange(int index) {
@@ -105,9 +104,52 @@ class HomePageState extends State<HomePage> {
       appBar: _currentIndex == 0 ? _buildAppBar() : null,
       backgroundColor: const Color.fromARGB(255, 245, 247, 248),
       body: _pages[_currentIndex], // Show the current page
-      bottomNavigationBar: BottomNavBar(
-        selectedIndex: _currentIndex,
-        onTabChange: onTabChange,
+      bottomNavigationBar: Container(
+        color: const Color.fromARGB(
+            255, 226, 231, 234), // Background color of the navigation bar
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+        child: GNav(
+          backgroundColor: const Color(0xFF79A3B7)
+              .withOpacity(0), // Set the background color to match your old bar
+          color: const Color(
+              0xFF545454), // Inactive icons and text color (match the old inactive color)
+          activeColor: const Color(
+              0xFF104A73), // Active icon and text color (match the old active color)
+          tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(
+              0.3), // Slightly transparent background for active tab
+          gap: 8, // Gap between icon and text
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8), // Adjust the padding for visual consistency
+          tabBorderRadius:
+              15, // Optional: add rounded corners for a softer look
+          selectedIndex: _currentIndex,
+          iconSize: 24, // Adjust icon size to match the old bar
+          onTabChange: (index) {
+            setState(() {
+              _currentIndex = index; // Update the index when a tab is selected
+            });
+          },
+          tabs: const [
+            GButton(
+              icon: Icons.home,
+              text: 'Home',
+            ),
+            GButton(
+              icon: Icons.task,
+              text: 'Tasks',
+            ),
+            GButton(
+              icon: Icons.sms,
+              text: 'Chatbot',
+            ),
+            GButton(icon: Icons.poll, text: 'Progress'),
+            GButton(
+              icon: Icons.person,
+              text: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -121,7 +121,7 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
     'assets/images/signUpForFeatures.png',
     'assets/images/managaTasksCrousel.png',
     'assets/images/setRemindersCrousel.png',
-    'assets/images/chatCrou sel.png',
+    'assets/images/chatCrousel.png',
   ]; // carousel list
 
   // Fetch user data from Firestore
@@ -380,11 +380,11 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                 borderRadius: BorderRadius.circular(16.0),
                               ),
                               title: const Text(
-                                'Sign In Required',
+                                'Login & Explor!',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               content: const Text(
-                                'You need to sign in to add tasks. Please log in or create an account.',
+                                'Ready to add tasks? Sign in or create an account to access all features.',
                               ),
                               actions: [
                                 ElevatedButton(
@@ -405,11 +405,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                   ),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    // Navigate to Sign-In page or provide sign-in functionality
-                                    // Implement navigation to your sign-in page here if needed
-                                  },
+                                   onPressed: () {
+                          Navigator.of(context).pop();
+                           Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => WelcomePage()),
+                        );
+                        },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF79A3B7),
                                     shape: RoundedRectangleBorder(
@@ -417,7 +419,7 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                     ),
                                   ),
                                   child: const Text(
-                                    'Sign In',
+                                    'Join Now',
                                     style: TextStyle(color: Colors.white),
                                   ),
                                 ),
