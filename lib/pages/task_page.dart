@@ -17,6 +17,7 @@ import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'dart:math';
+import 'package:flutter_application/models/MessageManager';
 
 
 class TaskPage extends StatefulWidget {
@@ -36,18 +37,21 @@ class _TaskPageState extends State<TaskPage> {
   DateTime? endOfDay;
   bool isLoading = true;
   String? selectedCompletionMessage;
+  late double _xPosition = 100.0; // Default X-coordinate position
+  late double _yPosition = 150.0; // Default Y-coordinate position
+
 
   //list for empty list state.
 final List<String> emptyStateMessages = [
-  "A new day, a new opportunity to achieve your goals!✨",
+  "A new day, a new opportunity\n to achieve your goals!✨",
   "Today is a blank canvas – make it\n productive!🚀",
   "No tasks yet! Ready to conquer new challenges?🌟",
-  "Set your intentions for the day and take the first step!🎯",
+  "Set your intentions for the day and\n take the first step!🎯",
   "Every small step counts. What will you accomplish today?✨",
   "Organize your day, and see\n the magic unfold!📅",
-  "Great things come to those who plan. Start adding your tasks!💡",
-  "A goal without a plan is just a wish. Start planning!🌟",
-  "Don’t wait for inspiration. Start planning and watch it come!🚀",
+  "Great things come to those who plan.\n Start adding your tasks!💡",
+  "A goal without a plan is just\n a wish. Start planning!🌟",
+  "Don’t wait for inspiration. Start\n planning and watch it come!🚀",
 ];
 
  //list for complete list state.
@@ -67,7 +71,7 @@ final List<String> completionMessages = [
   "Outstanding! All tasks done and dusted. Keep shining! 🔥",
   "Phenomenal! You rocked your to-do list. Take a well-deserved break. 💼",
   "You nailed it! No tasks left, you've been productive! 🥳",
-  "Victory! You've completed every task on your list. Great job! 🏅",
+  "Victory! You've completed every task\n on your list. Great job! 🏅",
   "Unstoppable! You've checked off everything for today. Celebrate! 🎉",
   "Champion! All tasks are done. You're on a roll! 🥇",
   "Incredible! Every single task is completed. Enjoy the day! 🌞",
@@ -99,7 +103,18 @@ final List<String> completionMessages = [
       selectedCategories = ['All']; //add All category 
       fetchTasksFromFirestore();
     }
+  // Initialize the button position using MediaQuery in a post-frame callback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenSize = MediaQuery.of(context).size;
+      setState(() {
+        _xPosition = screenSize.width - 70; // Default to the right of the screen
+        _yPosition = screenSize.height - 120; // Default to the bottom
+      });
+    });
+  
+   
   }
+
 
   Future<void> _fetchUserID() async {
     // Get the current user from FirebaseAuth
@@ -157,25 +172,46 @@ final List<String> completionMessages = [
 }
 
 String getEmptyStateMessage() {
-  final randomIndex = Random().nextInt(emptyStateMessages.length);
-  return emptyStateMessages[randomIndex];
+  return getFixedMessageForDay(emptyStateMessages);
 }
+
 
 String getCompletionMessage() {
-  if (selectedCompletionMessage == null) {
-    final randomIndex = Random().nextInt(completionMessages.length);
-    selectedCompletionMessage = completionMessages[randomIndex];
+  return getFixedMessageForDay(completionMessages);
+}
+
+String getDayMessage() {
+  if (areAllTasksCompleted()) {
+    print("All tasks completed: Returning completion message.");
+    return getCompletionMessage();
+  } else if (tasks.isEmpty) {
+    print("No tasks available: Returning empty state message.");
+    return getEmptyStateMessage();
+  } else {
+    print("Default case: Returning default motivational message.");
+    return "Keep pushing forward! You're doing great! 🚀";
   }
-  return selectedCompletionMessage!;
 }
 
 
+String getFixedMessageForDay(List<String> messages) {
+  final today = DateTime.now();
+  final dateKey = "${today.year}-${today.month}-${today.day}"; // Unique key for the day
+  final hash = dateKey.hashCode; // Generate a hash based on the date
+  final random = Random(hash); // Seed the random generator with the hash
+  final index = random.nextInt(messages.length); // Generate a consistent random index
+  return messages[index];
+}
 
 
-  bool areAllTasksCompleted() {
-    return tasks.every(
-        (task) => task['completed'] ?? false); // If null, default to false
+bool areAllTasksCompleted() {
+  if (tasks.isEmpty) {
+    return false; // إذا لم تكن هناك مهام، فليس من المنطقي اعتبارها مكتملة
   }
+  return tasks.every((task) => task['completed'] == true);
+}
+
+
 
 void deleteTask(Map<String, dynamic> taskData) async {
   // Call the static deleteTask method on the Task class
@@ -340,12 +376,16 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                 ),
                 ElevatedButton(
                   onPressed: () {
+                   print(getDayMessage());
                     Navigator.of(context).pop();
-                    if (selectedView == 'calendar') {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => CalendarPage()),
-                      );
-                    }
+                  Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => CalendarPage(dailyMessage: getDayMessage()),
+  ),
+);
+
+
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -853,6 +893,8 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
   @override
   Widget build(BuildContext context) {
+   
+
     return GestureDetector(
       onTap:
           closeAllSubtasks, // This closes the expanded subtasks when clicking outsid
@@ -1015,7 +1057,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                             const SizedBox(
                                 height: 20), 
                             Text(
-                              getEmptyStateMessage(), // استخدم الدالة لجلب رسالة عشوائية
+                              getEmptyStateMessage(), 
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -1037,11 +1079,38 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                         .contains('Uncategorized')) ||
                                 selectedCategories.any((category) =>
                                     task['categories'].contains(category))))
+                                    
                             ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+                              
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                   SizedBox(height: 18),
+                                  if (selectedCategories.first != 'All')
+                                    Wrap( //wrap for show selected category on the page
+                                      alignment: WrapAlignment.start,
+                                      spacing: 8.0,
+                                      children: selectedCategories.map((category) {
+                                        return ActionChip(
+                                          label: Text(category),
+                                          onPressed: () {
+                                            // Remove specific category on tap
+                                            setState(() {
+                                              selectedCategories.remove(category);
+                                              if (selectedCategories.isEmpty) {
+                                                selectedCategories = ['All']; 
+                                              }
+                                            });
+                                          },
+                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+                                          backgroundColor: const Color(0xFF79A3B7),
+                                          labelStyle: const TextStyle(color: Colors.white),
+                                        );
+                                      }).toList(),
+                                    ),
+                                 
                                   const SizedBox(height: 30),
                                   Center(
+                                    
                                     child: Image.asset(
                                       'assets/images/empty_list.png', 
                                       width: 100,
@@ -1051,7 +1120,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                   const SizedBox(height: 20),
                                   const Center(
                                     child: Text(
-                                      'There are no tasks in this category\.',
+                                      ' No tasks are available in the selected category(ies).',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -1166,7 +1235,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
         ),
         const SizedBox(height: 20),
         Text(
-          getCompletionMessage(), // استخدم الدالة لجلب رسالة تهنئة عشوائية
+          getCompletionMessage(), 
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1256,8 +1325,35 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                   ],
                 ),
         ),
-        floatingActionButton: FloatingActionButton( //Add button
-          onPressed: () async {
+      floatingActionButton: Overlay(
+        initialEntries: [
+          OverlayEntry(
+            builder: (context) {
+              return Positioned(
+                left: _xPosition,
+                top: _yPosition,
+                child: Draggable(
+                  feedback: FloatingActionButton(
+                    onPressed: null,
+                    backgroundColor: const Color(0xFF3B7292),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                  childWhenDragging: Container(),
+                  onDragEnd: (details) {
+                    setState(() {
+                      final screenSize = MediaQuery.of(context).size;
+                      _xPosition = details.offset.dx.clamp(
+                        0.0,
+                        screenSize.width - 58.0,
+                      );
+                      _yPosition = details.offset.dy.clamp(
+                        0.0,
+                        screenSize.height - 112.0,
+                      );
+                    });
+                  },
+                  child: FloatingActionButton(
+                    onPressed: () async {
             if (userID != null) {
               // Navigate to AddTaskPage if the user is logged in
               bool? result = await Navigator.push(
@@ -1330,16 +1426,23 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
               );
             }
           },
-          backgroundColor: const Color(0xFF3B7292),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30.0),
+                    backgroundColor: const Color(0xFF3B7292),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
+                ),
+              );
+            },
           ),
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-      ), 
-    ); 
-  }
+        ],
+      ),
+    ),
+  );
 }
+}
+
 
 class TaskCard extends StatelessWidget {
   final Map<String, dynamic> task;
@@ -1420,6 +1523,7 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+     
     return ClipRRect(
       borderRadius: BorderRadius.circular(16.0), 
       child: Card(

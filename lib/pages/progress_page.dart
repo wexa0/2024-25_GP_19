@@ -129,34 +129,7 @@ class ProgressPage extends StatelessWidget {
                 ],
               ),
             ),
-            Positioned.fill(
-              child: Container(
-                color: Colors.grey.withOpacity(0.8),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.hourglass_empty, size: 80, color: Colors.white),
-                      SizedBox(height: 20),
-                      Text(
-                        'Coming Soon',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'This feature is not available yet.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            
           ],
         ),
       ),
