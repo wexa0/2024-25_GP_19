@@ -294,29 +294,7 @@ Widget build(BuildContext context) {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            if (isLoading) ...[
-              Center(
-                child: Column(
-                  
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                     const SizedBox(height: 200),
-                    Image.asset(
-                      'assets/images/logo.png', 
-                      width: 170,
-                      height: 170,
-                    ),
-                    const SizedBox(height: 0),
-                    Lottie.asset(
-                      'assets/animations/loading.json',
-                      width: 150,
-                      height: 150,
-                    ),
-                  ],
-                ),
-              ),
-            ] else ...[
-              TableCalendar(
+               TableCalendar(
   firstDay: DateTime.utc(2010, 10, 16),
   lastDay: DateTime.utc(2030, 3, 14),
   focusedDay: _focusedDay,
@@ -358,6 +336,28 @@ Widget build(BuildContext context) {
     titleCentered: true,
   ),
 ),
+            if (isLoading) ...[
+              Center(
+                child: Column(
+                  
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png', 
+                      width: 170,
+                      height: 170,
+                    ),      
+
+                    Lottie.asset(
+                      'assets/animations/loading.json',
+                      width: 150,
+                      height: 150,
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+           
               const SizedBox(height: 20),
                     //If no tasks for today
                     if (tasks.isEmpty)

@@ -143,7 +143,8 @@ class HomePageState extends State<HomePage> {
               icon: Icons.sms,
               text: 'Chatbot',
             ),
-            GButton(icon: Icons.poll, text: 'Progress'),
+            GButton(icon: Icons.poll,
+             text: 'Progress'),
             GButton(
               icon: Icons.person,
               text: 'Profile',

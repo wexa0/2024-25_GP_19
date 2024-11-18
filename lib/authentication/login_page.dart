@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/welcome_page.dart';
@@ -51,7 +52,7 @@ void _showTopNotification(String message) {
 
     overlayState?.insert(overlayEntry);
 
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 3), () {
       overlayEntry.remove();
     });
   }
@@ -89,6 +90,128 @@ void _showTopNotification(String message) {
       }
     }
   }
+  void showResetPasswordPopup(BuildContext context) {
+  final TextEditingController emailController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: const Color(0xFFF5F5F5), // نفس خلفية الحقول في البروفايل
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Reset Password',
+          style: TextStyle(
+            color: Color.fromARGB(255, 0, 0, 0), // نفس لون النصوص الرئيسية
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter your email to reset your password:',
+              style: TextStyle(
+                color: Color(0xFF737373), // لون النصوص الثانوية
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                hintText: 'Your email',
+                filled: true,
+                fillColor: Colors.white, // خلفية الحقل
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE6EBEF), // حدود الحقل
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF3B7292), // حدود عند التركيز
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF5F7F8),
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0xFF79A3B7)),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF79A3B7)),
+            ),
+          ),
+        ElevatedButton(
+  onPressed: () async {
+    final email = emailController.text.trim();
+
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
+      // Invalid email format
+      _showTopNotification('Invalid email address. Please try again.');
+      return;
+    }
+
+     try {
+      // Check if the email exists in Firestore
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('User')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        // Email not found in database
+        _showTopNotification('This email is not registered. Please try again.');
+        return;
+      }
+
+      // Send password reset email
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      // Show success message
+      Navigator.of(context).pop(); // Close the popup
+      _showTopNotification('A password reset link has been sent to your email.');
+    } catch (e) {
+      // Handle errors
+      _showTopNotification('Failed to send email: ${e.toString()}');
+    }
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF79A3B7),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+  ),
+  child: const Text(
+    'Send',
+    style: TextStyle(color: Colors.white),
+  ),
+),
+
+
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +297,7 @@ void _showTopNotification(String message) {
                       floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
-                      // زر التحكم في رؤية كلمة المرور
+                    
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -194,8 +317,22 @@ void _showTopNotification(String message) {
                       return null;
                     },
                   ),
-                  
-                  const SizedBox(height: 24),
+  Align(
+  alignment: Alignment.centerLeft, 
+  child: TextButton(
+    onPressed: () => showResetPasswordPopup(context), // Call the popup function directly
+    child: const Text(
+      'Forgot Password?',
+      style: TextStyle(
+        color: Color(0xFF737373),
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+),
+
+       
+                  const SizedBox(height: 4),
                   // Log In Button
                   SizedBox(
                     width: double.infinity,

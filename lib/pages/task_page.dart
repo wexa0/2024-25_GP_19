@@ -17,7 +17,6 @@ import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'dart:math';
-import 'package:flutter_application/models/MessageManager';
 
 
 class TaskPage extends StatefulWidget {
@@ -56,26 +55,26 @@ final List<String> emptyStateMessages = [
 
  //list for complete list state.
 final List<String> completionMessages = [
-  "Awesome job! You've conquered your to-do list today! 🌟",
-  "Way to go! Every task is completed. Keep up the great work! 🎉",
-  "You did it! Take a break, you've earned it. ✨",
+  "Awesome job! You've conquered your\n to-do list today! 🌟",
+  "Way to go! Every task is completed.\n Keep up the great work! 🎉",
+  "You did it! Take a break,\n you've earned it. ✨",
   "Mission accomplished! You're unstoppable! 🚀",
-  "All tasks completed! Time to relax and recharge. 🏆",
-  "Great job! You've been super productive today. 🎈",
-  "Excellent! Every task is ticked off. Keep this momentum going! 💪",
-  "Fantastic work! Enjoy some free time, you've earned it! 🌈",
-  "Brilliant effort! You've completed everything for today! 🙌",
-  "Amazing! Your to-do list is empty. Relax and enjoy your success! 🎊",
-  "Success! You've wrapped up all your tasks. Keep it going! 🎯",
-  "Wonderful! You've achieved all your goals for today. 🌟",
-  "Outstanding! All tasks done and dusted. Keep shining! 🔥",
-  "Phenomenal! You rocked your to-do list. Take a well-deserved break. 💼",
-  "You nailed it! No tasks left, you've been productive! 🥳",
+  "All tasks completed! Time\n to relax and recharge. 🏆",
+  "Great job! You've been super\n productive today. 🎈",
+  "Excellent! Every task is ticked\n off. Keep this momentum going! 💪",
+  "Fantastic work! Enjoy some free\n time, you've earned it! 🌈",
+  "Brilliant effort! You've completed\n everything for today! 🙌",
+  "Amazing! Your to-do list is\n empty. Relax and enjoy your success! 🎊",
+  "Success! You've wrapped up all your \ntasks. Keep it going! 🎯",
+  "Wonderful! You've achieved all\n your goals for today. 🌟",
+  "Outstanding! All tasks done and\n dusted. Keep shining! 🔥",
+  "Phenomenal! You rocked your to-do\n list. Take a well-deserved break. 💼",
+  "You nailed it! No tasks left, you've\n been productive! 🥳",
   "Victory! You've completed every task\n on your list. Great job! 🏅",
-  "Unstoppable! You've checked off everything for today. Celebrate! 🎉",
+  "Unstoppable! You've checked off\n everything for today. Celebrate! 🎉",
   "Champion! All tasks are done. You're on a roll! 🥇",
-  "Incredible! Every single task is completed. Enjoy the day! 🌞",
-  "You’re a superstar! No tasks left. Keep being awesome! 🌟"
+  "Incredible! Every single task is \ncompleted. Enjoy the day! 🌞",
+  "You’re a superstar! No tasks left.\n Keep being awesome! 🌟"
 ];
 
 

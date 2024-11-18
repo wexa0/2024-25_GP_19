@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/home.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application/welcome_page.dart'; // Import your WelcomePage
@@ -35,10 +37,30 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Your App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const WelcomePage(), // Set the initial page to WelcomePage
+      home: const AuthWrapper(), // Use an auth wrapper
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading spinner while waiting for auth state
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasData) {
+          // User is logged in, navigate to HomePage
+          return HomePage();
+        } else {
+          // User is not logged in, navigate to WelcomePage
+          return const WelcomePage();
+        }
+      },
     );
   }
 }
