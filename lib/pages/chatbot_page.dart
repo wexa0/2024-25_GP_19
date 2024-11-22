@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/profile_page.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 
 class ChatbotpageWidget extends StatelessWidget {
   const ChatbotpageWidget({super.key});
@@ -9,6 +13,7 @@ class ChatbotpageWidget extends StatelessWidget {
     // Get the screen width
     double screenWidth = MediaQuery.of(context).size.width;
 
+    var selectedIndex =2;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -320,8 +325,29 @@ class ChatbotpageWidget extends StatelessWidget {
           ),
         ],
       ),
-      
-      
+            bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
+      ),
     );
   }
 }

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Task';
+import 'package:flutter_application/models/DailyMessageManager';
+import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/profile_page.dart';
+import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -21,9 +26,9 @@ import 'package:flutter_application/models/BottomNavigationBar.dart';
 
 class CalendarPage extends StatefulWidget {
   
-   final String dailyMessage;
+ 
+const CalendarPage({super.key});
 
-const CalendarPage({super.key, required this.dailyMessage});
   @override
   _CalendarPageState createState() => _CalendarPageState();
 }
@@ -32,17 +37,17 @@ class _CalendarPageState extends State<CalendarPage> {
   String selectedSort = 'timeline';
   List<String> selectedCategories = ['All'];
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  int _currentIndex = 1; 
+  int selectedIndex = 1; 
   var isCalendarView = true;
 DateTime? startOfDay;
   DateTime? endOfDay;
 String? selectedCompletionMessage;
 String? selectedEmptyMessage;
-  late double _xPosition = 100.0; // Default X-coordinate position
-  late double _yPosition = 150.0; // Default Y-coordinate position
+  late double _xPosition = 0; 
+  late double _yPosition = 0; 
 
   List<String> availableCategories = []; // store categories from Firestore.
-
+Map<DateTime, String> dailyMessagesCache = {};
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now(); // اليوم المحدد
   List<Map<String, dynamic>> tasks = []; // تخزين المهام المسترجعة
@@ -55,21 +60,24 @@ List<Map<String, dynamic>> cachedTasks = []; // Cache all tasks for the selected
   void initState() {
     super.initState();
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      setState(() {
-        userID = null;
-        isLoading = false;
-      });
-    } else {
-      userID = user.uid;
-      fetchTasksFromFirestore();
-    }
+     if (user != null) {
+    userID = user.uid;
+    fetchTasksFromFirestore().then((_) {
+      generateTaskIndicators(); 
+    });
+  } else {
+    setState(() {
+      userID = null;
+      isLoading = false;
+    });
+  
+  }
     // Initialize the button position using MediaQuery in a post-frame callback
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenSize = MediaQuery.of(context).size;
-      setState(() {
-        _xPosition = screenSize.width - 70; // Default to the right of the screen
-        _yPosition = screenSize.height - 120; // Default to the bottom
+         setState(() {
+        _xPosition = screenSize.width - 80.1; // Default to the right of the screen
+        _yPosition = screenSize.height - 74; // Default to the bottom
       });
     });
   }
@@ -114,6 +122,7 @@ Future<void> fetchTasksFromFirestore() async {
     }
   }
 
+
   setState(() {
     isLoading = false;
   });
@@ -125,7 +134,60 @@ void onDaySelected(DateTime selectedDay, DateTime focusedDay) {
   });
   fetchTasksFromFirestore();
 }
+Future<List<Map<String, dynamic>>> fetchAllTasks() async {
+  // Fetch all tasks for the user from Firestore
+  List<Task> fetchedTasks = await Task.fetchTasksForUser(userID!);
+  List<Map<String, dynamic>> allTasks = [];
 
+  for (Task task in fetchedTasks) {
+    allTasks.add({
+      'id': task.taskID,
+      'title': task.title,
+      'time': task.scheduledDate,
+      'priority': task.priority,
+      'completed': task.completionStatus == 2,
+      'categories': [], // إذا كنت بحاجة إلى الفئات يمكن إضافتها هنا
+    });
+  }
+
+  return allTasks;
+}
+
+
+Map<DateTime, List<Map<String, dynamic>>> _taskIndicators = {};
+
+void generateTaskIndicators() async {
+  _taskIndicators.clear(); // مسح المؤشرات القديمة
+
+  // جلب كل المهام
+  List<Map<String, dynamic>> allTasks = await fetchAllTasks();
+
+  for (var task in allTasks) {
+    DateTime taskDate = DateTime(
+      task['time'].year,
+      task['time'].month,
+      task['time'].day,
+    );
+
+    // إذا لم يتم إضافة التاريخ، قم بإضافته
+    if (!_taskIndicators.containsKey(taskDate)) {
+      _taskIndicators[taskDate] = []; // إنشاء قائمة فارغة للتاريخ
+    }
+    _taskIndicators[taskDate]!.add(task); // إضافة المهمة للتاريخ
+  }
+
+  setState(() {}); // تحديث الواجهة
+}
+
+
+
+
+
+
+void addNewTask(Map<String, dynamic> newTask) {
+  tasks.add(newTask); 
+  generateTaskIndicators();
+}
 
   String getFormattedDate() {
     return DateFormat('EEE, d MMM yyyy').format(_focusedDay);
@@ -147,7 +209,7 @@ void onDaySelected(DateTime selectedDay, DateTime focusedDay) {
                 'View Options',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF545454),
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
               content: Column(
@@ -223,6 +285,7 @@ void onDaySelected(DateTime selectedDay, DateTime focusedDay) {
   }
 @override
 Widget build(BuildContext context) {
+  
   return GestureDetector(
     onTap: closeAllSubtasks, // This closes the expanded subtasks when clicking outside
     child: Scaffold(
@@ -294,14 +357,12 @@ Widget build(BuildContext context) {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-               TableCalendar(
+TableCalendar(
   firstDay: DateTime.utc(2010, 10, 16),
   lastDay: DateTime.utc(2030, 3, 14),
   focusedDay: _focusedDay,
-  selectedDayPredicate: (day) {
-    return isSameDay(_selectedDay, day);
-  },
-   onDaySelected: onDaySelected,
+  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+  onDaySelected: onDaySelected,
   calendarFormat: _calendarFormat,
   availableCalendarFormats: const {
     CalendarFormat.month: 'Month',
@@ -315,27 +376,70 @@ Widget build(BuildContext context) {
   onPageChanged: (focusedDay) {
     _focusedDay = focusedDay;
   },
+  eventLoader: (day) {
+    
+    DateTime adjustedDay = DateTime(day.year, day.month, day.day);
+    if (isSameDay(day, _selectedDay)) {
+      return []; 
+    }
+    return _taskIndicators.containsKey(adjustedDay) ? ['Task Indicator'] : [];
+  },
   calendarStyle: CalendarStyle(
-    selectedDecoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: const Color(0xFF104A73), 
-    ),
+    
+    markersMaxCount: 1, 
+    markerSizeScale: 0.2, 
     todayDecoration: BoxDecoration(
       shape: BoxShape.circle,
       border: Border.all(
-        color: const Color(0xFF104A73), 
-        width: 2,
+        color: Color(0xFF3B7292), 
+        width: 2.0,
       ),
       color: Colors.transparent, 
     ),
-    todayTextStyle: TextStyle(color: const Color(0xFF104A73)), 
-    selectedTextStyle: TextStyle(color: Colors.white), 
+    todayTextStyle: const TextStyle(
+      color: Color(0xFF3B7292), 
+    ),
+  
+    selectedDecoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Color(0xFF3B7292), 
+    ),
+    selectedTextStyle: const TextStyle(
+      color: Colors.white,
+    ),
+    
+    markerDecoration: BoxDecoration(
+      color: Color.fromARGB(255, 150, 168, 178), 
+      shape: BoxShape.circle,
+    ),
+   
+    defaultTextStyle: const TextStyle(
+      color: Colors.black, 
+    ),
+   
   ),
-  headerStyle: HeaderStyle(
-    formatButtonVisible: true,
-    titleCentered: true,
+ headerStyle: HeaderStyle(
+  formatButtonVisible: true,
+  titleCentered: true,
+  formatButtonTextStyle: const TextStyle(
+    color: Colors.white, 
+  ),
+  formatButtonDecoration: BoxDecoration(
+    color: Color(0xFF3B7292), 
+    borderRadius: BorderRadius.circular(16.0), 
+  ),
+  leftChevronIcon: const Icon(
+    Icons.chevron_left,
+    color: Color(0xFF3B7292),
+  ),
+  rightChevronIcon: const Icon(
+    Icons.chevron_right,
+    color: Color(0xFF3B7292), 
   ),
 ),
+
+),
+
             if (isLoading) ...[
               Center(
                 child: Column(
@@ -344,28 +448,32 @@ Widget build(BuildContext context) {
                   children: [
                     Image.asset(
                       'assets/images/logo.png', 
-                      width: 170,
-                      height: 170,
+                      width: 160,
+                      height: 160,
                     ),      
-
                     Lottie.asset(
                       'assets/animations/loading.json',
-                      width: 150,
-                      height: 150,
+                      width: 120,
+                      height: 120,
                     ),
+                    
+                     const SizedBox(height: 0),
+                     
                   ],
                 ),
               ),
+              
+               
             ] else ...[
            
-              const SizedBox(height: 20),
+            
                     //If no tasks for today
                     if (tasks.isEmpty)
                       Center(
                         child: Column(
                           children: [
                             const SizedBox(
-                                height: 80), 
+                                height: 40), 
                             Image.asset(
                               'assets/images/empty_list.png', 
                               width: 110, 
@@ -383,9 +491,13 @@ Widget build(BuildContext context) {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 50),
+                            
                            ],
+                           
                         ),
+                        
                       )
+                      
                       else
                       Expanded(
                         child: (!tasks.any((task) =>
@@ -645,6 +757,7 @@ Widget build(BuildContext context) {
 
            
         ),
+        
              floatingActionButton: Overlay(
         initialEntries: [
           OverlayEntry(
@@ -653,6 +766,7 @@ Widget build(BuildContext context) {
                 left: _xPosition,
                 top: _yPosition,
                 child: Draggable(
+                  
                   feedback: FloatingActionButton(
                     onPressed: null,
                     backgroundColor: const Color(0xFF3B7292),
@@ -759,6 +873,29 @@ Widget build(BuildContext context) {
         ],
       ),
       
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
+      ),
       ), 
     
   
@@ -773,9 +910,9 @@ String getDayMessage() {
   String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDay!);
   if (isSameDay(_selectedDay!, DateTime.now())) {
     if (tasks.isEmpty) {
-      return widget.dailyMessage; // استخدم الرسالة اليومية
+      return DailyMessageManager.getDayMessage(tasks); // استخدم الرسالة اليومية
     } else if (areAllTasksCompleted()) {
-      return widget.dailyMessage; // استخدم الرسالة اليومية
+      return DailyMessageManager.getDayMessage(tasks); // استخدم الرسالة اليومية
     }
   }
 
@@ -809,6 +946,7 @@ void deleteTask(Map<String, dynamic> taskData) async {
   // Remove the task locally and update the UI
   setState(() {
     tasks.removeWhere((t) => t['id'] == taskData['id']);
+    getDayMessage();
   });
 
   // Show notification
@@ -1425,6 +1563,11 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+      int totalSubtasks = task['subtasks']?.length ?? 0;
+int completedSubtasks = task['subtasks']
+        ?.where((subtask) => subtask['completed'] == true)
+        .length ?? 0;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16.0), 
       child: Card(
@@ -1508,10 +1651,30 @@ class TaskCard extends StatelessWidget {
                         : TextDecoration.none,
                   ),
                 ),
-                subtitle: Text(
-                  DateFormat('h:mm a').format(
-                      task['time']), // Display the time (i.e. 10 AM) format.
-                ),
+                 subtitle: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      DateFormat('h:mm a').format(task['time']), // عرض وقت المهمة
+    ),
+    if (totalSubtasks > 0) 
+      Row(
+        children: List.generate(totalSubtasks, (index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+            child: Icon(
+              Icons.circle,
+              size: 10,
+              color: index < completedSubtasks
+                  ? const Color(0xFF3B7292) // لون أزرق للمهام المكتملة
+                  : Colors.grey, // لون رمادي للمهام غير المكتملة
+            ),
+          );
+        }),
+      ),
+  ],
+),
+
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1630,5 +1793,3 @@ class TaskCard extends StatelessWidget {
     );
   }
 }
-
-

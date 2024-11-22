@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -100,57 +101,32 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 0;
     return Scaffold(
-      appBar: _currentIndex == 0 ? _buildAppBar() : null,
-      backgroundColor: const Color.fromARGB(255, 245, 247, 248),
-      body: _pages[_currentIndex], // Show the current page
-      bottomNavigationBar: Container(
-        color: const Color.fromARGB(
-            255, 226, 231, 234), // Background color of the navigation bar
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        child: GNav(
-          backgroundColor: const Color(0xFF79A3B7)
-              .withOpacity(0), // Set the background color to match your old bar
-          color: const Color(
-              0xFF545454), // Inactive icons and text color (match the old inactive color)
-          activeColor: const Color(
-              0xFF104A73), // Active icon and text color (match the old active color)
-          tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(
-              0.3), // Slightly transparent background for active tab
-          gap: 8, // Gap between icon and text
-          padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8), // Adjust the padding for visual consistency
-          tabBorderRadius:
-              15, // Optional: add rounded corners for a softer look
-          selectedIndex: _currentIndex,
-          iconSize: 24, // Adjust icon size to match the old bar
-          onTabChange: (index) {
-            setState(() {
-              _currentIndex = index; // Update the index when a tab is selected
-            });
-          },
-          tabs: const [
-            GButton(
-              icon: Icons.home,
-              text: 'Home',
-            ),
-            GButton(
-              icon: Icons.task,
-              text: 'Tasks',
-            ),
-            GButton(
-              icon: Icons.sms,
-              text: 'Chatbot',
-            ),
-            GButton(icon: Icons.poll,
-             text: 'Progress'),
-            GButton(
-              icon: Icons.person,
-              text: 'Profile',
-            ),
-          ],
-        ),
+       appBar: _currentIndex == 0 ? _buildAppBar() : null,
+      body: _pages[_currentIndex],
+       bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
       ),
     );
   }
@@ -376,7 +352,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(1); // Navigate to TaskPage
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TaskPage(),
+                          ),
+                        ); // Navigate to TaskPage
                       },
                       child: Container(
                         height: 110,
@@ -519,7 +500,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(3); // Navigate to ProgressPage
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProgressPage(),
+                          ),
+                        ); // Navigate to ProgressPage
                       },
                       child: Container(
                         height: 110,
@@ -586,7 +572,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(2); // Navigate to ChatbotpageWidget
+                       Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatbotpageWidget(),
+                          ),
+                        ); // Navigate to ChatbotpageWidget
                       },
                       child: Container(
                         height: 110,

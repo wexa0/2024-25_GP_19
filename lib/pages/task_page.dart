@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/editTask.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -17,7 +20,7 @@ import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'dart:math';
-
+import 'package:flutter_application/models/DailyMessageManager';
 
 class TaskPage extends StatefulWidget {
   const TaskPage({super.key});
@@ -30,16 +33,16 @@ class _TaskPageState extends State<TaskPage> {
   String selectedSort = 'timeline';
   bool showEmptyState = true;
   String? userID;
-  int _currentIndex = 1;
+  int selectedIndex = 1;
   bool isCalendarView = false;
   DateTime? startOfDay;
   DateTime? endOfDay;
   bool isLoading = true;
   String? selectedCompletionMessage;
-  late double _xPosition = 100.0; // Default X-coordinate position
-  late double _yPosition = 150.0; // Default Y-coordinate position
-
-
+  late double _xPosition = 190.0; // Default X-coordinate position
+  late double _yPosition = 100.0; // Default Y-coordinate position
+ 
+        
   //list for empty list state.
 final List<String> emptyStateMessages = [
   "A new day, a new opportunity\n to achieve your goals!✨",
@@ -91,6 +94,7 @@ final List<String> completionMessages = [
   @override
   void initState() {
     super.initState();
+    
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) { //if it is guest user
       setState(() {
@@ -106,15 +110,13 @@ final List<String> completionMessages = [
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenSize = MediaQuery.of(context).size;
       setState(() {
-        _xPosition = screenSize.width - 70; // Default to the right of the screen
-        _yPosition = screenSize.height - 120; // Default to the bottom
+        _xPosition = screenSize.width - 80.1; // Default to the right of the screen
+        _yPosition = screenSize.height - 74; // Default to the bottom
       });
     });
   
    
   }
-
-
   Future<void> _fetchUserID() async {
     // Get the current user from FirebaseAuth
     User? user = FirebaseAuth.instance.currentUser;
@@ -181,13 +183,10 @@ String getCompletionMessage() {
 
 String getDayMessage() {
   if (areAllTasksCompleted()) {
-    print("All tasks completed: Returning completion message.");
     return getCompletionMessage();
   } else if (tasks.isEmpty) {
-    print("No tasks available: Returning empty state message.");
     return getEmptyStateMessage();
   } else {
-    print("Default case: Returning default motivational message.");
     return "Keep pushing forward! You're doing great! 🚀";
   }
 }
@@ -377,14 +376,12 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                   onPressed: () {
                    print(getDayMessage());
                     Navigator.of(context).pop();
-                  Navigator.push(
+                 Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => CalendarPage(dailyMessage: getDayMessage()),
+    builder: (context) => const CalendarPage(),
   ),
 );
-
-
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -551,13 +548,13 @@ Widget _buildLegendCircle(Color color, String label) {
   return Row(
     children: [
       CircleAvatar(
-        radius: 5,
+        radius: 6,
         backgroundColor: color,
       ),
       const SizedBox(width: 4),
       Text(
         label,
-        style: const TextStyle(fontSize: 12),
+        style: const TextStyle(fontSize: 14),
       ),
     ],
   );
@@ -596,21 +593,21 @@ void showCategoryDialog() {
                     bool isAllCategory = category == 'All';
                     Color chipColor;
 
-                    // تحديد اللون بناءً على حالة المهام
+                  
                     bool allTasksComplete = tasks.isNotEmpty && tasks.every((task) => task['completed'] == true);
                     bool categoryComplete = tasks
                         .where((task) => task['categories'] != null && task['categories'].contains(category))
                         .every((task) => task['completed'] == true);
 
-                    // تحديث لون "All" بناءً على المهام المتاحة
+                 
                     if (isAllCategory) {
                       chipColor = tasks.isEmpty
-                          ? Colors.grey // اللون الرمادي إذا لم توجد أي مهام
-                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFF79A3B7)); // أخضر إذا كانت كل المهام مكتملة، أزرق إذا لم تكن مكتملة
+                          ? Colors.grey
+                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFFF9A15A)); 
                     } else if (!tasks.any((task) => task['categories'].contains(category))) {
-                      chipColor = Colors.grey; // اللون الرمادي إذا لم توجد مهام في هذه الفئة
+                      chipColor = Colors.grey; 
                     } else {
-                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFF79A3B7);
+                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFFF9A15A);
                     }
 
                     return Container(
@@ -666,9 +663,9 @@ void showCategoryDialog() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLegendCircle(Colors.grey, 'No Tasks'),
-                      _buildLegendCircle(const Color(0xFF79A3B7), 'Incomplete Tasks'),
-                      _buildLegendCircle(Color(0xFF24AB79) , 'All Completed'),
+                     _buildLegendCircle(Colors.grey, 'No Tasks'), // Light Gray
+                      _buildLegendCircle(const Color(0xFFF9A15A), 'Pending Tasks'), // Amber
+                      _buildLegendCircle(Color(0xFF24AB79), 'Completed Tasks '), // Green
                     ],
                   ),
                 ),
@@ -893,6 +890,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
   @override
   Widget build(BuildContext context) {
    
+   final message = DailyMessageManager.getDayMessage(tasks);
 
     return GestureDetector(
       onTap:
@@ -901,7 +899,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
         backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           title: Text(
-            'Tasks page',
+            'Tasks',
             style: TextStyle(
               color: Colors.black,
               fontSize: 20,
@@ -1056,7 +1054,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                             const SizedBox(
                                 height: 20), 
                             Text(
-                              getEmptyStateMessage(), 
+                              message, 
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -1085,27 +1083,60 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                 children: [
                                    SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-                                    Wrap( //wrap for show selected category on the page
-                                      alignment: WrapAlignment.start,
-                                      spacing: 8.0,
-                                      children: selectedCategories.map((category) {
-                                        return ActionChip(
-                                          label: Text(category),
-                                          onPressed: () {
-                                            // Remove specific category on tap
-                                            setState(() {
-                                              selectedCategories.remove(category);
-                                              if (selectedCategories.isEmpty) {
-                                                selectedCategories = ['All']; 
-                                              }
-                                            });
-                                          },
-                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-                                          backgroundColor: const Color(0xFF79A3B7),
-                                          labelStyle: const TextStyle(color: Colors.white),
-                                        );
-                                      }).toList(),
-                                    ),
+  Wrap(
+    // عرض التصنيفات المحددة على الصفحة
+    alignment: WrapAlignment.start,
+    spacing: 8.0,
+    children: selectedCategories.map((category) {
+      // تحديد اللون الخاص بالتصنيف بناءً على حالته
+      bool allTasksComplete = tasks.isNotEmpty &&
+          tasks
+              .where((task) =>
+                  task['categories'] != null &&
+                  task['categories'].contains(category))
+              .every((task) => task['completed'] == true); // جميع المهام مكتملة
+      bool hasPendingTasks = tasks
+          .where((task) =>
+              task['categories'] != null &&
+              task['categories'].contains(category))
+          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
+      bool hasNoTasks = tasks.every((task) =>
+          task['categories'] == null ||
+          !task['categories'].contains(category)); // لا توجد مهام
+
+      // تحديد اللون بناءً على الحالة
+      Color chipColor;
+      if (hasNoTasks) {
+        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
+      } else if (allTasksComplete) {
+        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
+      } else if (hasPendingTasks) {
+        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
+      } else {
+        chipColor = Colors.grey; // افتراضي: رمادي
+      }
+      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
+
+
+      return ActionChip(
+        label: Text(category),
+        onPressed: () {
+          // إزالة التصنيف عند النقر
+          setState(() {
+            selectedCategories.remove(category);
+            if (selectedCategories.isEmpty) {
+              selectedCategories = ['All'];
+            }
+          });
+        },
+        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+        backgroundColor: chipColor, // اللون الديناميكي
+        labelStyle: const TextStyle(color: Colors.white),
+        
+      );
+    }).toList(),
+  ),
+
                                  
                                   const SizedBox(height: 30),
                                   Center(
@@ -1134,26 +1165,59 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                 children: [
                                    SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-                                    Wrap( //wrap for show selected category on the page
-                                      spacing: 8.0,
-                                      children: selectedCategories.map((category) {
-                                        return ActionChip(
-                                          label: Text(category),
-                                          onPressed: () {
-                                            // Remove specific category on tap
-                                            setState(() {
-                                              selectedCategories.remove(category);
-                                              if (selectedCategories.isEmpty) {
-                                                selectedCategories = ['All']; 
-                                              }
-                                            });
-                                          },
-                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-                                          backgroundColor: const Color(0xFF79A3B7),
-                                          labelStyle: const TextStyle(color: Colors.white),
-                                        );
-                                      }).toList(),
-                                    ),
+                                    Wrap(
+    // عرض التصنيفات المحددة على الصفحة
+    alignment: WrapAlignment.start,
+    spacing: 8.0,
+    children: selectedCategories.map((category) {
+      // تحديد اللون الخاص بالتصنيف بناءً على حالته
+      bool allTasksComplete = tasks.isNotEmpty &&
+          tasks
+              .where((task) =>
+                  task['categories'] != null &&
+                  task['categories'].contains(category))
+              .every((task) => task['completed'] == true); // جميع المهام مكتملة
+      bool hasPendingTasks = tasks
+          .where((task) =>
+              task['categories'] != null &&
+              task['categories'].contains(category))
+          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
+      bool hasNoTasks = tasks.every((task) =>
+          task['categories'] == null ||
+          !task['categories'].contains(category)); // لا توجد مهام
+
+      // تحديد اللون بناءً على الحالة
+      Color chipColor;
+      if (hasNoTasks) {
+        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
+      } else if (allTasksComplete) {
+        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
+      } else if (hasPendingTasks) {
+        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
+      } else {
+        chipColor = Colors.grey; // افتراضي: رمادي
+      }
+      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
+
+
+      return ActionChip(
+        label: Text(category),
+        onPressed: () {
+          // إزالة التصنيف عند النقر
+          setState(() {
+            selectedCategories.remove(category);
+            if (selectedCategories.isEmpty) {
+              selectedCategories = ['All'];
+            }
+          });
+        },
+        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+        backgroundColor: chipColor, // اللون الديناميكي
+        labelStyle: const TextStyle(color: Colors.white),
+        
+      );
+    }).toList(),
+  ),
                                   const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
@@ -1234,7 +1298,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
         ),
         const SizedBox(height: 20),
         Text(
-          getCompletionMessage(), 
+          message, 
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1324,6 +1388,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                   ],
                 ),
         ),
+        
       floatingActionButton: Overlay(
         initialEntries: [
           OverlayEntry(
@@ -1437,6 +1502,30 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
           ),
         ],
       ),
+         
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
+      ),
     ),
   );
 }
@@ -1522,7 +1611,11 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     
+      int totalSubtasks = task['subtasks']?.length ?? 0;
+int completedSubtasks = task['subtasks']
+        ?.where((subtask) => subtask['completed'] == true)
+        .length ?? 0;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16.0), 
       child: Card(
@@ -1606,10 +1699,30 @@ class TaskCard extends StatelessWidget {
                         : TextDecoration.none,
                   ),
                 ),
-                subtitle: Text(
-                  DateFormat('h:mm a').format(
-                      task['time']), // Display the time (i.e. 10 AM) format.
-                ),
+                 subtitle: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Text(
+      DateFormat('h:mm a').format(task['time']), // عرض وقت المهمة
+    ),
+    if (totalSubtasks > 0) 
+      Row(
+        children: List.generate(totalSubtasks, (index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+            child: Icon(
+              Icons.circle,
+              size: 10,
+              color: index < completedSubtasks
+                  ? const Color(0xFF3B7292) // لون أزرق للمهام المكتملة
+                  : Colors.grey, // لون رمادي للمهام غير المكتملة
+            ),
+          );
+        }),
+      ),
+  ],
+),
+
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

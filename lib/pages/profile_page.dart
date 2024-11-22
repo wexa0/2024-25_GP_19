@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'dart:io'; // For File type
 //import 'dart:html' as html; // Import for web detection
@@ -67,6 +71,7 @@ void _refreshUserData() {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 4 ;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -307,6 +312,29 @@ void _refreshUserData() {
                   ],
                 ),
               ),
+      ),
+        bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return HomePage();
+              }
+            }),
+          );
+        },
       ),
     );
   }

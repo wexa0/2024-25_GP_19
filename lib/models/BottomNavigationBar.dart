@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
-class BottomNavigationBarWidget extends StatelessWidget {
+class CustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTabChange;
 
-  const BottomNavigationBarWidget({
+  const CustomNavigationBar({
     Key? key,
     required this.selectedIndex,
     required this.onTabChange,
@@ -18,8 +18,8 @@ class BottomNavigationBarWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
       child: GNav(
         backgroundColor: const Color(0xFF79A3B7).withOpacity(0),
-        color: const Color(0xFF545454), // اللون الافتراضي للأيقونات
-        activeColor: const Color(0xFF104A73), // لون الأيقونات النشطة
+        color: const Color(0xFF545454),
+        activeColor: const Color(0xFF104A73),
         tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(0.3),
         gap: 8,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -40,10 +40,7 @@ class BottomNavigationBarWidget extends StatelessWidget {
             icon: Icons.sms,
             text: 'Chatbot',
           ),
-          GButton(
-            icon: Icons.poll,
-            text: 'Progress',
-          ),
+          GButton(icon: Icons.poll, text: 'Progress'),
           GButton(
             icon: Icons.person,
             text: 'Profile',
