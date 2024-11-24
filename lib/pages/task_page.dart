@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
-import 'package:flutter_application/pages/chatbot_page.dart';
+import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
-import 'package:flutter_application/pages/home.dart';
-import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_application/pages/timer_page';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
-import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'dart:math';
 import 'package:flutter_application/models/DailyMessageManager';
 
@@ -41,216 +36,151 @@ class _TaskPageState extends State<TaskPage> {
   String? selectedCompletionMessage;
   late double _xPosition = 190.0; // Default X-coordinate position
   late double _yPosition = 100.0; // Default Y-coordinate position
- 
-        
-  //list for empty list state.
-final List<String> emptyStateMessages = [
-  "A new day, a new opportunity\n to achieve your goals!✨",
-  "Today is a blank canvas – make it\n productive!🚀",
-  "No tasks yet! Ready to conquer new challenges?🌟",
-  "Set your intentions for the day and\n take the first step!🎯",
-  "Every small step counts. What will you accomplish today?✨",
-  "Organize your day, and see\n the magic unfold!📅",
-  "Great things come to those who plan.\n Start adding your tasks!💡",
-  "A goal without a plan is just\n a wish. Start planning!🌟",
-  "Don’t wait for inspiration. Start\n planning and watch it come!🚀",
-];
-
- //list for complete list state.
-final List<String> completionMessages = [
-  "Awesome job! You've conquered your\n to-do list today! 🌟",
-  "Way to go! Every task is completed.\n Keep up the great work! 🎉",
-  "You did it! Take a break,\n you've earned it. ✨",
-  "Mission accomplished! You're unstoppable! 🚀",
-  "All tasks completed! Time\n to relax and recharge. 🏆",
-  "Great job! You've been super\n productive today. 🎈",
-  "Excellent! Every task is ticked\n off. Keep this momentum going! 💪",
-  "Fantastic work! Enjoy some free\n time, you've earned it! 🌈",
-  "Brilliant effort! You've completed\n everything for today! 🙌",
-  "Amazing! Your to-do list is\n empty. Relax and enjoy your success! 🎊",
-  "Success! You've wrapped up all your \ntasks. Keep it going! 🎯",
-  "Wonderful! You've achieved all\n your goals for today. 🌟",
-  "Outstanding! All tasks done and\n dusted. Keep shining! 🔥",
-  "Phenomenal! You rocked your to-do\n list. Take a well-deserved break. 💼",
-  "You nailed it! No tasks left, you've\n been productive! 🥳",
-  "Victory! You've completed every task\n on your list. Great job! 🏅",
-  "Unstoppable! You've checked off\n everything for today. Celebrate! 🎉",
-  "Champion! All tasks are done. You're on a roll! 🥇",
-  "Incredible! Every single task is \ncompleted. Enjoy the day! 🌞",
-  "You’re a superstar! No tasks left.\n Keep being awesome! 🌟"
-];
-
-
   final List<Map<String, dynamic>> tasks = []; // store task from Firestore.
   List<String> availableCategories = []; // store categories from Firestore.
+  List<String> selectedCategories = [];
 
   @override
   void dispose() {
     tasks.clear(); // Clear the list of tasks to free up memory.
-    userID = null;// Reset the user ID to null, removing any user-specific information from this widget.
+    userID =
+        null; // Reset the user ID to null, removing any user-specific information from this widget.
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    
+    _fetchUserID();
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) { //if it is guest user
+    if (user == null) {
+      //if it is guest user
       setState(() {
         userID = null;
         isLoading = false;
       });
-    } else { // for login user 
+    } else {
+      // for login user
       userID = user.uid;
-      selectedCategories = ['All']; //add All category 
+      selectedCategories = ['All']; //add All category
       fetchTasksFromFirestore();
     }
-  // Initialize the button position using MediaQuery in a post-frame callback
+    // Initialize the button position using MediaQuery in a post-frame callback
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenSize = MediaQuery.of(context).size;
       setState(() {
-        _xPosition = screenSize.width - 80.1; // Default to the right of the screen
+        _xPosition =
+            screenSize.width - 80.1; // Default to the right of the screen
         _yPosition = screenSize.height - 74; // Default to the bottom
       });
     });
-  
-   
   }
+
   Future<void> _fetchUserID() async {
-    // Get the current user from FirebaseAuth
     User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      setState(() {
-        userID = user.uid; // Assign the logged-in user's UID
-      });
-      fetchTasksFromFirestore(); // Fetch tasks now that we have the user ID
-    }
+    setState(() {
+      userID = user?.uid; // Set the user ID if logged in, otherwise null
+    });
   }
 
   void fetchTasksFromFirestore() async {
-  setState(() {
-    isLoading = true;
-  });
+    setState(() {
+      isLoading = true;
+    });
 
-  List<Task> fetchedTasks = await Task.fetchTasksForUser(userID!);   // Fetch the list of tasks specific to the user from Firestore.
-  Map<String, dynamic> categoryData = await Category.fetchCategoriesForUser(userID!);
-  Map<String, List<String>> categoryTaskMap = categoryData['taskCategoryMap'] as Map<String, List<String>>;
-  availableCategories = categoryData['categories'] as List<String>;
+    List<Task> fetchedTasks = await Task.fetchTasksForUser(
+        userID!); // Fetch the list of tasks specific to the user from Firestore.
+    Map<String, dynamic> categoryData =
+        await Category.fetchCategoriesForUser(userID!);
+    Map<String, List<String>> categoryTaskMap =
+        categoryData['taskCategoryMap'] as Map<String, List<String>>;
+    availableCategories = categoryData['categories'] as List<String>;
 
-  // Set start and end of the day for filtering tasks that belong to the current day.
-  startOfDay = DateTime.now();
-  startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
-  endOfDay = startOfDay!.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+    // Set start and end of the day for filtering tasks that belong to the current day.
+    startOfDay = DateTime.now();
+    startOfDay = DateTime(startOfDay!.year, startOfDay!.month, startOfDay!.day);
+    endOfDay = startOfDay!
+        .add(const Duration(days: 1))
+        .subtract(const Duration(seconds: 1));
 
-  tasks.clear();
-  for (Task task in fetchedTasks) {
-    DateTime taskTime = task.scheduledDate;
+    tasks.clear();
+    for (Task task in fetchedTasks) {
+      DateTime taskTime = task.scheduledDate;
 
-    if (taskTime.isAfter(startOfDay!) && taskTime.isBefore(endOfDay!)) {
-      List<SubTask> subtasks = await SubTask.fetchSubtasksForTask(task.taskID);
-      // Add the task to the list, including its details and associated subtasks.
-      tasks.add({
-        'id': task.taskID,
-        'title': task.title,
-        'time': taskTime,
-        'priority': task.priority,
-        'completed': task.completionStatus == 2,
-        'expanded': false,
-        'subtasks': subtasks.map((sub) => {
-              'id': sub.subTaskID,
-              'title': sub.title,
-              'completed': sub.completionStatus == 1,
-            }).toList(),
-        'categories': categoryTaskMap[task.taskID] ?? ['Uncategorized'],
-      });
+      if (taskTime.isAfter(startOfDay!) && taskTime.isBefore(endOfDay!)) {
+        List<SubTask> subtasks =
+            await SubTask.fetchSubtasksForTask(task.taskID);
+        // Add the task to the list, including its details and associated subtasks.
+        tasks.add({
+          'id': task.taskID,
+          'title': task.title,
+          'time': taskTime,
+          'priority': task.priority,
+          'completed': task.completionStatus == 2,
+          'expanded': false,
+          'subtasks': subtasks
+              .map((sub) => {
+                    'id': sub.subTaskID,
+                    'title': sub.title,
+                    'completed': sub.completionStatus == 1,
+                  })
+              .toList(),
+          'categories': categoryTaskMap[task.taskID] ?? ['Uncategorized'],
+        });
+      }
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  setState(() {
-    isLoading = false;
-  });
-}
 
-String getEmptyStateMessage() {
-  return getFixedMessageForDay(emptyStateMessages);
-}
-
-
-String getCompletionMessage() {
-  return getFixedMessageForDay(completionMessages);
-}
-
-String getDayMessage() {
-  if (areAllTasksCompleted()) {
-    return getCompletionMessage();
-  } else if (tasks.isEmpty) {
-    return getEmptyStateMessage();
-  } else {
-    return "Keep pushing forward! You're doing great! 🚀";
-  }
-}
-
-
-String getFixedMessageForDay(List<String> messages) {
-  final today = DateTime.now();
-  final dateKey = "${today.year}-${today.month}-${today.day}"; // Unique key for the day
-  final hash = dateKey.hashCode; // Generate a hash based on the date
-  final random = Random(hash); // Seed the random generator with the hash
-  final index = random.nextInt(messages.length); // Generate a consistent random index
-  return messages[index];
-}
-
-
-bool areAllTasksCompleted() {
-  if (tasks.isEmpty) {
-    return false; // إذا لم تكن هناك مهام، فليس من المنطقي اعتبارها مكتملة
-  }
-  return tasks.every((task) => task['completed'] == true);
-}
-
-
-
-void deleteTask(Map<String, dynamic> taskData) async {
-  // Call the static deleteTask method on the Task class
-  await Task.deleteTask(taskData['id']);
-
-  // Remove the task locally and update the UI
-  setState(() {
-    tasks.removeWhere((t) => t['id'] == taskData['id']);
-  });
-
-  // Show notification
-  _showTopNotification("Task deleted successfully.");
-}
-
-void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskData) async {
-  // Create an instance of SubTask using the provided data
-  SubTask subtask = SubTask(
-    subTaskID: subtaskData['id'],
-    taskID: taskData['id'],
-    title: subtaskData['title'],
-    completionStatus: subtaskData['completed'] ? 1 : 0,
-  );
-
-  // Call the instance method deleteSubTask
-  await subtask.deleteSubTask();
-
-  // Remove the subtask locally and update the UI
-  setState(() {
-    final taskIndex = tasks.indexWhere((t) => t['id'] == taskData['id']);
-    if (taskIndex != -1) {
-      tasks[taskIndex]['subtasks'].removeWhere((s) => s['id'] == subtask.subTaskID);
+  bool areAllTasksCompleted() {
+    if (tasks.isEmpty) {
+      return false; 
     }
-  });
+    return tasks.every((task) => task['completed'] == true);
+  }
 
-  // Show notification
-  _showTopNotification("Subtask deleted successfully.");
-}
+  void deleteTask(Map<String, dynamic> taskData) async {
+    // Call the static deleteTask method on the Task class
+    await Task.deleteTask(taskData['id']);
 
+    // Remove the task locally and update the UI
+    setState(() {
+      tasks.removeWhere((t) => t['id'] == taskData['id']);
+    });
 
+    // Show notification
+    _showTopNotification("Task deleted successfully.");
+  }
 
+  void deleteSubTask(
+      Map<String, dynamic> taskData, Map<String, dynamic> subtaskData) async {
+    // Create an instance of SubTask using the provided data
+    SubTask subtask = SubTask(
+      subTaskID: subtaskData['id'],
+      taskID: taskData['id'],
+      title: subtaskData['title'],
+      completionStatus: subtaskData['completed'] ? 1 : 0,
+    );
 
+    // Call the instance method deleteSubTask from subtask class.
+    await subtask.deleteSubTask();
+
+    // Remove the subtask locally and update the UI
+    setState(() {
+      final taskIndex = tasks.indexWhere((t) => t['id'] == taskData['id']);
+      if (taskIndex != -1) {
+        tasks[taskIndex]['subtasks']
+            .removeWhere((s) => s['id'] == subtask.subTaskID);
+      }
+    });
+
+    // Show notification
+    _showTopNotification("Subtask deleted successfully.");
+  }
 
   void editTask(Map<String, dynamic> task) async {
     bool? result = await Navigator.push(
@@ -266,9 +196,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
     }
   }
 
-  List<String> selectedCategories = [];
 
-  // Functions for Hamburger Menu options
   String getFormattedDate() {
     final now = DateTime.now();
     final formatter = DateFormat('EEE, d MMM yyyy');
@@ -294,12 +222,13 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String selectedView = isCalendarView ? 'calendar' : 'list'; // Default view selection
+        String selectedView =
+            isCalendarView ? 'calendar' : 'list'; // Default view selection
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor:
-                  const Color(0xFFF5F7F8), // Light background color
+                  const Color(0xFFF5F7F8), 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -307,7 +236,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                 'View Options',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 6, 6, 6),// Title color
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
               content: Column(
@@ -315,12 +244,12 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                 children: [
                   RadioListTile<String>(
                     activeColor:
-                        const Color(0xFF79A3B7), // Active color for selection
+                        const Color(0xFF79A3B7), 
                     title: const Text(
                       'View as List',
                       style: TextStyle(
-                        color: Color(0xFF545454), // Text color for radio item
-                        fontWeight: FontWeight.w500, // Slightly bold text
+                        color: Color(0xFF545454), 
+                        fontWeight: FontWeight.w500, 
                       ),
                     ),
                     value: 'list',
@@ -333,12 +262,12 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                   ),
                   RadioListTile<String>(
                     activeColor:
-                        const Color(0xFF79A3B7), // Active color for selection
+                        const Color(0xFF79A3B7), 
                     title: const Text(
                       'View as Calendar',
                       style: TextStyle(
-                        color: Color(0xFF545454), // Text color for radio item
-                        fontWeight: FontWeight.w500, // Slightly bold text
+                        color: Color(0xFF545454),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'calendar',
@@ -358,35 +287,33 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        Colors.white, // White background for cancel button
+                        Colors.white, 
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(
-                          color: Color(0xFF79A3B7)), // Border color
+                          color: Color(0xFF79A3B7)), 
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   child: const Text(
                     'Cancel',
                     style: TextStyle(
-                      color: Color(0xFF79A3B7), // Button text color
+                      color: Color(0xFF79A3B7),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                   print(getDayMessage());
                     Navigator.of(context).pop();
-                 Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => const CalendarPage(),
-  ),
-);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CalendarPage(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF79A3B7), 
+                    backgroundColor: const Color(0xFF79A3B7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -394,7 +321,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                   child: const Text(
                     'Apply',
                     style: TextStyle(
-                      color: Colors.white, // White text for apply button
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -415,7 +342,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor:
-                  const Color(0xFFF5F7F8), // Change background color
+                  const Color(0xFFF5F7F8), 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -423,7 +350,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                 'Sort by',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 6, 6, 6), // Text color matching your theme
+                  color: Color.fromARGB(255, 0, 0, 0), 
                 ),
               ),
               content: Column(
@@ -434,8 +361,8 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                     title: const Text(
                       'Time',
                       style: TextStyle(
-                        color: Color(0xFF545454), // Text color for radio item
-                        fontWeight: FontWeight.w500, // Slightly bold text
+                        color: Color(0xFF545454), 
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'timeline',
@@ -451,8 +378,8 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                     title: const Text(
                       'Priority',
                       style: TextStyle(
-                        color: Color(0xFF545454), // Text color for radio item
-                        fontWeight: FontWeight.w500, // Slightly bold text
+                        color: Color(0xFF545454), 
+                        fontWeight: FontWeight.w500, 
                       ),
                     ),
                     value: 'priority',
@@ -471,17 +398,17 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white, // White button background
+                    backgroundColor: Colors.white, 
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(
-                          color: Color(0xFF79A3B7)), // Border color
+                          color: Color(0xFF79A3B7)), 
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   child: const Text(
                     'Cancel',
                     style: TextStyle(
-                      color: Color(0xFF79A3B7), // Button text color
+                      color: Color(0xFF79A3B7),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -489,13 +416,13 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      sortTasks(); // Ensure sorting happens here
+                      sortTasks(); 
                     });
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        const Color(0xFF79A3B7), // Apply button color
+                        const Color(0xFF79A3B7), 
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -503,7 +430,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
                   child: const Text(
                     'Apply',
                     style: TextStyle(
-                      color: Colors.white, // White text for the apply button
+                      color: Colors.white, 
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -523,10 +450,11 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
   }
 
   void sortTasks() {
+   //sort by priority
     if (selectedSort == 'priority') {
-      // فرز المهام بناءً على القيم العددية للأولوية (4 = urgent، 1 = low)
       tasks.sort((a, b) =>
-          b['priority'].compareTo(a['priority'])); // ترتيب تنازلي حسب الأولوية
+          b['priority'].compareTo(a['priority'])); 
+    //sort by time
     } else if (selectedSort == 'timeline') {
       try {
         tasks.sort((a, b) {
@@ -536,185 +464,189 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
           DateTime timeB = b['time'] is DateTime
               ? b['time']
               : DateTime.parse(b['time'].toString());
-          return timeA.compareTo(timeB); // ترتيب تصاعدي حسب الوقت
+          return timeA.compareTo(timeB); 
         });
       } catch (e) {
         print('General error: $e');
       }
     }
-    setState(() {}); // تحديث الواجهة بعد الفرز
+    setState(() {}); 
   }
 
-Widget _buildLegendCircle(Color color, String label) {
-  return Row(
-    children: [
-      CircleAvatar(
-        radius: 6,
-        backgroundColor: color,
-      ),
-      const SizedBox(width: 4),
-      Text(
-        label,
-        style: const TextStyle(fontSize: 14),
-      ),
-    ],
-  );
-}
-
-
-
-void showCategoryDialog() {
-  List<String> tempSelectedCategories = List.from(selectedCategories);
-
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFFF5F7F8), // Light gray background
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
+  Widget _buildLegendCircle(Color color, String label) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 6,
+          backgroundColor: color,
         ),
-        title: const Text(
-          'Category',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 6, 6, 6), // Dark blue text color
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  void showCategoryDialog() {
+    List<String> tempSelectedCategories = List.from(selectedCategories);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5F7F8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
           ),
-        ),
-        content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: availableCategories.map((category) {
-                    bool isSelected = tempSelectedCategories.contains(category);
-                    bool isAllCategory = category == 'All';
-                    Color chipColor;
+          title: const Text(
+            'Category',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color.fromARGB(255, 6, 6, 6), 
+            ),
+          ),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: availableCategories.map((category) {
+                      bool isSelected =
+                          tempSelectedCategories.contains(category);
+                      bool isAllCategory = category == 'All';
+                      Color chipColor;
 
-                  
-                    bool allTasksComplete = tasks.isNotEmpty && tasks.every((task) => task['completed'] == true);
-                    bool categoryComplete = tasks
-                        .where((task) => task['categories'] != null && task['categories'].contains(category))
-                        .every((task) => task['completed'] == true);
+                      bool allTasksComplete = tasks.isNotEmpty &&
+                          tasks.every((task) => task['completed'] == true);
+                      bool categoryComplete = tasks
+                          .where((task) =>
+                              task['categories'] != null &&
+                              task['categories'].contains(category))
+                          .every((task) => task['completed'] == true);
 
-                 
-                    if (isAllCategory) {
-                      chipColor = tasks.isEmpty
-                          ? Colors.grey
-                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFFF9A15A)); 
-                    } else if (!tasks.any((task) => task['categories'].contains(category))) {
-                      chipColor = Colors.grey; 
-                    } else {
-                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFFF9A15A);
-                    }
+                      if (isAllCategory) {
+                        chipColor = tasks.isEmpty
+                            ? Colors.grey
+                            : (allTasksComplete
+                                ? Color(0xFF24AB79)
+                                : const Color(0xFFF9A15A));
+                      } else if (!tasks.any(
+                          (task) => task['categories'].contains(category))) {
+                        chipColor = Colors.grey;
+                      } else {
+                        chipColor = categoryComplete
+                            ? Color(0xFF24AB79)
+                            : const Color(0xFFF9A15A);
+                      }
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          // إضافة ظل خارجي
-                          BoxShadow(
-                            color: Color(0xFFFAFBFF).withOpacity(1.0), // 100% opacity
-                            offset: Offset(-5, -5),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: ChoiceChip(
-                        label: Text(
-                          category,
-                          style: const TextStyle(
-                            color: Colors.white, // لون النص الأبيض
-                          ),
+                      return Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFFFAFBFF)
+                                  .withOpacity(1.0), 
+                              offset: Offset(-5, -5),
+                              blurRadius: 10,
+                            ),
+                          ],
                         ),
-                        selected: isSelected,
-                        selectedColor: chipColor,
-                        backgroundColor: chipColor,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              if (category == 'All') {
-                                // إذا تم اختيار "All"، قم بتحديدها وإلغاء تحديد الفئات الأخرى
-                                tempSelectedCategories.clear();
-                                tempSelectedCategories.add('All');
+                        child: ChoiceChip(
+                          label: Text(
+                            category,
+                            style: const TextStyle(
+                              color: Colors.white, 
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: chipColor,
+                          backgroundColor: chipColor,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                if (category == 'All') {
+                                  tempSelectedCategories.clear();
+                                  tempSelectedCategories.add('All');
+                                } else {
+                                  tempSelectedCategories.remove('All');
+                                  tempSelectedCategories.add(category);
+                                }
                               } else {
-                                // إذا تم اختيار فئة أخرى، قم بإلغاء تحديد "All" وأضف الفئة المحددة
-                                tempSelectedCategories.remove('All');
-                                tempSelectedCategories.add(category);
+                                tempSelectedCategories.remove(category);
+                                if (tempSelectedCategories.isEmpty) {
+                                  tempSelectedCategories.add('All');
+                                }
                               }
-                            } else {
-                              tempSelectedCategories.remove(category);
-                              if (tempSelectedCategories.isEmpty) {
-                                // إذا كانت الفئات فارغة، قم بتحديد "All" تلقائيًا
-                                tempSelectedCategories.add('All');
-                              }
-                            }
-                          });
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                // Legend for color codes in a vertical column
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                     _buildLegendCircle(Colors.grey, 'No Tasks'), // Light Gray
-                      _buildLegendCircle(const Color(0xFFF9A15A), 'Pending Tasks'), // Amber
-                      _buildLegendCircle(Color(0xFF24AB79), 'Completed Tasks '), // Green
-                    ],
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
                   ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLegendCircle(
+                            Colors.grey, 'No Tasks'),
+                        _buildLegendCircle(
+                            const Color(0xFFF9A15A), 'Pending Tasks'), 
+                        _buildLegendCircle(
+                            Color(0xFF24AB79), 'Completed Tasks '),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    const Color(0xFFF5F7F8), 
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-              ],
-            );
-          },
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF5F7F8), // Light gray background
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF79A3B7)),
               ),
             ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF79A3B7)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                selectedCategories = tempSelectedCategories;
-              });
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF79A3B7),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  selectedCategories = tempSelectedCategories;
+                });
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF79A3B7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Apply',
+                style: TextStyle(color: Colors.white),
               ),
             ),
-            child: const Text(
-              'Apply',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
+          ],
+        );
+      },
+    );
+  }
 
   void closeAllSubtasks() {
     setState(() {
@@ -723,52 +655,53 @@ void showCategoryDialog() {
       }
     });
   }
-void toggleTaskCompletion(Map<String, dynamic> taskData) async {
-  Task task = Task.fromMap(taskData);
-  bool newTaskCompletionStatus = !taskData['completed'];
 
-   setState(() {
-    taskData['completed'] = newTaskCompletionStatus;
-    selectedCompletionMessage = null; 
-  });
+  void toggleTaskCompletion(Map<String, dynamic> taskData) async {
+    Task task = Task.fromMap(taskData);
+    bool newTaskCompletionStatus = !taskData['completed'];
 
-  if (newTaskCompletionStatus) {
-    for (var subtask in taskData['subtasks']) {
-      setState(() {
-        subtask['completed'] = true;
-      });
-      await SubTask(
-        subTaskID: subtask['id'], 
-        taskID: task.taskID, 
-        title: subtask['title'], 
-        completionStatus: 1
-      ).updateCompletionStatus(1);
+    setState(() {
+      taskData['completed'] = newTaskCompletionStatus;
+      selectedCompletionMessage = null;
+    });
+
+    if (newTaskCompletionStatus) {
+      for (var subtask in taskData['subtasks']) {
+        setState(() {
+          subtask['completed'] = true;
+        });
+        await SubTask(
+                subTaskID: subtask['id'],
+                taskID: task.taskID,
+                title: subtask['title'],
+                completionStatus: 1)
+            .updateCompletionStatus(1);
+      }
+      await task.updateCompletionStatus(2);
+    } else {
+      for (var subtask in taskData['subtasks']) {
+        setState(() {
+          subtask['completed'] = false;
+        });
+        await SubTask(
+                subTaskID: subtask['id'],
+                taskID: task.taskID,
+                title: subtask['title'],
+                completionStatus: 0)
+            .updateCompletionStatus(0);
+      }
+      await task.updateCompletionStatus(0);
     }
-    await task.updateCompletionStatus(2);
-  } else {
-    for (var subtask in taskData['subtasks']) {
-      setState(() {
-        subtask['completed'] = false;
-      });
-      await SubTask(
-        subTaskID: subtask['id'], 
-        taskID: task.taskID, 
-        title: subtask['title'], 
-        completionStatus: 0
-      ).updateCompletionStatus(0);
-    }
-    await task.updateCompletionStatus(0);
-  }
 
-  if (mounted) {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
-}
 
   void toggleSubtaskCompletion(
       Map<String, dynamic> task, Map<String, dynamic> subtask) async {
     bool newSubtaskCompletionStatus =
-        !subtask['completed']; // عكس حالة إكمال المهام الفرعية
+        !subtask['completed']; 
 
     setState(() {
       subtask['completed'] = newSubtaskCompletionStatus;
@@ -776,13 +709,11 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
     FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    // تحديث حالة المهمة الفرعية في قاعدة البيانات
     await firestore
         .collection('SubTask')
         .doc(subtask['id'])
         .update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
 
-    // التحقق مما إذا كانت جميع المهام الفرعية مكتملة أو على الأقل واحدة مكتملة
     bool allSubtasksComplete =
         task['subtasks'].every((s) => s['completed'] == true);
     bool anySubtaskComplete =
@@ -790,25 +721,24 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
     int newTaskStatus;
     if (allSubtasksComplete) {
-      newTaskStatus = 2; // المهمة الرئيسية مكتملة
+      newTaskStatus = 2; 
       task['completed'] = true;
     } else if (anySubtaskComplete) {
-      newTaskStatus = 1; // المهمة الرئيسية قيد التنفيذ
+      newTaskStatus = 1; 
       task['completed'] = false;
     } else {
-      newTaskStatus = 0; // المهمة الرئيسية غير مكتملة
+      newTaskStatus = 0; 
       task['completed'] = false;
     }
     if (mounted) {
-      setState(() {}); // تحديث واجهة المستخدم
+      setState(() {});
     }
 
-    // تحديث حالة المهمة الرئيسية في قاعدة البيانات
     await firestore
         .collection('Task')
         .doc(task['id'])
         .update({'completionStatus': newTaskStatus});
-  } 
+  }
 
   void showDeleteConfirmationDialog(Map<String, dynamic> task) {
     showDialog(
@@ -826,7 +756,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // إغلاق النافذة بدون حذف
+                Navigator.of(context).pop(); 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -843,7 +773,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
             ElevatedButton(
               onPressed: () {
                 deleteTask(task);
-                Navigator.of(context).pop(); // إغلاق النافذة بعد الحذف
+                Navigator.of(context).pop(); 
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -894,8 +824,7 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
   @override
   Widget build(BuildContext context) {
-   
-   final message = DailyMessageManager.getDayMessage(tasks);
+    final message = DailyMessageManager.getDayMessage(tasks);
 
     return GestureDetector(
       onTap:
@@ -928,24 +857,20 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                   showCategoryDialog();
                 }
               },
-              icon: const Icon(Icons.more_vert,
-                  color: Color(0xFF104A73)), 
+              icon: const Icon(Icons.more_vert, color: Color(0xFF104A73)),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
                     value: 'view',
                     child: Row(
                       children: const [
-                        Icon(Icons.list,
-                            size: 24,
-                            color: Color(0xFF545454)), 
+                        Icon(Icons.list, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
                           'View',
                           style: TextStyle(
                             fontSize: 18,
-                            color:
-                                Color(0xFF545454), 
+                            color: Color(0xFF545454),
                           ),
                         ),
                       ],
@@ -955,16 +880,13 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                     value: 'sort',
                     child: Row(
                       children: const [
-                        Icon(Icons.sort,
-                            size: 24,
-                            color: Color(0xFF545454)), 
+                        Icon(Icons.sort, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
                           'Sort',
                           style: TextStyle(
                             fontSize: 18,
-                            color:
-                                Color(0xFF545454), 
+                            color: Color(0xFF545454),
                           ),
                         ),
                       ],
@@ -974,16 +896,13 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                     value: 'categorize',
                     child: Row(
                       children: const [
-                        Icon(Icons.label,
-                            size: 24,
-                            color: Color(0xFF545454)), 
+                        Icon(Icons.label, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
                           'Categorize',
                           style: TextStyle(
                             fontSize: 18,
-                            color:
-                                Color(0xFF545454), 
+                            color: Color(0xFF545454),
                           ),
                         ),
                       ],
@@ -996,17 +915,16 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
             ),
           ],
         ),
-
-          body: Padding(
+        body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: isLoading
               ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    //loading 
+                    //loading
                     children: [
                       Image.asset(
-                        'assets/images/logo.png', 
+                        'assets/images/logo.png',
                         width: 170,
                         height: 170,
                       ),
@@ -1041,26 +959,24 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                         fontFamily: 'Poppins',
                       ),
                     ),
-                  
+
                     //If no tasks for today
-                    
-                    if (tasks.isEmpty ||!tasks.any((task) =>
+                    if (tasks.isEmpty ||
+                        !tasks.any((task) =>
                             task['time'].isAfter(startOfDay!) &&
-                            task['time'].isBefore(endOfDay!)) )
+                            task['time'].isBefore(endOfDay!)))
                       Center(
                         child: Column(
                           children: [
-                            const SizedBox(
-                                height: 80), 
+                            const SizedBox(height: 80),
                             Image.asset(
-                              'assets/images/empty_list.png', 
-                              width: 150, 
-                              height: 150, 
+                              'assets/images/empty_list.png',
+                              width: 150,
+                              height: 150,
                             ),
-                            const SizedBox(
-                                height: 20), 
+                            const SizedBox(height: 20),
                             Text(
-                              message, 
+                              message,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -1068,12 +984,11 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                               ),
                               textAlign: TextAlign.center,
                             ),
-
                             const SizedBox(height: 50),
-                           ],
+                          ],
                         ),
                       )
-                      else
+                    else
                       Expanded(
                         child: (!tasks.any((task) =>
                                 selectedCategories.contains('All') ||
@@ -1082,73 +997,77 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                         .contains('Uncategorized')) ||
                                 selectedCategories.any((category) =>
                                     task['categories'].contains(category))))
-                                    
                             ? Column(
-                              
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                   SizedBox(height: 18),
+                                  SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-  Wrap(
-    // عرض التصنيفات المحددة على الصفحة
-    alignment: WrapAlignment.start,
-    spacing: 8.0,
-    children: selectedCategories.map((category) {
-      // تحديد اللون الخاص بالتصنيف بناءً على حالته
-      bool allTasksComplete = tasks.isNotEmpty &&
-          tasks
-              .where((task) =>
-                  task['categories'] != null &&
-                  task['categories'].contains(category))
-              .every((task) => task['completed'] == true); // جميع المهام مكتملة
-      bool hasPendingTasks = tasks
-          .where((task) =>
-              task['categories'] != null &&
-              task['categories'].contains(category))
-          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
-      bool hasNoTasks = tasks.every((task) =>
-          task['categories'] == null ||
-          !task['categories'].contains(category)); // لا توجد مهام
-
-      // تحديد اللون بناءً على الحالة
-      Color chipColor;
-      if (hasNoTasks) {
-        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
-      } else if (allTasksComplete) {
-        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
-      } else if (hasPendingTasks) {
-        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
-      } else {
-        chipColor = Colors.grey; // افتراضي: رمادي
-      }
-      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
-
-
-      return ActionChip(
-        label: Text(category),
-        onPressed: () {
-          // إزالة التصنيف عند النقر
-          setState(() {
-            selectedCategories.remove(category);
-            if (selectedCategories.isEmpty) {
-              selectedCategories = ['All'];
-            }
-          });
-        },
-        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-        backgroundColor: chipColor, // اللون الديناميكي
-        labelStyle: const TextStyle(color: Colors.white),
-        
-      );
-    }).toList(),
-  ),
-
-                                 
+                                    Wrap(
+                                     alignment: WrapAlignment.start,
+                                      spacing: 8.0,
+                                      children:
+                                          selectedCategories.map((category) {
+                                        bool allTasksComplete = tasks
+                                                .isNotEmpty &&
+                                            tasks
+                                                .where((task) =>
+                                                    task['categories'] !=
+                                                        null &&
+                                                    task['categories']
+                                                        .contains(category))
+                                                .every((task) =>
+                                                    task['completed'] ==
+                                                    true); 
+                                        bool hasPendingTasks = tasks
+                                            .where((task) =>
+                                                task['categories'] != null &&
+                                                task['categories']
+                                                    .contains(category))
+                                            .any((task) =>
+                                                task['completed'] ==
+                                                false); 
+                                        bool hasNoTasks = tasks.every((task) =>
+                                            task['categories'] == null ||
+                                            !task['categories'].contains(
+                                                category)); 
+                                        Color chipColor;
+                                        if (hasNoTasks) {
+                                          chipColor = Colors
+                                              .grey; 
+                                        } else if (allTasksComplete) {
+                                          chipColor = const Color(
+                                              0xFF24AB79);
+                                        } else if (hasPendingTasks) {
+                                          chipColor = const Color(
+                                              0xFFF9A15A);
+                                        } else {
+                                          chipColor =
+                                              Colors.grey; 
+                                        }
+                                        return ActionChip(
+                                          label: Text(category),
+                                          onPressed: () {
+                                            setState(() {
+                                              selectedCategories
+                                                  .remove(category);
+                                              if (selectedCategories.isEmpty) {
+                                                selectedCategories = ['All'];
+                                              }
+                                            });
+                                          },
+                                          avatar: const Icon(Icons.close,
+                                              size: 18, color: Colors.white),
+                                          backgroundColor:
+                                              chipColor,
+                                          labelStyle: const TextStyle(
+                                              color: Colors.white),
+                                        );
+                                      }).toList(),
+                                    ),
                                   const SizedBox(height: 30),
                                   Center(
-                                    
                                     child: Image.asset(
-                                      'assets/images/empty_list.png', 
+                                      'assets/images/empty_list.png',
                                       width: 100,
                                       height: 110,
                                     ),
@@ -1169,70 +1088,84 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                               )
                             : ListView(
                                 children: [
-                                   SizedBox(height: 18),
+                                  SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
                                     Wrap(
-    // عرض التصنيفات المحددة على الصفحة
-    alignment: WrapAlignment.start,
-    spacing: 8.0,
-    children: selectedCategories.map((category) {
-      // تحديد اللون الخاص بالتصنيف بناءً على حالته
-      bool allTasksComplete = tasks.isNotEmpty &&
-          tasks
-              .where((task) =>
-                  task['categories'] != null &&
-                  task['categories'].contains(category))
-              .every((task) => task['completed'] == true); // جميع المهام مكتملة
-      bool hasPendingTasks = tasks
-          .where((task) =>
-              task['categories'] != null &&
-              task['categories'].contains(category))
-          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
-      bool hasNoTasks = tasks.every((task) =>
-          task['categories'] == null ||
-          !task['categories'].contains(category)); // لا توجد مهام
+                                      alignment: WrapAlignment.start,
+                                      spacing: 8.0,
+                                      children:
+                                          selectedCategories.map((category) {
+                                        bool allTasksComplete = tasks
+                                                .isNotEmpty &&
+                                            tasks
+                                                .where((task) =>
+                                                    task['categories'] !=
+                                                        null &&
+                                                    task['categories']
+                                                        .contains(category))
+                                                .every((task) =>
+                                                    task['completed'] ==
+                                                    true); 
+                                        bool hasPendingTasks = tasks
+                                            .where((task) =>
+                                                task['categories'] != null &&
+                                                task['categories']
+                                                    .contains(category))
+                                            .any((task) =>
+                                                task['completed'] ==
+                                                false); 
+                                        bool hasNoTasks = tasks.every((task) =>
+                                            task['categories'] == null ||
+                                            !task['categories'].contains(
+                                                category)); 
+                                        Color chipColor;
+                                        if (hasNoTasks) {
+                                          chipColor = Colors
+                                              .grey; 
+                                        } else if (allTasksComplete) {
+                                          chipColor = const Color(
+                                              0xFF24AB79); 
+                                        } else if (hasPendingTasks) {
+                                          chipColor = const Color(
+                                              0xFFF9A15A); 
+                                        } else {
+                                          chipColor =
+                                              Colors.grey; 
+                                        }
 
-      // تحديد اللون بناءً على الحالة
-      Color chipColor;
-      if (hasNoTasks) {
-        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
-      } else if (allTasksComplete) {
-        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
-      } else if (hasPendingTasks) {
-        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
-      } else {
-        chipColor = Colors.grey; // افتراضي: رمادي
-      }
-      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
-
-
-      return ActionChip(
-        label: Text(category),
-        onPressed: () {
-          // إزالة التصنيف عند النقر
-          setState(() {
-            selectedCategories.remove(category);
-            if (selectedCategories.isEmpty) {
-              selectedCategories = ['All'];
-            }
-          });
-        },
-        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-        backgroundColor: chipColor, // اللون الديناميكي
-        labelStyle: const TextStyle(color: Colors.white),
-        
-      );
-    }).toList(),
-  ),
+                                        return ActionChip(
+                                          label: Text(category),
+                                          onPressed: () {
+                                            setState(() {
+                                              selectedCategories
+                                                  .remove(category);
+                                              if (selectedCategories.isEmpty) {
+                                                selectedCategories = ['All'];
+                                              }
+                                            });
+                                          },
+                                          avatar: const Icon(Icons.close,
+                                              size: 18, color: Colors.white),
+                                          backgroundColor:
+                                              chipColor, 
+                                          labelStyle: const TextStyle(
+                                              color: Colors.white),
+                                        );
+                                      }).toList(),
+                                    ),
                                   const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
-                                    !task['completed'] &&
-                                    (selectedCategories.contains('All') ||
-                                        (selectedCategories.contains('Uncategorized') &&
-                                            (task['categories'] == null || task['categories'].contains('Uncategorized'))) ||
-                                        selectedCategories.any((category) => task['categories'].contains(category)))))
-
+                                      !task['completed'] &&
+                                      (selectedCategories.contains('All') ||
+                                          (selectedCategories
+                                                  .contains('Uncategorized') &&
+                                              (task['categories'] == null ||
+                                                  task['categories'].contains(
+                                                      'Uncategorized'))) ||
+                                          selectedCategories.any((category) =>
+                                              task['categories']
+                                                  .contains(category)))))
                                     Row(
                                       children: const [
                                         Expanded(child: Divider(thickness: 1)),
@@ -1250,16 +1183,23 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                         Expanded(child: Divider(thickness: 1)),
                                       ],
                                     ),
-                            ...tasks.where((task) {
-  if (selectedCategories.contains('All')) {// If the "All" category is selected, return tasks that are not completed.
-    return !task['completed'];
-  }
-  else {  // If "All" is not selected, filter tasks based on more specific conditions:
-    return !task['completed'] &&
-        (selectedCategories.contains('Uncategorized') &&
-            (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
-        selectedCategories.any((category) => task['categories'].contains(category)));
-  }
+                                  ...tasks.where((task) {
+                                    if (selectedCategories.contains('All')) {
+                                      // If the "All" category is selected, return tasks that are not completed.
+                                      return !task['completed'];
+                                    } else {
+                                      // If "All" is not selected, filter tasks based on more specific conditions:
+                                      return !task['completed'] &&
+                                          (selectedCategories.contains(
+                                                      'Uncategorized') &&
+                                                  (task['categories'] == null ||
+                                                      task['categories'].contains(
+                                                          'Uncategorized')) ||
+                                              selectedCategories.any(
+                                                  (category) =>
+                                                      task['categories']
+                                                          .contains(category)));
+                                    }
                                   }).map(
                                     (task) => TaskCard(
                                       task: task,
@@ -1271,22 +1211,24 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                         });
                                       },
                                       onSubtaskToggle: (subtask) =>
-                                          toggleSubtaskCompletion(task, subtask),
-                                     onSubtaskDeleted: (subtask) async {
+                                          toggleSubtaskCompletion(
+                                              task, subtask),
+                                      onSubtaskDeleted: (subtask) async {
                                         // Create an instance of SubTask from the subtask data
                                         SubTask subtaskInstance = SubTask(
                                           subTaskID: subtask['id'],
-                                          taskID: task['id'], 
+                                          taskID: task['id'],
                                           title: subtask['title'],
-                                          completionStatus: subtask['completed'] ? 1 : 0,
+                                          completionStatus:
+                                              subtask['completed'] ? 1 : 0,
                                         );
                                         await subtaskInstance.deleteSubTask();
-                                         setState(() {
-                                        task['subtasks'].remove(subtask);
-                                         });
-                                        _showTopNotification("Subtask deleted successfully.");
+                                        setState(() {
+                                          task['subtasks'].remove(subtask);
+                                        });
+                                        _showTopNotification(
+                                            "Subtask deleted successfully.");
                                       },
-
                                       getPriorityColor: getPriorityColor,
                                       onDeleteTask: () =>
                                           showDeleteConfirmationDialog(task),
@@ -1295,30 +1237,30 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                   ),
                                   const SizedBox(height: 16),
 
-                                 if (areAllTasksCompleted() && selectedCategories.contains('All'))
-  Center(
-    child: Column(
-      children: [
-        const SizedBox(height: 70),
-        Image.asset(
-          'assets/images/done.png',
-          height: 110,
-        ),
-        const SizedBox(height: 20),
-        Text(
-          message, 
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF3B7292),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-      ],
-    ),
-  ),
-
+                                  if (areAllTasksCompleted() &&
+                                      selectedCategories.contains('All'))
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 70),
+                                          Image.asset(
+                                            'assets/images/done.png',
+                                            height: 110,
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Text(
+                                            message,
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF3B7292),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 20),
+                                        ],
+                                      ),
+                                    ),
 
                                   // Show Completed Tasks section if all tasks completed.
                                   if (tasks.any((task) =>
@@ -1349,16 +1291,21 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                         Expanded(child: Divider(thickness: 1)),
                                       ],
                                     ),
-                                  
-                                   ...tasks.where((task) {
+
+                                  ...tasks.where((task) {
                                     if (selectedCategories.contains('All')) {
                                       return task['completed'];
-                                    }
-                                    else {
+                                    } else {
                                       return task['completed'] &&
-                                          (selectedCategories.contains('Uncategorized') &&
-                                              (task['categories'] == null || task['categories'].contains('Uncategorized')) ||
-                                          selectedCategories.any((category) => task['categories'].contains(category)));
+                                          (selectedCategories.contains(
+                                                      'Uncategorized') &&
+                                                  (task['categories'] == null ||
+                                                      task['categories'].contains(
+                                                          'Uncategorized')) ||
+                                              selectedCategories.any(
+                                                  (category) =>
+                                                      task['categories']
+                                                          .contains(category)));
                                     }
                                   }).map(
                                     (task) => TaskCard(
@@ -1379,8 +1326,8 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                             .doc(subtask['id'])
                                             .delete();
                                         setState(() {
-                                        task['subtasks'].remove(subtask);
-                                         });
+                                          task['subtasks'].remove(subtask);
+                                        });
                                         _showTopNotification(
                                             "Subtask deleted successfully.");
                                       },
@@ -1396,142 +1343,157 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                   ],
                 ),
         ),
-        
-      floatingActionButton: Overlay(
-        initialEntries: [
-          OverlayEntry(
-            builder: (context) {
-              return Positioned(
-                left: _xPosition,
-                top: _yPosition,
-                child: Draggable(
-                  feedback: FloatingActionButton(
-                    onPressed: null,
-                    backgroundColor: const Color(0xFF3B7292),
-                    child: const Icon(Icons.add, color: Colors.white),
-                  ),
-                  childWhenDragging: Container(),
-                  onDragEnd: (details) {
-                    setState(() {
-                      final screenSize = MediaQuery.of(context).size;
-                      _xPosition = details.offset.dx.clamp(
-                        0.0,
-                        screenSize.width - 58.0,
-                      );
-                      _yPosition = details.offset.dy.clamp(
-                        0.0,
-                        screenSize.height - 112.0,
-                      );
-                    });
-                  },
-                  child: FloatingActionButton(
-                    onPressed: () async {
-            if (userID != null) {
-              // Navigate to AddTaskPage if the user is logged in
-              bool? result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddTaskPage(),
-                ),
-              );
 
-              // Check if a task was added and refresh tasks
-              if (result == true) {
-                fetchTasksFromFirestore();
-              }
-            } else {
-              // Show a dialog prompting the user to sign in (for guest user).
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    backgroundColor: const Color(0xFFF5F7F8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
+       // Allows the floating action button to be dragged and repositioned within screen bounds.
+        floatingActionButton: Overlay(
+          initialEntries: [
+            OverlayEntry(
+              builder: (context) {
+                return Positioned(
+                  left: _xPosition,
+                  top: _yPosition,
+                  child: Draggable(
+                    feedback: FloatingActionButton(
+                      onPressed: null,
+                      backgroundColor: const Color(0xFF3B7292),
+                      child: const Icon(Icons.add, color: Colors.white),
                     ),
-                    title: const Text(
-                      'Login & Explor!',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    content: const Text(
-                      'Ready to add tasks? Sign in or create an account to access all features.',
-                    ),
-                    actions: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            side: const BorderSide(color: Color(0xFF79A3B7)),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(color: Color(0xFF79A3B7)),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                           Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => WelcomePage()),
+                    childWhenDragging: Container(),
+                    onDragEnd: (details) {
+                      setState(() {
+                        final screenSize = MediaQuery.of(context).size;
+                        _xPosition = details.offset.dx.clamp(
+                          0.0,
+                          screenSize.width - 58.0,
                         );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF79A3B7),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        child: const Text(
-                          'Join Now',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }
-          },
-                    backgroundColor: const Color(0xFF3B7292),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    child: const Icon(Icons.add, color: Colors.white),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-         
-      bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: selectedIndex,
-  onTabChange: (index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  },
-      ),
-    ),
-  );
-}
-}
+                        _yPosition = details.offset.dy.clamp(
+                          0.0,
+                          screenSize.height - 112.0,
+                        );
+                      });
+                    },
+                    child: FloatingActionButton(
+                      onPressed: () async {
+                        if (userID != null) {
+                          // Navigate to AddTaskPage if the user is logged in
+                          bool? result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddTaskPage(),
+                            ),
+                          );
 
+                          // Check if a task was added and refresh tasks
+                          if (result == true) {
+                            fetchTasksFromFirestore();
+                          }
+                        } else {
+                          // Show a dialog prompting the user to sign in (for guest user).
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                backgroundColor: const Color(0xFFF5F7F8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.0),
+                                ),
+                                title: const Text(
+                                  'Login & Explor!',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                content: const Text(
+                                  'Ready to add tasks? Sign in or create an account to access all features.',
+                                ),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                            color: Color(0xFF79A3B7)),
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Cancel',
+                                      style:
+                                          TextStyle(color: Color(0xFF79A3B7)),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                WelcomePage()),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF79A3B7),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Join Now',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      },
+                      backgroundColor: const Color(0xFF3B7292),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        bottomNavigationBar: userID != null
+        //showing nav bar for registered user.
+            ? CustomNavigationBar(
+                selectedIndex: selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              )
+               //showing nav bar for guest user.
+            : GuestCustomNavigationBar(
+                selectedIndex: selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+      ),
+    );
+  }
+}
 
 class TaskCard extends StatelessWidget {
   final Map<String, dynamic> task;
   final VoidCallback onTaskToggle;
   final VoidCallback onExpandToggle;
   final Function(Map<String, dynamic>) onSubtaskToggle;
-  final Function(Map<String, dynamic>)
-  onSubtaskDeleted; 
+  final Function(Map<String, dynamic>) onSubtaskDeleted;
   final Color Function(int) getPriorityColor;
   final VoidCallback onDeleteTask;
   final VoidCallback onEditTask;
@@ -1542,7 +1504,7 @@ class TaskCard extends StatelessWidget {
     required this.onTaskToggle,
     required this.onExpandToggle,
     required this.onSubtaskToggle,
-    required this.onSubtaskDeleted, 
+    required this.onSubtaskDeleted,
     required this.getPriorityColor,
     required this.onDeleteTask,
     required this.onEditTask,
@@ -1565,7 +1527,7 @@ class TaskCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -1581,7 +1543,7 @@ class TaskCard extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
                 onSubtaskDeleted(subtask);
               },
               style: ElevatedButton.styleFrom(
@@ -1604,20 +1566,22 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      int totalSubtasks = task['subtasks']?.length ?? 0;
-int completedSubtasks = task['subtasks']
-        ?.where((subtask) => subtask['completed'] == true)
-        .length ?? 0;
+    int totalSubtasks = task['subtasks']?.length ?? 0;
+    int completedSubtasks = task['subtasks']
+            ?.where((subtask) => subtask['completed'] == true)
+            .length ??
+        0;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16.0), 
+      borderRadius: BorderRadius.circular(16.0),
       child: Card(
         color: Colors.white,
         margin: const EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0), 
+          borderRadius: BorderRadius.circular(16.0),
         ),
-        child: Slidable( //Slidable(swap) to show edit and delete each task .
+        child: Slidable(
+          //Slidable(swap) to show edit and delete each task .
           key: ValueKey(task['title']),
           endActionPane: ActionPane(
             motion: const ScrollMotion(),
@@ -1631,7 +1595,7 @@ int completedSubtasks = task['subtasks']
                     ),
                   );
                 },
-                backgroundColor: const Color(0xFFC2C2C2), 
+                backgroundColor: const Color(0xFFC2C2C2),
                 child: const Icon(
                   Icons.edit,
                   color: Colors.white,
@@ -1640,7 +1604,7 @@ int completedSubtasks = task['subtasks']
               SizedBox(
                 width: 1,
                 child: Container(
-                  color: Colors.grey, 
+                  color: Colors.grey,
                 ),
               ),
               CustomSlidableAction(
@@ -1661,8 +1625,7 @@ int completedSubtasks = task['subtasks']
                   message: "Mark Task as complete!", //hint
                   showDuration: Duration(milliseconds: 500),
                   child: InkWell(
-                    onTap:
-                        onTaskToggle, 
+                    onTap: onTaskToggle,
                     child: Container(
                       width: 24,
                       height: 24,
@@ -1692,30 +1655,33 @@ int completedSubtasks = task['subtasks']
                         : TextDecoration.none,
                   ),
                 ),
-                 subtitle: Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    Text(
-      DateFormat('h:mm a').format(task['time']), // عرض وقت المهمة
-    ),
-    if (totalSubtasks > 0) 
-      Row(
-        children: List.generate(totalSubtasks, (index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: Icon(
-              Icons.circle,
-              size: 10,
-              color: index < completedSubtasks
-                  ? const Color(0xFF3B7292) // لون أزرق للمهام المكتملة
-                  : Colors.grey, // لون رمادي للمهام غير المكتملة
-            ),
-          );
-        }),
-      ),
-  ],
-),
-
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      DateFormat('h:mm a')
+                          .format(task['time']),
+                    ),
+                    if (totalSubtasks > 0)
+                      Row(
+                        children: List.generate(totalSubtasks, (index) {
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: Icon(
+                              Icons.circle,
+                              size: 10,
+                              color: index < completedSubtasks
+                                  ? const Color(
+                                      0xFF3B7292) 
+                                  : Colors
+                                      .grey, 
+                            ),
+                          );
+                        }),
+                      ),
+                  ],
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1774,10 +1740,8 @@ int completedSubtasks = task['subtasks']
                             );
                           },
                           leading: Tooltip(
-                            message:
-                                "Mark SubTask as complete!", //hint
-                            showDuration:
-                                Duration(milliseconds: 500), 
+                            message: "Mark SubTask as complete!", //hint
+                            showDuration: Duration(milliseconds: 500),
                             child: GestureDetector(
                               onTap: () {
                                 onSubtaskToggle(subtask);

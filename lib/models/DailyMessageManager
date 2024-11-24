@@ -1,6 +1,8 @@
 import 'dart:math';
 
 class DailyMessageManager {
+
+
   // List for empty list state
   static const List<String> emptyStateMessages = [
     "A new day, a new opportunity\n to achieve your goals!✨",
@@ -12,6 +14,10 @@ class DailyMessageManager {
     "Great things come to those who plan.\n Start adding your tasks!💡",
     "A goal without a plan is just\n a wish. Start planning!🌟",
     "Don’t wait for inspiration. Start\n planning and watch it come!🚀",
+    "Big ideas need small actions.\n What’s the first move today? 🤔",
+    "Visualize your success. Now, let’s\n take one small action toward it! 🌟",
+    "Feeling scattered? Choose one priority \n and dive in – progress feels amazing! 💡",
+    "Even a 5-minute task can make\na difference. Pick one and go!⏱",
   ];
 
   // List for complete list state

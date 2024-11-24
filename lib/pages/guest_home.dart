@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/guest_profile_page.dart';
@@ -7,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:flutter_application/welcome_page.dart';
 
 void main() async {
@@ -15,6 +15,7 @@ void main() async {
 }
 
 class GuestHomePage extends StatefulWidget {
+  const GuestHomePage({super.key});
   @override
   GuestHomePageState createState() => GuestHomePageState();
 }
@@ -33,7 +34,7 @@ class GuestHomePageState extends State<GuestHomePage> {
       TaskPage(),
       ChatbotpageWidget(),
       ProgressPage(),
-      GuestProfilePage(),
+      GuestHomePage(),
     ]);
   }
 
@@ -45,39 +46,32 @@ class GuestHomePageState extends State<GuestHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 0;
     return Scaffold(
       appBar: _currentIndex == 0 ? _buildAppBar() : null,
       backgroundColor: const Color.fromARGB(255, 245, 247, 248),
-      body: _pages[_currentIndex], // Show the current page
-      bottomNavigationBar: Container(
-        color: const Color.fromARGB(
-            255, 226, 231, 234), // Background color of the navigation bar
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        child: GNav(
-          backgroundColor: const Color(0xFF79A3B7)
-              .withOpacity(0), // Set the background color to match your theme
-          color: const Color(0xFF545454), // Inactive icons and text color
-          activeColor: const Color(0xFF104A73), // Active icon and text color
-          tabBackgroundColor: const Color(0xFF79A3B7).withOpacity(
-              0.3), // Slightly transparent background for active tab
-          gap: 8, // Gap between icon and text
-          padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8), // Adjust the padding for visual consistency
-          tabBorderRadius:
-              15, // Optional: add rounded corners for a softer look
-          selectedIndex: _currentIndex,
-          iconSize: 24, // Adjust icon size to match the old bar
-          onTabChange:
-              onTabChange, // Use the public onTabChange method for bottom navigation
-          tabs: const [
-            GButton(icon: Icons.home, text: 'Home'),
-            GButton(icon: Icons.task, text: 'Tasks'),
-            GButton(icon: Icons.sms, text: 'Chatbot'),
-            GButton(icon: Icons.poll, text: 'Progress'),
-            GButton(icon: Icons.person, text: 'Profile'),
-          ],
-        ),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: GuestCustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              switch (index) {
+                case 0:
+                  return GuestHomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return GuestProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
       ),
     );
   }
@@ -105,7 +99,7 @@ class GuestHomePageState extends State<GuestHomePage> {
 class GuestHomePageContent extends StatefulWidget {
   final Function(int) onTabChange; // Callback to change tabs
 
-  GuestHomePageContent({required this.onTabChange}); // Constructor
+  GuestHomePageContent({required this.onTabChange});
 
   @override
   GuestHomePageContentState createState() => GuestHomePageContentState();
@@ -303,8 +297,8 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
-                     onTap: () {
-                         Navigator.push(
+                      onTap: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => TaskPage(),
@@ -410,13 +404,14 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                   ),
                                 ),
                                 ElevatedButton(
-                                   onPressed: () {
-                          Navigator.of(context).pop();
-                           Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => WelcomePage()),
-                        );
-                        },
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => WelcomePage()),
+                                    );
+                                  },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF79A3B7),
                                     shape: RoundedRectangleBorder(
@@ -501,13 +496,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
-                       onTap: () {
-                         Navigator.push(
+                      onTap: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ProgressPage(),
                           ),
-                        ); 
+                        );
                       },
                       child: Container(
                         height: 110,
@@ -573,13 +568,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
-                       onTap: () {
-                         Navigator.push(
+                      onTap: () {
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChatbotpageWidget(),
                           ),
-                        ); 
+                        );
                       },
                       child: Container(
                         height: 110,

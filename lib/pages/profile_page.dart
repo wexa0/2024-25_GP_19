@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
-import 'package:flutter_application/pages/chatbot_page.dart';
-import 'package:flutter_application/pages/home.dart';
-import 'package:flutter_application/pages/progress_page.dart';
-import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'dart:io'; // For File type
-//import 'dart:html' as html; // Import for web detection
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_application/Classes/User';
 import 'guest_profile_page.dart';
 

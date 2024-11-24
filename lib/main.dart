@@ -1,9 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/home.dart';
-import 'package:flutter_application/pages/task_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application/welcome_page.dart'; // Import your WelcomePage
+import 'package:flutter_application/welcome_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +36,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Your App',
       debugShowCheckedModeBanner: false,
-      home: const AuthWrapper(), // Use an auth wrapper
+      home: const AuthWrapper(), 
     );
   }
 }

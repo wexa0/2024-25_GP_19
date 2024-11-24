@@ -6,6 +6,7 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
+//Nav bar for Guest user.
 class GuestCustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTabChange;

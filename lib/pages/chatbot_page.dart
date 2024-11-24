@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 
 class ChatbotpageWidget extends StatefulWidget {
   const ChatbotpageWidget({super.key});
@@ -9,6 +11,23 @@ class ChatbotpageWidget extends StatefulWidget {
 }
 
 class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
+String? userID; // To determine if the user is logged in
+int selectedIndex = 2; // Default tab index for the Chatbot page
+
+    @override
+  void initState() {
+    super.initState();
+    _fetchUserID();
+  }
+
+  Future<void> _fetchUserID() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      userID = user?.uid; // Set userID if logged in, otherwise null
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     // Get the screen width
@@ -326,14 +345,24 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
           ),
         ],
       ),
-            bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: selectedIndex,
-  onTabChange: (index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  },
-      ),
+           // Conditional Navigation Bar
+      bottomNavigationBar: userID != null
+          ? CustomNavigationBar(
+              selectedIndex: selectedIndex,
+              onTabChange: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+            )
+          : GuestCustomNavigationBar(
+              selectedIndex: selectedIndex,
+              onTabChange: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+            ),
     );
   }
 }

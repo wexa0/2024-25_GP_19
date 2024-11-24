@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/login_page.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
-import 'package:flutter_application/welcome_page.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,6 +71,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 4;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -232,6 +231,14 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                   ),
                 ),
               ),
+              bottomNavigationBar:GuestCustomNavigationBar(
+              selectedIndex: selectedIndex,
+              onTabChange: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+            ),
       );
     
   }

@@ -1,10 +1,6 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -103,9 +99,9 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     var selectedIndex = 0;
     return Scaffold(
-       appBar: _currentIndex == 0 ? _buildAppBar() : null,
+      appBar: _currentIndex == 0 ? _buildAppBar() : null,
       body: _pages[_currentIndex],
-       bottomNavigationBar: CustomNavigationBar(
+      bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
         onTabChange: (index) {
           Navigator.pushReplacement(
@@ -352,7 +348,7 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                         Navigator.push(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => TaskPage(),
@@ -500,7 +496,7 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                         Navigator.push(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ProgressPage(),
@@ -572,7 +568,7 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                       Navigator.push(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChatbotpageWidget(),
