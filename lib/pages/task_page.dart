@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_application/pages/timer_page';
-import 'package:flutter_application/pages/progress_page.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -247,6 +247,7 @@ void deleteSubTask(Map<String, dynamic> taskData, Map<String, dynamic> subtaskDa
   // Show notification
   _showTopNotification("Subtask deleted successfully.");
 }
+
 
 
 
@@ -728,12 +729,14 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
    setState(() {
     taskData['completed'] = newTaskCompletionStatus;
-    selectedCompletionMessage = null; // إعادة تعيين الرسالة
+    selectedCompletionMessage = null; 
   });
 
   if (newTaskCompletionStatus) {
     for (var subtask in taskData['subtasks']) {
-      subtask['completed'] = true;
+      setState(() {
+        subtask['completed'] = true;
+      });
       await SubTask(
         subTaskID: subtask['id'], 
         taskID: task.taskID, 
@@ -744,7 +747,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
     await task.updateCompletionStatus(2);
   } else {
     for (var subtask in taskData['subtasks']) {
-      subtask['completed'] = false;
+      setState(() {
+        subtask['completed'] = false;
+      });
       await SubTask(
         subTaskID: subtask['id'], 
         taskID: task.taskID, 
@@ -1036,11 +1041,12 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                         fontFamily: 'Poppins',
                       ),
                     ),
+                  
                     //If no tasks for today
-                    if (tasks.isEmpty ||
-                        !tasks.any((task) =>
+                    
+                    if (tasks.isEmpty ||!tasks.any((task) =>
                             task['time'].isAfter(startOfDay!) &&
-                            task['time'].isBefore(endOfDay!)))
+                            task['time'].isBefore(endOfDay!)) )
                       Center(
                         child: Column(
                           children: [
@@ -1275,7 +1281,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                           completionStatus: subtask['completed'] ? 1 : 0,
                                         );
                                         await subtaskInstance.deleteSubTask();
+                                         setState(() {
                                         task['subtasks'].remove(subtask);
+                                         });
                                         _showTopNotification("Subtask deleted successfully.");
                                       },
 
@@ -1370,9 +1378,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
                                             .collection('SubTask')
                                             .doc(subtask['id'])
                                             .delete();
+                                        setState(() {
                                         task['subtasks'].remove(subtask);
-                                        setState(
-                                            () {}); // تحديث الواجهة بعد الحذف
+                                         });
                                         _showTopNotification(
                                             "Subtask deleted successfully.");
                                       },
@@ -1505,26 +1513,11 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
          
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
-        onTabChange: (index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) {
-              // قم بإرجاع الصفحة بناءً على الـindex
-              switch (index) {
-                case 0:
-                  return HomePage();
-                case 2:
-                  return ChatbotpageWidget();
-                case 3:
-                  return ProgressPage();
-                case 4:
-                  return ProfilePage();
-                default:
-                  return TaskPage();
-              }
-            }),
-          );
-        },
+  onTabChange: (index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  },
       ),
     ),
   );

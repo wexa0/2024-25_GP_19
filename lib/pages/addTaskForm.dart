@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application/Classes/Category';
+import 'package:flutter_application/Classes/SubTask';
+import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/pages/editTask.dart';
-import 'package:flutter_application/pages/task_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -148,99 +150,78 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return _user;
   }
 
-  Future<void> _saveCategoryAndLinkToTask(
-      String categoryName, DocumentReference taskRef) async {
-    try {
-      User? currentUser = await _getCurrentUser();
-      if (currentUser == null) return;
+ Future<bool> _saveTaskToFirebase() async {
+  try {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return false;
 
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Category')
-          .where('categoryName', isEqualTo: categoryName)
-          .where('userID', isEqualTo: currentUser.uid)
-          .get();
+    final DateTime taskDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
 
-      if (querySnapshot.docs.isNotEmpty) {
-        DocumentReference categoryRef = querySnapshot.docs.first.reference;
+    // Check for duplicate tasks
+    QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
+        .collection('Task')
+        .where('userID', isEqualTo: currentUser.uid)
+        .where('scheduledDate', isEqualTo: Timestamp.fromDate(taskDateTime))
+        .get();
 
-        await categoryRef.update({
-          'taskIDs': FieldValue.arrayUnion([taskRef.id])
-        });
-      } else {
-        DocumentReference categoryRef =
-            FirebaseFirestore.instance.collection('Category').doc();
-        await categoryRef.set({
-          'categoryName': categoryName,
-          'userID': currentUser.uid,
-          'taskIDs': [taskRef.id],
-        });
-      }
-    } catch (e) {
-      _showTopNotification('Failed to save category or link to task: $e');
-    }
-  }
-
-  Future<bool> _saveTaskToFirebase() async {
-    try {
-      User? currentUser = await _getCurrentUser();
-      if (currentUser == null) return false;
-
-      final DateTime taskDateTime = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
-
-      QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
-          .collection('Task')
-          .where('userID', isEqualTo: currentUser.uid)
-          .where('scheduledDate', isEqualTo: Timestamp.fromDate(taskDateTime))
-          .get();
-
-      if (existingTaskSnapshot.docs.isNotEmpty) {
-        _showTopNotification(
-            'A task already exists with the same date and time. Please choose a different time.');
-        return false;
-      }
-
-      DocumentReference taskRef =
-          FirebaseFirestore.instance.collection('Task').doc();
-      String taskId = taskRef.id;  
-          
-      await taskRef.set({
-        'completionStatus': 0,
-        'scheduledDate': Timestamp.fromDate(taskDateTime),
-        'note': notesController.text,
-        'priority': _getPriorityValue(),
-        'reminder': '',
-        'timer': '',
-        'title': taskNameController.text,
-        'userID': currentUser.uid,
-      });
-
-      if (selectedCategory.isNotEmpty) {
-        await _saveCategoryAndLinkToTask(selectedCategory, taskRef);
-      }
-
-      for (String subtask in subtasks) {
-        await FirebaseFirestore.instance.collection('SubTask').add({
-          'completionStatus': 0,
-          'taskID': taskRef.id,
-          'timer': '',
-          'title': subtask,
-        });
-      }
-
-      _showTopNotification('Task saved successfully!');
-
-      return true;
-    } catch (e) {
-      _showTopNotification('Failed to save task. Please try again: $e');
+    if (existingTaskSnapshot.docs.isNotEmpty) {
+      _showTopNotification(
+          'A task already exists with the same date and time. Please choose a different time.');
       return false;
     }
+
+    // Create a Task object
+    Task newTask = Task(
+      taskID: FirebaseFirestore.instance.collection('Task').doc().id,
+      title: taskNameController.text,
+      scheduledDate: taskDateTime,
+      priority: _getPriorityValue(),
+      reminder: [], // Currently empty; update as needed
+      timer: taskDateTime,
+      note: notesController.text,
+      completionStatus: 0,
+      userID: currentUser.uid,
+    );
+
+    // Save the task
+    await Task.addTask(newTask);
+
+    // Add SubTasks
+    for (String subtaskTitle in subtasks) {
+      SubTask subtask = SubTask(
+        subTaskID: FirebaseFirestore.instance.collection('SubTask').doc().id,
+        taskID: newTask.taskID,
+        title: subtaskTitle,
+        completionStatus: 0,
+      );
+      await SubTask.addSubTask(subtask);
+    }
+
+    // Handle category if selected
+    if (selectedCategory.isNotEmpty) {
+      Category newCategory = Category(
+        categoryID: FirebaseFirestore.instance.collection('Category').doc().id,
+        categoryName: selectedCategory,
+        userID: currentUser.uid,
+      );
+      await Category.addCategory(newCategory);
+      await Category.linkTaskToCategory(newCategory.categoryID, newTask.taskID);
+    }
+
+    _showTopNotification('Task saved successfully!');
+    return true;
+  } catch (e) {
+    _showTopNotification('Failed to save task. Please try again: $e');
+    return false;
   }
+}
+
 
   int _getPriorityValue() {
     switch (selectedPriority) {

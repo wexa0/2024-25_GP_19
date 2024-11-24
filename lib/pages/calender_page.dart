@@ -468,7 +468,7 @@ TableCalendar(
            
             
                     //If no tasks for today
-                    if (tasks.isEmpty)
+                    if (tasks.isEmpty && selectedCategories.first == 'All')
                       Center(
                         child: Column(
                           children: [
@@ -512,27 +512,59 @@ TableCalendar(
                                 children: [
                                    SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-                                    Wrap( //wrap for show selected category on the page
-                                      alignment: WrapAlignment.start,
-                                      spacing: 8.0,
-                                      children: selectedCategories.map((category) {
-                                        return ActionChip(
-                                          label: Text(category),
-                                          onPressed: () {
-                                            // Remove specific category on tap
-                                            setState(() {
-                                              selectedCategories.remove(category);
-                                              if (selectedCategories.isEmpty) {
-                                                selectedCategories = ['All']; 
-                                              }
-                                            });
-                                          },
-                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-                                          backgroundColor: const Color(0xFF79A3B7),
-                                          labelStyle: const TextStyle(color: Colors.white),
-                                        );
-                                      }).toList(),
-                                    ),
+                                     Wrap(
+    // عرض التصنيفات المحددة على الصفحة
+    alignment: WrapAlignment.start,
+    spacing: 8.0,
+    children: selectedCategories.map((category) {
+      // تحديد اللون الخاص بالتصنيف بناءً على حالته
+      bool allTasksComplete = tasks.isNotEmpty &&
+          tasks
+              .where((task) =>
+                  task['categories'] != null &&
+                  task['categories'].contains(category))
+              .every((task) => task['completed'] == true); // جميع المهام مكتملة
+      bool hasPendingTasks = tasks
+          .where((task) =>
+              task['categories'] != null &&
+              task['categories'].contains(category))
+          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
+      bool hasNoTasks = tasks.every((task) =>
+          task['categories'] == null ||
+          !task['categories'].contains(category)); // لا توجد مهام
+
+      // تحديد اللون بناءً على الحالة
+      Color chipColor;
+      if (hasNoTasks) {
+        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
+      } else if (allTasksComplete) {
+        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
+      } else if (hasPendingTasks) {
+        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
+      } else {
+        chipColor = Colors.grey; // افتراضي: رمادي
+      }
+      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
+
+
+      return ActionChip(
+        label: Text(category),
+        onPressed: () {
+          // إزالة التصنيف عند النقر
+          setState(() {
+            selectedCategories.remove(category);
+            if (selectedCategories.isEmpty) {
+              selectedCategories = ['All'];
+            }
+          });
+        },
+        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+        backgroundColor: chipColor, // اللون الديناميكي
+        labelStyle: const TextStyle(color: Colors.white),
+        
+      );
+    }).toList(),
+  ),
                                  
                                   const SizedBox(height: 30),
                                   Center(
@@ -561,26 +593,59 @@ TableCalendar(
                                 children: [
                                    SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
-                                    Wrap( //wrap for show selected category on the page
-                                      spacing: 8.0,
-                                      children: selectedCategories.map((category) {
-                                        return ActionChip(
-                                          label: Text(category),
-                                          onPressed: () {
-                                            // Remove specific category on tap
-                                            setState(() {
-                                              selectedCategories.remove(category);
-                                              if (selectedCategories.isEmpty) {
-                                                selectedCategories = ['All']; 
-                                              }
-                                            });
-                                          },
-                                          avatar: const Icon(Icons.close, size: 18, color: Colors.white),
-                                          backgroundColor: const Color(0xFF79A3B7),
-                                          labelStyle: const TextStyle(color: Colors.white),
-                                        );
-                                      }).toList(),
-                                    ),
+                                     Wrap(
+    // عرض التصنيفات المحددة على الصفحة
+    alignment: WrapAlignment.start,
+    spacing: 8.0,
+    children: selectedCategories.map((category) {
+      // تحديد اللون الخاص بالتصنيف بناءً على حالته
+      bool allTasksComplete = tasks.isNotEmpty &&
+          tasks
+              .where((task) =>
+                  task['categories'] != null &&
+                  task['categories'].contains(category))
+              .every((task) => task['completed'] == true); // جميع المهام مكتملة
+      bool hasPendingTasks = tasks
+          .where((task) =>
+              task['categories'] != null &&
+              task['categories'].contains(category))
+          .any((task) => task['completed'] == false); // وجود مهام غير مكتملة
+      bool hasNoTasks = tasks.every((task) =>
+          task['categories'] == null ||
+          !task['categories'].contains(category)); // لا توجد مهام
+
+      // تحديد اللون بناءً على الحالة
+      Color chipColor;
+      if (hasNoTasks) {
+        chipColor = Colors.grey; // رمادي عند عدم وجود مهام
+      } else if (allTasksComplete) {
+        chipColor = const Color(0xFF24AB79); // أخضر عند اكتمال جميع المهام
+      } else if (hasPendingTasks) {
+        chipColor = const Color(0xFFF9A15A); // برتقالي عند وجود مهام قيد التنفيذ
+      } else {
+        chipColor = Colors.grey; // افتراضي: رمادي
+      }
+      print('Category: $category, AllComplete: $allTasksComplete, Pending: $hasPendingTasks, NoTasks: $hasNoTasks');
+
+
+      return ActionChip(
+        label: Text(category),
+        onPressed: () {
+          // إزالة التصنيف عند النقر
+          setState(() {
+            selectedCategories.remove(category);
+            if (selectedCategories.isEmpty) {
+              selectedCategories = ['All'];
+            }
+          });
+        },
+        avatar: const Icon(Icons.close, size: 18, color: Colors.white),
+        backgroundColor: chipColor, // اللون الديناميكي
+        labelStyle: const TextStyle(color: Colors.white),
+        
+      );
+    }).toList(),
+  ),
                                   const SizedBox(height: 1),
                                   // Show Pending Tasks section if there are any uncompleted tasks
                                   if (tasks.any((task) =>
@@ -638,7 +703,9 @@ TableCalendar(
                                           completionStatus: subtask['completed'] ? 1 : 0,
                                         );
                                         await subtaskInstance.deleteSubTask();
+                                        setState(() {
                                         task['subtasks'].remove(subtask);
+                                         });
                                         _showTopNotification("Subtask deleted successfully.");
                                       },
 
@@ -732,7 +799,9 @@ TableCalendar(
                                             .collection('SubTask')
                                             .doc(subtask['id'])
                                             .delete();
+                                        setState(() {
                                         task['subtasks'].remove(subtask);
+                                         });
                                         setState(
                                             () {}); // تحديث الواجهة بعد الحذف
                                         _showTopNotification(
@@ -747,8 +816,10 @@ TableCalendar(
                                 ],
                               ),
                       ),
+                     
+                       ]
                   ],
-          ],
+          
                 ),
                 
 
@@ -875,26 +946,11 @@ TableCalendar(
       
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
-        onTabChange: (index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) {
-              // قم بإرجاع الصفحة بناءً على الـindex
-              switch (index) {
-                case 0:
-                  return HomePage();
-                case 2:
-                  return ChatbotpageWidget();
-                case 3:
-                  return ProgressPage();
-                case 4:
-                  return ProfilePage();
-                default:
-                  return TaskPage();
-              }
-            }),
-          );
-        },
+  onTabChange: (index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  },
       ),
       ), 
     
@@ -1061,16 +1117,15 @@ void showCategoryDialog() {
                         .every((task) => task['completed'] == true);
 
                     // تحديث لون "All" بناءً على المهام المتاحة
-                    if (isAllCategory) {
+                         if (isAllCategory) {
                       chipColor = tasks.isEmpty
-                          ? Colors.grey // اللون الرمادي إذا لم توجد أي مهام
-                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFF79A3B7)); // أخضر إذا كانت كل المهام مكتملة، أزرق إذا لم تكن مكتملة
+                          ? Colors.grey
+                          : (allTasksComplete ? Color(0xFF24AB79)  : const Color(0xFFF9A15A)); 
                     } else if (!tasks.any((task) => task['categories'].contains(category))) {
-                      chipColor = Colors.grey; // اللون الرمادي إذا لم توجد مهام في هذه الفئة
+                      chipColor = Colors.grey; 
                     } else {
-                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFF79A3B7);
+                      chipColor = categoryComplete ? Color(0xFF24AB79) : const Color(0xFFF9A15A);
                     }
-
                     return Container(
                       decoration: BoxDecoration(
                         boxShadow: [
@@ -1124,9 +1179,9 @@ void showCategoryDialog() {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLegendCircle(Colors.grey, 'No Tasks'),
-                      _buildLegendCircle(const Color(0xFF79A3B7), 'Incomplete Tasks'),
-                      _buildLegendCircle(Color(0xFF24AB79) , 'All Completed'),
+                     _buildLegendCircle(Colors.grey, 'No Tasks'), // Light Gray
+                      _buildLegendCircle(const Color(0xFFF9A15A), 'Pending Tasks'), // Amber
+                      _buildLegendCircle(Color(0xFF24AB79), 'Completed Tasks '), // Green
                     ],
                   ),
                 ),
@@ -1326,7 +1381,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
 
   if (newTaskCompletionStatus) {
     for (var subtask in taskData['subtasks']) {
-      subtask['completed'] = true;
+      setState(() {
+        subtask['completed'] = true;
+      });
       await SubTask(
         subTaskID: subtask['id'], 
         taskID: task.taskID, 
@@ -1337,7 +1394,9 @@ void toggleTaskCompletion(Map<String, dynamic> taskData) async {
     await task.updateCompletionStatus(2);
   } else {
     for (var subtask in taskData['subtasks']) {
-      subtask['completed'] = false;
+       setState(() {
+        subtask['completed'] = false;
+      });
       await SubTask(
         subTaskID: subtask['id'], 
         taskID: task.taskID, 

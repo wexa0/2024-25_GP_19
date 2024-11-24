@@ -315,26 +315,11 @@ void _refreshUserData() {
       ),
         bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
-        onTabChange: (index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) {
-              // قم بإرجاع الصفحة بناءً على الـindex
-              switch (index) {
-                case 0:
-                  return HomePage();
-                case 2:
-                  return ChatbotpageWidget();
-                case 3:
-                  return ProgressPage();
-                case 4:
-                  return ProfilePage();
-                default:
-                  return HomePage();
-              }
-            }),
-          );
-        },
+  onTabChange: (index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  },
       ),
     );
   }

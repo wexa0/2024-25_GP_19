@@ -194,28 +194,13 @@ Widget build(BuildContext context) {
                 ),
               ],
             ),
-              bottomNavigationBar: CustomNavigationBar(
+            bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
-        onTabChange: (index) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) {
-              // قم بإرجاع الصفحة بناءً على الـindex
-              switch (index) {
-                case 0:
-                  return HomePage();
-                case 2:
-                  return ChatbotpageWidget();
-                case 3:
-                  return ProgressPage();
-                case 4:
-                  return ProfilePage();
-                default:
-                  return TaskPage();
-              }
-            }),
-          );
-        },
+  onTabChange: (index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  },
       ),
     ),
   );

@@ -14,7 +14,13 @@ class SubTask {
     required this.completionStatus,
   });
 
-
+  static Future<void> addSubTask(SubTask subtask) async {
+    await FirebaseFirestore.instance.collection('SubTask').doc(subtask.subTaskID).set({
+      'taskID': subtask.taskID,
+      'title': subtask.title,
+      'completionStatus': subtask.completionStatus,
+    });
+  }
   
    // Method to toggle completion of subtask and update in Firestore
  Future<void> updateCompletionStatus(int status) async {

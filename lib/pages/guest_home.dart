@@ -303,8 +303,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
-                      onTap: () {
-                        widget.onTabChange(1); // Navigate to TaskPage
+                     onTap: () {
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TaskPage(),
+                          ),
+                        ); // Navigate to TaskPage
                       },
                       child: Container(
                         height: 110,
@@ -496,8 +501,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
-                      onTap: () {
-                        widget.onTabChange(3); // Navigate to ProgressPage
+                       onTap: () {
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProgressPage(),
+                          ),
+                        ); 
                       },
                       child: Container(
                         height: 110,
@@ -563,8 +573,13 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                 Padding(
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
-                      onTap: () {
-                        widget.onTabChange(2); // Navigate to ChatbotpageWidget
+                       onTap: () {
+                         Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatbotpageWidget(),
+                          ),
+                        ); 
                       },
                       child: Container(
                         height: 110,

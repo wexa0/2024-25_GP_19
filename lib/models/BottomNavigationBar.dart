@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/profile_page.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 class CustomNavigationBar extends StatelessWidget {
@@ -26,7 +31,27 @@ class CustomNavigationBar extends StatelessWidget {
         tabBorderRadius: 15,
         selectedIndex: selectedIndex,
         iconSize: 24,
-        onTabChange: onTabChange,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 1:
+                  return TaskPage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage(); 
+              }
+            }),
+          );
+        },
         tabs: const [
           GButton(
             icon: Icons.home,
@@ -40,7 +65,10 @@ class CustomNavigationBar extends StatelessWidget {
             icon: Icons.sms,
             text: 'Chatbot',
           ),
-          GButton(icon: Icons.poll, text: 'Progress'),
+          GButton(
+            icon: Icons.poll,
+            text: 'Progress',
+          ),
           GButton(
             icon: Icons.person,
             text: 'Profile',
