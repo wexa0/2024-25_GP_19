@@ -959,12 +959,37 @@ class _TaskPageState extends State<TaskPage> {
                         fontFamily: 'Poppins',
                       ),
                     ),
-
-                    //If no tasks for today
-                    if (tasks.isEmpty ||
+                    // if the user is a guest user.
+                   if(userID == null)
+                    Center(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 80),
+                            Image.asset(
+                              'assets/images/empty_list.png',
+                              width: 150,
+                              height: 150,
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF3B7292),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 50),
+                          ],
+                        ),
+                      )
+                      else
+                    //If the user is registered and no tasks for today.
+                    if ((tasks.isEmpty ||
                         !tasks.any((task) =>
                             task['time'].isAfter(startOfDay!) &&
-                            task['time'].isBefore(endOfDay!)))
+                            task['time'].isBefore(endOfDay!))) && selectedCategories.first == 'All')
                       Center(
                         child: Column(
                           children: [
@@ -988,6 +1013,7 @@ class _TaskPageState extends State<TaskPage> {
                           ],
                         ),
                       )
+
                     else
                       Expanded(
                         child: (!tasks.any((task) =>
@@ -1086,6 +1112,7 @@ class _TaskPageState extends State<TaskPage> {
                                   ),
                                 ],
                               )
+                              
                             : ListView(
                                 children: [
                                   SizedBox(height: 18),
