@@ -19,13 +19,12 @@ import 'package:flutter_application/models/BottomNavigationBar.dart';
 
 
 class TaskPage extends StatefulWidget {
-  const TaskPage({super.key});
-
+const TaskPage({Key? key}) : super(key: key);
   @override
-  _TaskPageState createState() => _TaskPageState();
+  TaskPageState createState() => TaskPageState();
 }
 
-class _TaskPageState extends State<TaskPage> {
+class TaskPageState extends State<TaskPage> {
   String selectedSort = 'timeline';
   bool showEmptyState = true;
   String? userID;

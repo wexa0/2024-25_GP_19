@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/services/notification_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/pages/task_page.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_application/Classes/Task';
+import 'package:flutter_application/Classes/SubTask';
+import 'package:flutter_application/Classes/Category';
+
 
 class EditTaskPage extends StatefulWidget {
   final String taskId;
@@ -14,6 +22,9 @@ class EditTaskPage extends StatefulWidget {
 }
 
 class _EditTaskPageState extends State<EditTaskPage> {
+   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   User? _user = FirebaseAuth.instance.currentUser;
   String selectedCategory = '';
   String? selectedPriority;
@@ -37,6 +48,22 @@ class _EditTaskPageState extends State<EditTaskPage> {
   bool _isTitleMissing = false;
   bool _isDateMissing = false;
   bool _isTimeMissing = false;
+
+  bool isReminderOn = false;
+ List<Map<String, dynamic>> reminderOptions = [
+    {"id": 1, "label": "1 day before", "duration": Duration(days: 1)},
+    {"id": 2, "label": "3 hours before", "duration": Duration(hours: 3)},
+    {"id": 3, "label": "1 hour before", "duration": Duration(hours: 1)},
+    {"id": 4, "label": "30 minutes before", "duration": Duration(minutes: 30)},
+    {"id": 5, "label": "10 minutes before", "duration": Duration(minutes: 10)},
+    {"id": 6, "label": "Custom Time", "duration": null},
+  ];
+
+  Map<String, dynamic>? selectedReminderOption;
+  DateTime? customReminderDateTime;
+
+Map<String, bool> subtaskCompletionStatus = {}; 
+  double progress = 0.0; // Current progress (0.0 to 1.0)
 
   Color darkBlue = Color(0xFF104A73);
   Color mediumBlue = Color(0xFF3B7292);
@@ -120,6 +147,32 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   .format(context);
           selectedTime =
               TimeOfDay.fromDateTime(taskData['scheduledDate'].toDate());
+         // Load reminder details
+         final DateTime taskDateTime = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            selectedTime.hour,
+            selectedTime.minute,
+          );
+
+          if (taskData['reminder'] != null) {
+            isReminderOn = true;
+            final reminderDate = taskData['reminder'].toDate();
+
+            // Check if the reminder matches a predefined option
+            selectedReminderOption = reminderOptions.firstWhere(
+              (option) =>
+                  option['duration'] != null &&
+                  taskDateTime.subtract(option['duration']) == reminderDate,
+              orElse: () {
+                // If no predefined option matches, it's a custom reminder
+                customReminderDateTime = reminderDate;
+                return {"label": "Custom Time", "duration": null};
+              },
+            );
+          }
+
         });
 
         QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
@@ -135,29 +188,65 @@ class _EditTaskPageState extends State<EditTaskPage> {
           });
         }
 
-        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
             .where('taskID', isEqualTo: widget.taskId)
             .get();
 
-        List<String> fetchedSubtasks = [];
+       List<String> fetchedSubtasks = [];
         subtaskSnapshot.docs.forEach((doc) {
           var subtaskData = doc.data() as Map<String, dynamic>;
-          fetchedSubtasks.add(subtaskData['title']);
-          subtaskControllers[subtaskData['title']] =
-              TextEditingController(text: subtaskData['title']);
+          String subtaskTitle = subtaskData['title'];
+          bool isCompleted =
+              subtaskData['completionStatus'] == 1; // Example value
+
+          fetchedSubtasks.add(subtaskTitle);
+          subtaskCompletionStatus[subtaskTitle] = isCompleted;
+
+          subtaskControllers[subtaskTitle] =
+              TextEditingController(text: subtaskTitle);
+
+          // Load reminder data
+          if (subtaskData['reminder'] != null) {
+            DateTime reminderDate = subtaskData['reminder'].toDate();
+            DateTime taskDateTime = DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day,
+              selectedTime.hour,
+              selectedTime.minute,
+            );
+
+            // Determine if the reminder matches a predefined option or is custom
+            subtaskReminders[subtaskTitle] = reminderOptions.firstWhere(
+              (option) =>
+                  option['duration'] != null &&
+                  taskDateTime.subtract(option['duration']) == reminderDate,
+              orElse: () => {
+                'duration': null,
+                'customDateTime': reminderDate,
+              },
+            );
+          } else {
+            subtaskReminders[subtaskTitle] = null;
+          }
         });
 
         setState(() {
           subtasks = fetchedSubtasks;
+          _updateProgress();
         });
+
+
+
+
       }
     } catch (e) {
       print('Failed to load task details: $e');
     }
   }
 
-  Future<void> _saveChangesToFirebase() async {
+ Future<void> _saveChangesToFirebase() async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
@@ -186,6 +275,24 @@ class _EditTaskPageState extends State<EditTaskPage> {
         return;
       }
 
+      DateTime? reminderDateTime;
+      if (isReminderOn) {
+        if (selectedReminderOption?['duration'] != null) {
+          reminderDateTime =
+              taskDateTime.subtract(selectedReminderOption!['duration']);
+        } else if (customReminderDateTime != null) {
+          reminderDateTime = customReminderDateTime;
+        }
+
+        // Ensure reminder is valid and in the future
+        if (reminderDateTime != null &&
+            reminderDateTime.isBefore(DateTime.now())) {
+          _showTopNotification("Reminder time must be in the future.");
+          return;
+        }
+      }
+
+      // Update the main task in Firestore
       await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
@@ -194,10 +301,26 @@ class _EditTaskPageState extends State<EditTaskPage> {
         'note': notesController.text,
         'priority': _getPriorityValue(),
         'scheduledDate': taskTimestamp,
+        'reminder': isReminderOn && reminderDateTime != null
+            ? Timestamp.fromDate(reminderDateTime)
+            : null,
       });
 
+      // Handle main task notification
+      if (isReminderOn && reminderDateTime != null) {
+        await NotificationHandler.cancelNotification(
+            widget.taskId); // Cancel old reminder
+        await _scheduleTaskNotification(
+          taskId: widget.taskId, // Task ID
+          taskTitle: taskNameController.text, // Task title
+          scheduledDateTime: reminderDateTime, // New reminder time
+        );
+      }
+
+      // Handle category changes
       await _handleCategoryChanges();
 
+      // Delete removed subtasks from Firestore
       for (String deletedSubtask in deletedSubtasks) {
         QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
@@ -209,38 +332,97 @@ class _EditTaskPageState extends State<EditTaskPage> {
           await doc.reference.delete();
         }
       }
-
-      for (String subtask in subtasks) {
+for (String subtask in subtasks) {
         final subtaskTitle = subtaskControllers[subtask]?.text ?? subtask;
+
         QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
             .collection('SubTask')
             .where('taskID', isEqualTo: widget.taskId)
             .where('title', isEqualTo: subtask)
             .get();
 
+        // Determine the reminder for the subtask
+        DateTime? subtaskReminderDateTime;
+        if (subtaskReminders[subtask] != null) {
+          if (subtaskReminders[subtask]!['customDateTime'] != null) {
+            subtaskReminderDateTime =
+                subtaskReminders[subtask]!['customDateTime'];
+          } else if (subtaskReminders[subtask]!['duration'] != null) {
+            subtaskReminderDateTime =
+                taskDateTime.subtract(subtaskReminders[subtask]!['duration']);
+          }
+
+          // Ensure reminder is valid (not in the past)
+          if (subtaskReminderDateTime != null &&
+              subtaskReminderDateTime.isBefore(DateTime.now())) {
+            print("Skipping past subtask reminder for: $subtaskTitle");
+            subtaskReminderDateTime = null;
+          }
+        }
+
+        print(
+            "Final reminder details for subtask $subtaskTitle: $subtaskReminderDateTime");
+
+        // Save reminder to Firestore
         if (subtaskSnapshot.docs.isNotEmpty) {
+          // Update existing subtask
           DocumentReference subtaskRef = subtaskSnapshot.docs.first.reference;
+
           await subtaskRef.update({
             'title': subtaskTitle,
+            'reminder': subtaskReminderDateTime != null
+                ? Timestamp.fromDate(subtaskReminderDateTime)
+                : null,
           });
+
+          print("Updated reminder in Firestore for subtask: $subtaskTitle");
+
+          // Schedule a notification for the subtask
+          if (subtaskReminderDateTime != null) {
+            await _scheduleTaskNotification(
+              taskId: subtaskRef.id,
+              taskTitle: subtaskTitle,
+              scheduledDateTime: subtaskReminderDateTime,
+            );
+          }
         } else {
-          await FirebaseFirestore.instance.collection('SubTask').add({
+          // Create a new subtask
+          DocumentReference newSubtaskRef =
+              FirebaseFirestore.instance.collection('SubTask').doc();
+
+          await newSubtaskRef.set({
             'completionStatus': 0,
             'taskID': widget.taskId,
             'timer': '',
             'title': subtaskTitle,
+            'reminder': subtaskReminderDateTime != null
+                ? Timestamp.fromDate(subtaskReminderDateTime)
+                : null,
           });
+
+          print("Created new subtask with reminder: $subtaskReminderDateTime");
+
+          // Schedule a notification for the new subtask
+          if (subtaskReminderDateTime != null) {
+            await _scheduleTaskNotification(
+              taskId: newSubtaskRef.id,
+              taskTitle: subtaskTitle,
+              scheduledDateTime: subtaskReminderDateTime,
+            );
+          }
         }
       }
 
-      _showTopNotification('Task updated successfully!');
 
+      // Notify success
+      _showTopNotification('Task updated successfully!');
       deletedSubtasks.clear();
     } catch (e) {
       print('Failed to update task: $e');
       _showTopNotification('Failed to update task. Please try again.');
     }
   }
+
 
   Future<void> _handleCategoryChanges() async {
     if (selectedCategory.isEmpty) return;
@@ -290,14 +472,28 @@ class _EditTaskPageState extends State<EditTaskPage> {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
+       await NotificationHandler.cancelNotification(widget.taskId);
+await NotificationHandler.debugPendingNotifications();
       // Delete subtasks
       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
           .collection('SubTask')
           .where('taskID', isEqualTo: widget.taskId)
           .get();
 
-      for (var subtaskDoc in subtaskSnapshot.docs) {
+     for (var subtaskDoc in subtaskSnapshot.docs) {
+        print(
+            "Attempting to cancel notification for subtask ID: ${subtaskDoc.id}");
+        await NotificationHandler.cancelNotification(subtaskDoc.id);
+        print("Deleting subtask: ${subtaskDoc.id}");
         await subtaskDoc.reference.delete();
+      }
+
+      // Debugging: Check pending notifications
+      final List<PendingNotificationRequest> pendingNotificationRequests =
+          await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+      for (var pendingNotification in pendingNotificationRequests) {
+        print('Pending Notification ID: ${pendingNotification.id}');
       }
 
       // Remove the task from categories
@@ -320,7 +516,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
           .doc(widget.taskId)
           .delete();
 
-      _showTopNotification('Task and related subtasks deleted successfully!');
+      _showTopNotification('Task deleted successfully!');
       // Pop back to the TaskPage
       Navigator.pop(
           context, true); // Passing `true` to indicate successful deletion
@@ -461,6 +657,131 @@ class _EditTaskPageState extends State<EditTaskPage> {
       overlayEntry.remove();
     });
   }
+  void _updateProgress() {
+    if (subtasks.isEmpty) {
+      progress = 0.0; // No progress for tasks without subtasks
+    } else {
+      int completedSubtasks =
+          subtaskCompletionStatus.values.where((completed) => completed).length;
+      progress = completedSubtasks / subtasks.length;
+    }
+  }
+
+ void _toggleSubtaskCompletion(String subtask) async {
+    setState(() {
+      subtaskCompletionStatus[subtask] =
+          !(subtaskCompletionStatus[subtask] ?? false);
+
+      // Update progress based on completed subtasks
+      int completedSubtasks =
+          subtaskCompletionStatus.values.where((status) => status).length;
+      progress =
+          subtasks.isNotEmpty ? completedSubtasks / subtasks.length : 0.0;
+    });
+
+    // Update subtask completion status in Firestore using SubTask method
+    QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+        .collection('SubTask')
+        .where('taskID', isEqualTo: widget.taskId)
+        .where('title', isEqualTo: subtask)
+        .get();
+
+    for (var doc in subtaskSnapshot.docs) {
+      SubTask subTask = SubTask(
+        subTaskID: doc.id,
+        taskID: widget.taskId,
+        title: subtask,
+        completionStatus: subtaskCompletionStatus[subtask] == true ? 1 : 0,
+      );
+      await subTask.updateCompletionStatus(subTask.completionStatus);
+    }
+
+    // Update task completion status using the Task method
+    int taskStatus = 0; // Default to incomplete
+    if (progress == 1.0) {
+      taskStatus = 2; // All subtasks completed
+    } else if (subtaskCompletionStatus.values.any((completed) => completed)) {
+      taskStatus = 1; // At least one subtask completed
+    }
+
+    Task task = Task(
+      taskID: widget.taskId,
+      title: taskNameController.text,
+      scheduledDate: selectedDate,
+      priority: _getPriorityValue(),
+      reminder: [],
+      timer: DateTime.now(),
+      note: notesController.text,
+      completionStatus: taskStatus,
+      userID: FirebaseAuth.instance.currentUser!.uid,
+    );
+    await task.updateCompletionStatus(taskStatus);
+
+    _showTopNotification(progress == 1.0
+        ? 'Task marked as completed!'
+        : (taskStatus == 1
+            ? 'Task marked as pending!'
+            : 'Task marked as incomplete.'));
+  }
+
+  
+
+
+  Future<void> _scheduleTaskNotification({
+    required String taskId,
+    required String taskTitle,
+    required DateTime scheduledDateTime,
+  }) async {
+    final tz.TZDateTime scheduledTZDateTime =
+        tz.TZDateTime.from(scheduledDateTime, tz.local);
+
+    if (scheduledTZDateTime.isBefore(tz.TZDateTime.now(tz.local))) {
+      print("Failed to schedule notification: Date must be in the future.");
+      return;
+    }
+print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $scheduledDateTime");
+
+    final int notificationId = _generateNotificationId(taskId); // Unique ID
+
+    const AndroidNotificationAction markDoneAction = AndroidNotificationAction(
+      'mark_done',
+      'Mark Task as Done',
+      showsUserInterface: true,
+    );
+
+    final androidDetails = AndroidNotificationDetails(
+      'task_channel',
+      'Task Reminders',
+      channelDescription: 'Task reminders with customizable intervals',
+      actions: [markDoneAction],
+    );
+
+    final platformDetails = NotificationDetails(android: androidDetails);
+
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        notificationId,
+        '$taskTitle Reminder',
+        'Reminder for your task scheduled at $scheduledDateTime',
+        scheduledTZDateTime,
+        platformDetails,
+        payload: taskId, // Store taskId in the payload
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      
+      );
+      print("Notification scheduled successfully! ID: $notificationId");
+    } catch (e) {
+      print("Failed to schedule notification: $e");
+    }
+  }
+
+  int _generateNotificationId(String documentId) {
+    return documentId
+        .hashCode; // Convert the Firestore document ID to an integer
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -479,11 +800,11 @@ class _EditTaskPageState extends State<EditTaskPage> {
           title: Center(
             child: Text(
               'Edit Task',
-             style: TextStyle(
-          color: Colors.black,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -495,33 +816,10 @@ class _EditTaskPageState extends State<EditTaskPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                 _buildProgressBar(), 
                 SizedBox(height: 12),
-                TextField(
-                  controller: taskNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Task name *',
-                    labelStyle: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: darkGray,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: lightestBlue),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: darkBlue),
-                    ),
-                    errorText: _isTitleMissing ? 'Task Name is required' : null,
-                    floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                  ),
-                ),
+                
+                _buildTaskTitleSection(),
                 SizedBox(height: 20),
                 _buildSubtaskSection(),
                 SizedBox(height: 20),
@@ -531,6 +829,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
                 SizedBox(height: 20),
                 _buildPrioritySection(),
                 SizedBox(height: 30),
+                 _buildReminderSection(),
+                SizedBox(height: 20),
                 _buildNotesSection(),
                 SizedBox(height: 20),
                 Row(
@@ -651,6 +951,112 @@ class _EditTaskPageState extends State<EditTaskPage> {
         ) ??
         false;
   }
+  Widget _buildTaskTitleSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: lightestBlue),
+          color: Colors.white,
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () async {
+                bool isTaskComplete = progress < 1.0; // Toggle task completion
+
+                setState(() {
+                  // Update all subtasks' completion statuses
+                  subtaskCompletionStatus.updateAll((key, _) => isTaskComplete);
+
+                  // Update progress
+                  progress = isTaskComplete ? 1.0 : 0.0;
+                });
+
+                // Update all subtasks in Firestore using the SubTask method
+                QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+                    .collection('SubTask')
+                    .where('taskID', isEqualTo: widget.taskId)
+                    .get();
+
+                for (var doc in subtaskSnapshot.docs) {
+                  SubTask subTask = SubTask(
+                    subTaskID: doc.id,
+                    taskID: widget.taskId,
+                    title: doc['title'],
+                    completionStatus: isTaskComplete ? 1 : 0,
+                  );
+                  await subTask.updateCompletionStatus(isTaskComplete ? 1 : 0);
+                }
+
+                // Update task completion status using the Task method
+                int taskStatus = isTaskComplete ? 2 : 0;
+                Task task = Task(
+                  taskID: widget.taskId,
+                  title: taskNameController.text,
+                  scheduledDate: selectedDate,
+                  priority: _getPriorityValue(),
+                  reminder: [],
+                  timer: DateTime.now(),
+                  note: notesController.text,
+                  completionStatus: taskStatus,
+                  userID: FirebaseAuth.instance.currentUser!.uid,
+                );
+                await task.updateCompletionStatus(taskStatus);
+
+                _showTopNotification(isTaskComplete
+                    ? 'Task marked as completed!'
+                    : 'Task marked as incomplete.');
+              },
+              child: Container(
+                width: 24.0,
+                height: 24.0,
+                margin: EdgeInsets.only(
+                    right: 12), // Spacing between checkbox and input field
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: progress == 1.0 ? Colors.grey : mediumBlue,
+                    width: 4.0,
+                  ),
+                  color: progress == 1.0 ? Colors.grey : Colors.white,
+                ),
+                child: progress == 1.0
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+            ),
+            Expanded(
+              child: TextField(
+                controller: taskNameController,
+                decoration: InputDecoration(
+                  labelText: 'Task name *',
+                  labelStyle: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: darkGray,
+                  ),
+                  border: InputBorder.none, // Remove default border
+                  errorText: _isTitleMissing ? 'Task Name is required' : null,
+                ),
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: darkGray,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildNotesSection() {
     return Padding(
@@ -1175,131 +1581,387 @@ class _EditTaskPageState extends State<EditTaskPage> {
     );
   }
 
+Widget _buildReminderSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.notifications, color: mediumBlue),
+                  SizedBox(width: 8),
+                  Text(
+                    'Reminder',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontFamily: 'Poppins',
+                      color: darkGray,
+                    ),
+                  ),
+                ],
+              ),
+              Switch(
+                value: isReminderOn,
+                onChanged: (value) {
+                  setState(() {
+                    isReminderOn = value;
+                    if (!isReminderOn) {
+                      selectedReminderOption = null;
+                      customReminderDateTime = null;
+                    }
+                  });
+                },
+                activeColor: mediumBlue,
+                activeTrackColor: lightBlue,
+                inactiveThumbColor: const Color.fromARGB(255, 172, 172, 172),
+                inactiveTrackColor: Colors.grey[350],
+              ),
+            ],
+          ),
+          if (isReminderOn)
+            DropdownButtonFormField<int>(
+              value: selectedReminderOption != null
+                  ? selectedReminderOption!['id']
+                  : null, // Use the id for comparison
+              isExpanded: true,
+              items: reminderOptions.map((option) {
+                return DropdownMenuItem<int>(
+                  value: option['id'], // Use the id as the dropdown value
+                  child: Text(
+                    option['label'],
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: darkGray,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (id) {
+                setState(() {
+                  selectedReminderOption = reminderOptions
+                      .firstWhere((option) => option['id'] == id);
+                  if (selectedReminderOption?['label'] == "Custom Time") {
+                    _pickCustomReminderTime();
+                  } else {
+                    customReminderDateTime =
+                        null; // Clear custom time if not selected
+                  }
+                });
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: lightestBlue),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              hint: Text(
+                "Select a reminder time",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: darkGray,
+                ),
+              ),
+              dropdownColor: const Color.fromARGB(255, 245, 245, 245),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: darkGray,
+              ),
+              iconEnabledColor: mediumBlue,
+            ),
+          if (selectedReminderOption != null &&
+              selectedReminderOption!['label'] == "Custom Time" &&
+              customReminderDateTime != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                "Custom Reminder: ${DateFormat('MMM dd, yyyy - hh:mm a').format(customReminderDateTime!)}",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: darkGray,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-  // Future<bool> _showDiscardConfirmation() async {
-  //   return await showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         backgroundColor: lightGray,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         title: Text(
-  //           'Are you sure?',
-  //           style: TextStyle(
-  //             fontFamily: 'Poppins',
-  //             fontSize: 18,
-  //             fontWeight: FontWeight.bold,
-  //             color: darkGray,
-  //           ),
-  //         ),
-  //         content: Text(
-  //           'Changes won\'t be saved.',
-  //           style: TextStyle(
-  //             fontFamily: 'Poppins',
-  //             fontSize: 14,
-  //             fontWeight: FontWeight.w400,
-  //             color: darkGray,
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(false);
-  //             },
-  //             style: TextButton.styleFrom(
-  //               foregroundColor:
-  //                   mediumBlue,
-  //             ),
-  //             child: Text(
-  //               'Cancel',
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 14,
-  //                 fontWeight: FontWeight.w600,
-  //                 color:
-  //                     mediumBlue,
-  //               ),
-  //             ),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop(true);
-  //             },
-  //             style: TextButton.styleFrom(
-  //               foregroundColor: Colors.red,
-  //             ),
-  //             child: Text(
-  //               'Discard',
-  //               style: TextStyle(
-  //                 fontFamily: 'Poppins',
-  //                 fontSize: 14,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Colors.red,
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+ Future<void> _pickCustomReminderTime() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: selectedDate,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: darkBlue,
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: Color(0xFFF5F7F8),
+              surface: Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
+            ),
+            dialogBackgroundColor: Color(0xFFF5F7F8),
+          ),
+          child: child!,
+        );
+      },
+    );
 
-  Widget _buildSubtaskSection() {
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              primaryColor: darkBlue,
+              colorScheme: ColorScheme.light(
+                primary: darkBlue,
+                onPrimary: Color(0xFFF5F7F8),
+                surface: Color(0xFFF5F7F8),
+                onSurface: darkGray,
+                secondary: lightBlue,
+              ),
+              dialogBackgroundColor: Color(0xFFF5F7F8),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        DateTime selectedReminder = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        DateTime taskDateTime = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+
+        if (selectedReminder.isAfter(taskDateTime)) {
+          _showTopNotification(
+              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
+          setState(() {
+            customReminderDateTime = null;
+          });
+        } else {
+          setState(() {
+            customReminderDateTime = selectedReminder;
+          });
+        }
+      }
+    }
+  }
+
+
+Map<String, Map<String, dynamic>?> subtaskReminders = {};
+
+Widget _buildSubtaskSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (subtasks.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(left: 16.0),
-            child: Row(
-              children: [
-                SizedBox(width: 8),
-                Text(
-                  'Subtasks',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: darkGray,
-                  ),
-                ),
-              ],
+            child: Text(
+              'Subtasks',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: darkGray,
+              ),
             ),
           ),
         SizedBox(height: 10),
-        ...subtasks.map((subtask) => ListTile(
-              title: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: TextField(
-                  controller: subtaskControllers[subtask],
-                  decoration: InputDecoration(
-                    labelText: '',
-                    labelStyle: TextStyle(
+        ...subtasks.map((subtask) {
+          final TextEditingController? subtaskEditingController =
+              subtaskControllers[subtask];
+
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+            child: Slidable(
+              key: ValueKey(subtask),
+              endActionPane: ActionPane(
+                motion: const ScrollMotion(),
+                children: [
+                  SlidableAction(
+                    onPressed: (_) async {
+                      try {
+                        QuerySnapshot subtaskSnapshot = await FirebaseFirestore
+                            .instance
+                            .collection('SubTask')
+                            .where('taskID', isEqualTo: widget.taskId)
+                            .where('title', isEqualTo: subtask)
+                            .get();
+
+                        for (var doc in subtaskSnapshot.docs) {
+                          String subtaskId = doc.id;
+
+                          // Cancel the notification for the subtask
+                          await NotificationHandler.cancelNotification(
+                              subtaskId);
+
+                          // Delete the subtask from Firestore
+                          await doc.reference.delete();
+                        }
+
+                        // Update state after deletion
+                        setState(() {
+                          deletedSubtasks.add(subtask);
+                          subtasks.remove(subtask);
+                          subtaskControllers.remove(subtask);
+                          subtaskReminders.remove(subtask);
+                          subtaskCompletionStatus.remove(subtask);
+
+                          // Update progress
+                          int completedSubtasks = subtaskCompletionStatus.values
+                              .where((status) => status)
+                              .length;
+                          progress = subtasks.isNotEmpty
+                              ? completedSubtasks / subtasks.length
+                              : 0.0;
+                        });
+
+                        print("Subtask $subtask deleted successfully.");
+                      } catch (e) {
+                        print("Failed to delete subtask: $e");
+                      }
+                    },
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    icon: Icons.delete,
+                    label: 'Delete',
+                  ),
+                ],
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: ListTile(
+                  leading: GestureDetector(
+                    onTap: () {
+                      if (subtaskCompletionStatus.containsKey(subtask)) {
+                        _toggleSubtaskCompletion(subtask);
+
+                        // Update Firestore (optional)
+                        FirebaseFirestore.instance
+                            .collection('SubTask')
+                            .where('taskID', isEqualTo: widget.taskId)
+                            .where('title', isEqualTo: subtask)
+                            .get()
+                            .then((snapshot) {
+                          for (var doc in snapshot.docs) {
+                            doc.reference.update({
+                              'completionStatus':
+                                  subtaskCompletionStatus[subtask] == true
+                                      ? 2
+                                      : 0,
+                            });
+                          }
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 24.0,
+                      height: 24.0,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: subtaskCompletionStatus[subtask] == true
+                              ? Colors.grey
+                              : mediumBlue,
+                          width: 4.0,
+                        ),
+                        color: subtaskCompletionStatus[subtask] == true
+                            ? Colors.grey
+                            : Colors.white,
+                      ),
+                      child: subtaskCompletionStatus[subtask] == true
+                          ? const Icon(Icons.check,
+                              size: 16, color: Colors.white)
+                          : null,
+                    ),
+                  ),
+                  title: TextField(
+                    controller: subtaskEditingController,
+                    onChanged: (newValue) {
+                      setState(() {
+                        final index = subtasks.indexOf(subtask);
+                        if (index != -1) {
+                          subtasks[index] = newValue;
+                        }
+                      });
+                    },
+                    style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: darkBlue,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                      color: darkGray,
                     ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: darkBlue, width: 2.0),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     ),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: subtaskReminders[subtask] != null
+                          ? mediumBlue
+                          : Colors.grey,
+                    ),
+                    onPressed: () async {
+                      await _showSubtaskReminderDialog(subtask);
+                    },
                   ),
                 ),
               ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete,
-                    color: Color.fromARGB(255, 125, 125, 125)),
-                onPressed: () {
-                  setState(() {
-                    deletedSubtasks.add(subtask);
-                    subtasks.remove(subtask);
-                    subtaskControllers.remove(subtask);
-                  });
-                },
-              ),
-            )),
+            ),
+          );
+        }).toList(),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: TextField(
@@ -1323,7 +1985,17 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       subtasks.add(subtaskController.text);
                       subtaskControllers[subtaskController.text] =
                           TextEditingController(text: subtaskController.text);
+                      subtaskReminders[subtaskController.text] = null;
+                      subtaskCompletionStatus[subtaskController.text] = false;
                       subtaskController.clear();
+
+                      // Update progress
+                      int completedSubtasks = subtaskCompletionStatus.values
+                          .where((status) => status)
+                          .length;
+                      progress = subtasks.isNotEmpty
+                          ? completedSubtasks / subtasks.length
+                          : 0.0;
                     });
                   }
                 },
@@ -1334,6 +2006,343 @@ class _EditTaskPageState extends State<EditTaskPage> {
       ],
     );
   }
+
+
+
+
+  Widget _buildProgressBar() {
+    if (subtasks.isEmpty)
+      return SizedBox.shrink(); // No progress bar for tasks without subtasks
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+         
+          SizedBox(height: 8),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(mediumBlue),
+            minHeight: 10,
+          ),
+          SizedBox(height: 8),
+          Text(
+            "${(progress * 100).toStringAsFixed(0)}% Complete",
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              color: darkGray,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+Future<void> _showSubtaskReminderDialog(String subtask) async {
+    bool isReminderOn = subtaskReminders[subtask] != null;
+    Map<String, dynamic>? selectedOption = subtaskReminders[subtask];
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              backgroundColor: lightGray,
+              title: Row(
+                children: [
+                  Icon(Icons.notifications, color: mediumBlue),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Set Reminder for "$subtask"',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: darkGray,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Reminder On/Off",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: darkGray,
+                          ),
+                        ),
+                        Switch(
+                          value: isReminderOn,
+                          onChanged: (value) {
+                            setStateDialog(() {
+                              isReminderOn = value;
+                              if (!isReminderOn) {
+                                selectedOption = null;
+                              }
+                            });
+                          },
+                          activeColor: mediumBlue,
+                          activeTrackColor: lightBlue,
+                          inactiveThumbColor: Colors.grey,
+                          inactiveTrackColor: Colors.grey[350],
+                        ),
+                      ],
+                    ),
+                    if (isReminderOn)
+                      ...reminderOptions.map((option) {
+                        bool isSelected = selectedOption != null &&
+                            ((option['duration'] != null &&
+                                    selectedOption?['duration'] ==
+                                        option['duration']) ||
+                                (option['label'] == "Custom Time" &&
+                                    selectedOption?['customDateTime'] != null));
+
+                        return GestureDetector(
+                          onTap: () {
+                            setStateDialog(() {
+                              selectedOption = {
+                                'duration': option['duration'],
+                                'customDateTime': null,
+                              };
+                              if (option['label'] == "Custom Time") {
+                                _pickCustomSubtaskReminderTime(subtask)
+                                    .then((customTime) {
+                                  if (customTime != null) {
+                                    setStateDialog(() {
+                                      selectedOption = {
+                                        'duration': null,
+                                        'customDateTime': customTime,
+                                      };
+                                    });
+                                  }
+                                });
+                              }
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? mediumBlue.withOpacity(0.2)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time, color: mediumBlue),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    option['label'],
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkGray,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      subtaskReminders[subtask] =
+                          isReminderOn ? selectedOption : null;
+                      print("Updated reminder for subtask: $subtask");
+                      print("Reminder details: ${subtaskReminders[subtask]}");
+                    });
+
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Save',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: mediumBlue,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: selectedDate,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: Color(0xFFF5F7F8),
+              surface: Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
+            ),
+            dialogBackgroundColor: Color(0xFFF5F7F8),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              colorScheme: ColorScheme.light(
+                primary: darkBlue,
+                onPrimary: Color(0xFFF5F7F8),
+                onSurface: darkGray,
+                secondary: lightBlue,
+              ),
+              dialogBackgroundColor: Color(0xFFF5F7F8),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        final DateTime customTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        if (customTime.isAfter(DateTime.now())) {
+          return customTime;
+        } else {
+          _showTopNotification(
+              "Custom reminder time must be in the future. Please select a valid time.");
+        }
+      }
+    }
+    return null;
+  }
+
+
+Future<DateTime?> _pickSubtaskReminderTime() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: darkBlue,
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: Colors.white,
+              onSurface: darkGray,
+            ),
+            dialogBackgroundColor: lightGray,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              colorScheme: ColorScheme.light(
+                primary: darkBlue,
+                onPrimary: Colors.white,
+                onSurface: darkGray,
+              ),
+              dialogBackgroundColor: lightGray,
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        return DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      }
+    }
+
+    return null;
+  }
+
 
   Widget _buildDateTimePicker() {
     return Column(
