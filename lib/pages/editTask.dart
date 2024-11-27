@@ -62,7 +62,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   Map<String, dynamic>? selectedReminderOption;
   DateTime? customReminderDateTime;
 
-Map<String, bool> subtaskCompletionStatus = {}; 
+  Map<String, bool> subtaskCompletionStatus = {}; 
   double progress = 0.0; // Current progress (0.0 to 1.0)
 
   Color darkBlue = Color(0xFF104A73);
@@ -2054,35 +2054,64 @@ Widget _buildSubtaskSection() {
 
   Widget _buildProgressBar() {
     if (subtasks.isEmpty)
-      return SizedBox.shrink(); // No progress bar for tasks without subtasks
+      return SizedBox.shrink(); // Hide progress bar if no subtasks
+
+    int totalSubtasks = subtasks.length;
+    int completedSubtasks =
+        subtaskCompletionStatus.values.where((status) => status).length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         
-          SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(mediumBlue),
-            minHeight: 10,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              
+              Text(
+                "$completedSubtasks/$totalSubtasks subtasks completed",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: darkGray,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8),
-          Text(
-            "${(progress * 100).toStringAsFixed(0)}% Complete",
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              color: darkGray,
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              children: List.generate(totalSubtasks, (index) {
+                bool isCompleted = index < completedSubtasks;
+                return Expanded(
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 1),
+                    decoration: BoxDecoration(
+                      color: isCompleted ? mediumBlue : Colors.grey[300],
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(index == 0 ? 6 : 0),
+                        bottomLeft: Radius.circular(index == 0 ? 6 : 0),
+                        topRight:
+                            Radius.circular(index == totalSubtasks - 1 ? 6 : 0),
+                        bottomRight:
+                            Radius.circular(index == totalSubtasks - 1 ? 6 : 0),
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
         ],
       ),
     );
   }
-
 
 
 Future<void> _showSubtaskReminderDialog(String subtask) async {
