@@ -105,7 +105,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   void initState() {
     super.initState();
     _getCategories();
-    _preselectReminderBasedOnPriority("Normal");
+    // _preselectReminderBasedOnPriority("Normal");
   }
 
   Future<void> _getCategories() async {
@@ -291,12 +291,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
     if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
       try {
-        String? taskId = await _saveTaskToFirebase(); // taskId is a String
+        String? taskId = await _saveTaskToFirebase(); 
 
         if (taskId != null) {
-          int notificationId =
-              taskId.hashCode.abs(); // Generate numeric ID from taskId
-
+        
+         
           DateTime? reminderDateTime;
 
           if (selectedReminderOption != null &&
@@ -314,7 +313,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
             } else {
               // Schedule the reminder notification
               await _scheduleTaskNotification(
-                taskId: taskId, // Pass taskId as String
+                taskId: taskId, 
                 taskTitle: taskNameController.text,
                 scheduledDateTime: reminderDateTime,
               );
@@ -335,10 +334,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   void _showTopNotification(String message) {
     final overlayState =
-        Navigator.of(context).overlay; // Access the root navigator's overlay
+        Navigator.of(context).overlay; 
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height * 0.1, // Top position
+        top: MediaQuery.of(context).size.height * 0.1, 
         left: 20,
         right: 20,
         child: Material(
@@ -407,7 +406,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
         'Reminder for your subtask scheduled at $scheduledDateTime',
         scheduledTZDateTime,
         platformDetails,
-        payload: taskId, // Store taskId in the payload
+        payload: taskId, 
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -886,8 +885,13 @@ int _generateNotificationId(String documentId) {
                                 ),
                               ),
                             ),
-                            IconButton(
-                              icon: Icon(Icons.send, color: mediumBlue),
+                           IconButton(
+                              icon: Icon(
+                                Icons.arrow_upward,
+                                color:
+                                    mediumBlue, 
+                                size: 24.0, 
+                              ),
                               onPressed: () {
                                 if (categoryController.text.isNotEmpty) {
                                   if (tempCategories.length < 7) {
@@ -1202,8 +1206,8 @@ int _generateNotificationId(String documentId) {
               selectedPriority = label;
               priorityIconColor = color;
 
-              // Preselect reminder based on priority
-              _preselectReminderBasedOnPriority(label);
+          
+              // _preselectReminderBasedOnPriority(label);
             });
           },
         ),
@@ -1355,11 +1359,11 @@ int _generateNotificationId(String documentId) {
                   });
                 },
                 activeColor: mediumBlue, // Thumb color when switch is ON
-                activeTrackColor: lightBlue, // Track color when switch is ON
+                activeTrackColor: lightBlue, 
                 inactiveThumbColor: const Color.fromARGB(
                     255, 172, 172, 172), // Thumb color when switch is OFF
                 inactiveTrackColor:
-                    Colors.grey[350], // Track color when switch is OFF
+                    Colors.grey[350], 
               ),
             ],
           ),
@@ -1519,36 +1523,36 @@ int _generateNotificationId(String documentId) {
     }
   }
 
-  void _preselectReminderBasedOnPriority(String priority) {
-    setState(() {
-      switch (priority) {
-        case 'Urgent':
-          selectedReminderOption = reminderOptions.firstWhere(
-              (option) => option['label'] == "10 minutes before",
-              orElse: () =>
-                  reminderOptions.first); // Default to the first option
-          break;
-        case 'High':
-          selectedReminderOption = reminderOptions.firstWhere(
-              (option) => option['label'] == "30 minutes before",
-              orElse: () => reminderOptions.first);
-          break;
-        case 'Normal':
-          selectedReminderOption = reminderOptions.firstWhere(
-              (option) => option['label'] == "1 day before",
-              orElse: () => reminderOptions.first);
-          break;
-        case 'Low':
-          selectedReminderOption = reminderOptions.firstWhere(
-              (option) => option['label'] == "1 day before",
-              orElse: () => reminderOptions.first);
-          break;
-        default:
-          selectedReminderOption =
-              reminderOptions.first; // Default to the first option
-      }
-    });
-  }
+  // void _preselectReminderBasedOnPriority(String priority) {
+  //   setState(() {
+  //     switch (priority) {
+  //       case 'Urgent':
+  //         selectedReminderOption = reminderOptions.firstWhere(
+  //             (option) => option['label'] == "10 minutes before",
+  //             orElse: () =>
+  //                 reminderOptions.first); // Default to the first option
+  //         break;
+  //       case 'High':
+  //         selectedReminderOption = reminderOptions.firstWhere(
+  //             (option) => option['label'] == "30 minutes before",
+  //             orElse: () => reminderOptions.first);
+  //         break;
+  //       case 'Normal':
+  //         selectedReminderOption = reminderOptions.firstWhere(
+  //             (option) => option['label'] == "1 day before",
+  //             orElse: () => reminderOptions.first);
+  //         break;
+  //       case 'Low':
+  //         selectedReminderOption = reminderOptions.firstWhere(
+  //             (option) => option['label'] == "1 day before",
+  //             orElse: () => reminderOptions.first);
+  //         break;
+  //       default:
+  //         selectedReminderOption =
+  //             reminderOptions.first; // Default to the first option
+  //     }
+  //   });
+  // }
 
   Map<String, Map<String, dynamic>?> subtaskReminders = {};
 
@@ -1834,43 +1838,5 @@ int _generateNotificationId(String documentId) {
     return null;
   }
 
-  void _addSubtask(String text) {
-    if (text.isNotEmpty) {
-      setState(() {
-        subtasks.add(text);
-        subtaskController.clear();
-      });
-    }
-  }
+  
 }
-//Future<void> _saveCategoryAndLinkToTask(
-//     String categoryName, DocumentReference taskRef) async {
-//   try {
-//     User? currentUser = await _getCurrentUser();
-//     if (currentUser == null) return;
-
-//     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-//         .collection('Category')
-//         .where('categoryName', isEqualTo: categoryName)
-//         .where('userID', isEqualTo: currentUser.uid)
-//         .get();
-
-//     if (querySnapshot.docs.isNotEmpty) {
-//       DocumentReference categoryRef = querySnapshot.docs.first.reference;
-
-//       await categoryRef.update({
-//         'taskIDs': FieldValue.arrayUnion([taskRef.id])
-//       });
-//     } else {
-//       DocumentReference categoryRef =
-//           FirebaseFirestore.instance.collection('Category').doc();
-//       await categoryRef.set({
-//         'categoryName': categoryName,
-//         'userID': currentUser.uid,
-//         'taskIDs': [taskRef.id],
-//       });
-//     }
-//   } catch (e) {
-//     _showTopNotification('Failed to save category or link to task: $e');
-//   }
-// }

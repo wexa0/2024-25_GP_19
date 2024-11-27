@@ -1111,6 +1111,13 @@ Widget _buildCategorySection() {
                   color: darkGray,
                 ),
               ),
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+                onPressed: () {
+                  _showCategoryEditDialog();
+                },
+              ),
             ],
           ),
         ),
@@ -1133,22 +1140,15 @@ Widget _buildCategorySection() {
                 selected: selectedCategory == category,
                 selectedColor: Color(0xFF3B7292),
                 backgroundColor: Colors.grey[200],
-                onSelected: (bool selected) async {
-                  if (selectedCategory == category) {
-                    await _updateCategoryInFirestore(remove: true);
-                    setState(() {
-                      selectedCategory = ''; 
-                    });
-                  } else {
-                    // Switch to the new category and update Firestore
-                    if (selectedCategory.isNotEmpty) {
-                      await _updateCategoryInFirestore(remove: true);
+                onSelected: (bool selected) {
+                  setState(() {
+                    // If the selected category is already active, unselect it
+                    if (selectedCategory == category) {
+                      selectedCategory = '';
+                    } else {
+                      selectedCategory = category;
                     }
-                    setState(() {
-                      selectedCategory = category; 
-                    });
-                    await _updateCategoryInFirestore(remove: false);
-                  }
+                  });
                 },
               );
             }).toList(),
@@ -1290,7 +1290,12 @@ Widget _buildCategorySection() {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.send, color: mediumBlue),
+                              icon: Icon(
+                                Icons.arrow_upward, 
+                                color:
+                                    mediumBlue,
+                                size: 24.0,
+                              ),
                               onPressed: () {
                                 if (categoryController.text.isNotEmpty) {
                                   if (tempCategories.length < 7) {

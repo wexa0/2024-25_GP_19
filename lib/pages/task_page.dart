@@ -7,7 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
-import 'package:flutter_application/pages/timer_page';
+import 'package:flutter_application/pages/timer_selector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1720,7 +1720,7 @@ class TaskCard extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => TimerPage()),
+                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], taskName: task['title'])),
                         );
                       },
                     ),
@@ -1812,11 +1812,13 @@ class TaskCard extends StatelessWidget {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.play_arrow),
-                            onPressed: () {
+                              onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => TimerPage()),
+                                    builder: (context) => TimerSelectionPage(
+                                        taskId: task['id'],
+                                        taskName: task['title'])),
                               );
                             },
                           ),
