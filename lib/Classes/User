@@ -246,129 +246,197 @@ class AppUser {
   );
 }
 
-
-  Future<void> showChangePasswordDialog(BuildContext context) async {
+Future<void> showChangePasswordDialog(BuildContext context) async {
   final TextEditingController currentPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+
   showDialog(
     context: context,
     builder: (context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        title: const Text(
-          'Change Password',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'Current Password',
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: const Text(
+              'Change Password',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: currentPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    filled: true,
+                    fillColor: Colors.white70,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE6EBEF),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF3b7292),
+                      ),
+                    ),
+                    floatingLabelStyle: const TextStyle(
+                      color: Color(0xFF3b7292),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureCurrentPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: const Color.fromARGB(255, 122, 137, 146),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureCurrentPassword = !_obscureCurrentPassword;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: _obscureCurrentPassword,
+                ),
+                const SizedBox(height: 16.0),
+                TextField(
+                  controller: newPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    filled: true,
+                    fillColor: Colors.white70,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE6EBEF),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF3b7292),
+                      ),
+                    ),
+                    floatingLabelStyle: const TextStyle(
+                      color: Color(0xFF3b7292),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureNewPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: const Color.fromARGB(255, 122, 137, 146),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureNewPassword = !_obscureNewPassword;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: _obscureNewPassword,
+                ),
+              ],
+            ),
+            backgroundColor: Colors.white,
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: Color(0xFF79A3B7)),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFF79A3B7)),
+                ),
               ),
-              obscureText: true,
-            ),
-            TextField(
-              controller: newPasswordController,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF79A3B7)),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                User? currentUser  = _auth.currentUser ;
-                if (currentUser  == null) throw Exception('No user is signed in.');
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    User? currentUser = _auth.currentUser;
+                    if (currentUser == null) throw Exception('No user is signed in.');
 
-                // Authenticate the current password
-                final credential = EmailAuthProvider.credential(
-                  email: currentUser .email!,
-                  password: currentPasswordController.text,
-                );
+                    // Authenticate the current password
+                    final credential = EmailAuthProvider.credential(
+                      email: currentUser.email!,
+                      password: currentPasswordController.text,
+                    );
 
-                await currentUser .reauthenticateWithCredential(credential);
+                    await currentUser.reauthenticateWithCredential(credential);
 
-                // Validate the new password
-                String newPassword = newPasswordController.text;
-                String? validationResult = _validatePassword(newPassword);
-                if (validationResult != null) {
-                  _showTopNotification(context, validationResult);
-                  return;
-                }
+                    // Validate the new password
+                    String newPassword = newPasswordController.text;
+                    String? validationResult = _validatePassword(newPassword);
+                    if (validationResult != null) {
+                      _showTopNotification(context, validationResult);
+                      return;
+                    }
 
-                // Update the password in Firebase Authentication
-                await currentUser .updatePassword(newPassword);
+                    // Update the password in Firebase Authentication
+                    await currentUser.updatePassword(newPassword);
 
-                // Close the dialog and show confirmation
-                Navigator.of(context).pop();
-                _showTopNotification(context, 'Password changed successfully!');
-              } catch (e) {
-                String errorMessage;
+                    // Close the dialog and show confirmation
+                    Navigator.of(context).pop();
+                    _showTopNotification(context, 'Password changed successfully!');
+                  } catch (e) {
+                    String errorMessage;
 
-                if (e is FirebaseAuthException) {
-                  switch (e.code) {
-                    case 'wrong-password':
-                      errorMessage = 'The current password is incorrect. Please try again.';
-                      break;
-                    case 'weak-password':
-                      errorMessage = 'The new password is too weak. Please choose a stronger password.';
-                      break;
-                    case 'requires-recent-login':
-                      errorMessage = 'Please re-login to change your password.';
-                      break;
-                    default:
+                    if (e is FirebaseAuthException) {
+                      switch (e.code) {
+                        case 'wrong-password':
+                          errorMessage = 'The current password is incorrect. Please try again.';
+                          break;
+                        case 'weak-password':
+                          errorMessage = 'The new password is too weak. Please choose a stronger password.';
+                          break;
+                        case 'requires-recent-login':
+                          errorMessage = 'Please re-login to change your password.';
+                          break;
+                        default:
+                          errorMessage = 'An error occurred. Please try again.';
+                          break;
+                      }
+                    } else {
                       errorMessage = 'An error occurred. Please try again.';
-                      break;
-                  }
-                } else {
-                  errorMessage = 'An error occurred. Please try again.';
-                }
+                    }
 
-                _showTopNotification(context, errorMessage);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF79A3B7),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+                    _showTopNotification(context, errorMessage);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF79A3B7),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'Change',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-            ),
-            child: const Text(
-              'Change',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       );
     },
   );
 }
+
 
 
 // Password validation method
