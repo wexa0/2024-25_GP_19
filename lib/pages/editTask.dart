@@ -715,11 +715,7 @@ await NotificationHandler.debugPendingNotifications();
     );
     await task.updateCompletionStatus(taskStatus);
 
-    _showTopNotification(progress == 1.0
-        ? 'Task marked as completed!'
-        : (taskStatus == 1
-            ? 'Task marked as pending!'
-            : 'Task marked as incomplete.'));
+
   }
 
   

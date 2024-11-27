@@ -1523,37 +1523,6 @@ int _generateNotificationId(String documentId) {
     }
   }
 
-  // void _preselectReminderBasedOnPriority(String priority) {
-  //   setState(() {
-  //     switch (priority) {
-  //       case 'Urgent':
-  //         selectedReminderOption = reminderOptions.firstWhere(
-  //             (option) => option['label'] == "10 minutes before",
-  //             orElse: () =>
-  //                 reminderOptions.first); // Default to the first option
-  //         break;
-  //       case 'High':
-  //         selectedReminderOption = reminderOptions.firstWhere(
-  //             (option) => option['label'] == "30 minutes before",
-  //             orElse: () => reminderOptions.first);
-  //         break;
-  //       case 'Normal':
-  //         selectedReminderOption = reminderOptions.firstWhere(
-  //             (option) => option['label'] == "1 day before",
-  //             orElse: () => reminderOptions.first);
-  //         break;
-  //       case 'Low':
-  //         selectedReminderOption = reminderOptions.firstWhere(
-  //             (option) => option['label'] == "1 day before",
-  //             orElse: () => reminderOptions.first);
-  //         break;
-  //       default:
-  //         selectedReminderOption =
-  //             reminderOptions.first; // Default to the first option
-  //     }
-  //   });
-  // }
-
   Map<String, Map<String, dynamic>?> subtaskReminders = {};
 
   void _pickSubtaskReminderTime(String subtask) async {

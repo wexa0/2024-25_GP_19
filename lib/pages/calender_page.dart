@@ -6,6 +6,7 @@ import 'package:flutter_application/models/DailyMessageManager';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/timer_selector.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lottie/lottie.dart';
@@ -132,7 +133,7 @@ class _CalendarPageState extends State<CalendarPage> {
         });
       }
     }
-
+  generateTaskIndicators();
     setState(() {
       isLoading = false;
     });
@@ -188,6 +189,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void addNewTask(Map<String, dynamic> newTask) {
     tasks.add(newTask);
     generateTaskIndicators();
+    setState(() {});
   }
 
   String getFormattedDate() {
@@ -302,6 +304,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     return [];
                   }
                   return _taskIndicators.containsKey(adjustedDay)
+                  
                       ? ['Task Indicator']
                       : [];
                 },
@@ -928,7 +931,8 @@ class _CalendarPageState extends State<CalendarPage> {
       tasks.removeWhere((t) => t['id'] == taskData['id']);
       getDayMessage();
     });
-
+  generateTaskIndicators(); 
+  setState(() {}); 
     // Show notification
     _showTopNotification("Task deleted successfully.");
   }
@@ -985,6 +989,7 @@ class _CalendarPageState extends State<CalendarPage> {
     // If result is true, refresh the task list
     if (result == true) {
       fetchTasksFromFirestore();
+      generateTaskIndicators(); 
     }
   }
 
@@ -1771,10 +1776,10 @@ class TaskCard extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.play_arrow),
-                      onPressed: () {
+                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => TimerPage()),
+                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], taskName: task['title'])),
                         );
                       },
                     ),
@@ -1863,12 +1868,11 @@ class TaskCard extends StatelessWidget {
                           trailing: IconButton(
                             icon: const Icon(Icons.play_arrow),
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => TimerPage()),
-                              );
-                            },
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], taskName: task['title'])),
+                        );
+                      },
                           ),
                         ),
                       );

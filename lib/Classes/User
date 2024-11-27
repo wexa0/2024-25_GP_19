@@ -489,7 +489,7 @@ Future<void> logout(BuildContext context) async {
               Navigator.of(context).pop(true);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: lightBlue,
+              backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
@@ -564,7 +564,7 @@ Future<void> logout(BuildContext context) async {
               Navigator.of(context).pop(true);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: lightBlue,
+              backgroundColor: Colors.red,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),

@@ -100,6 +100,7 @@ class HomePageState extends State<HomePage> {
     var selectedIndex = 0;
     return Scaffold(
       appBar: _currentIndex == 0 ? _buildAppBar() : null,
+      backgroundColor: const Color.fromARGB(255, 245, 247, 248),
       body: _pages[_currentIndex],
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,

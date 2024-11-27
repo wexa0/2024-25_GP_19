@@ -36,8 +36,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
 
       if (userDoc.exists && userDoc.data() != null) {
         var data = userDoc.data() as Map<String, dynamic>;
-        if (data.containsKey('preferences')) {
-          var preferences = data['preferences'];
+        if (data.containsKey('preference')) {
+          var preferences = data['preference'];
           setState(() {
             _focusMinutes = preferences['focusMinutes'];
             _shortBreakMinutes = preferences['shortBreakMinutes'];
@@ -466,7 +466,7 @@ Future<void> _initializeSettings() async {
             children: [
               _buildTopTimeBlock("Focus", _focusMinutes),
                 Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+                        color:Color.fromRGBO(16, 74, 115, 1),           // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
@@ -474,15 +474,15 @@ Future<void> _initializeSettings() async {
                       ),
               _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
                Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+                        color:Color.fromRGBO(16, 74, 115, 0.377),         // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
                          height: 0,   
-                      ), 
+                      ),
               _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
-                Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+               Divider(
+                        color:Color.fromRGBO(16, 74, 115, 1),           // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
