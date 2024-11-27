@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/authentication/login_page.dart';
 import 'package:flutter_application/authentication/signup__page.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
-import 'package:flutter_application/welcome_page.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -72,6 +71,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 4;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -90,16 +90,33 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
       backgroundColor: Color(0xFFF5F7F8),
       body: SafeArea(
         child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Center(
-                child: SingleChildScrollView(
+             ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    //loading 
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png', 
+                        width: 170,
+                        height: 170,
+                      ),
+                      const SizedBox(height: 0),
+                      Lottie.asset(
+                        'assets/animations/loading.json',
+                        width: 150,
+                        height: 150,
+                      ),
+                    ],
+                  ),
+                )
+            : SingleChildScrollView(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: 600),
                     child: Column(
                       children: [
                         SizedBox(height: 20),
                         Image.asset(
-                          'assets/images/logo.png', // Ensure the path matches your assets folder setup
+                          'assets/images/logo.png', 
                           width: 150,
                           height: 150,
                         ),
@@ -214,7 +231,15 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                   ),
                 ),
               ),
-      ),
-    );
+              bottomNavigationBar:GuestCustomNavigationBar(
+              selectedIndex: selectedIndex,
+              onTabChange: (index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+              },
+            ),
+      );
+    
   }
 }

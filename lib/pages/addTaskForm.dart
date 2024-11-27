@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application/Classes/Category';
+import 'package:flutter_application/Classes/SubTask';
+import 'package:flutter_application/Classes/Task';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -156,13 +159,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
       User? currentUser = await _getCurrentUser();
       if (currentUser == null) return null;
 
-      final DateTime taskDateTime = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
+    final DateTime taskDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
 
       DateTime? reminderDateTime;
 
@@ -689,7 +692,7 @@ int _generateNotificationId(String documentId) {
     );
   }
 
-  Widget _buildCategorySection() {
+ Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -739,7 +742,12 @@ int _generateNotificationId(String documentId) {
                 backgroundColor: Colors.grey[200],
                 onSelected: (bool selected) {
                   setState(() {
-                    selectedCategory = category;
+                    // If the selected category is already active, unselect it
+                    if (selectedCategory == category) {
+                      selectedCategory = '';
+                    } else {
+                      selectedCategory = category;
+                    }
                   });
                 },
               );
@@ -749,6 +757,7 @@ int _generateNotificationId(String documentId) {
       ],
     );
   }
+
 
   void _showCategoryEditDialog() {
     List<String> tempCategories = List.from(categories);

@@ -41,7 +41,7 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
 
       if (subtaskSnapshot.exists) {
         // Mark the subtask as complete
-        await subtaskSnapshot.reference.update({'completionStatus': 2});
+        await subtaskSnapshot.reference.update({'completionStatus': 1});
         print("Subtask $itemId marked as complete.");
       } else {
         final DocumentSnapshot taskSnapshot = await FirebaseFirestore.instance
@@ -61,7 +61,7 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
               .get();
 
           for (var subtaskDoc in subtaskSnapshot.docs) {
-            await subtaskDoc.reference.update({'completionStatus': 2});
+            await subtaskDoc.reference.update({'completionStatus': 1});
             print(
                 "Subtask ${subtaskDoc.id} of Task $itemId marked as complete.");
           }
@@ -73,6 +73,7 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
       print("Error updating completion status for $itemId: $e");
     }
   }
+
 
 
   static Future<void> _scheduleSnoozedNotification(

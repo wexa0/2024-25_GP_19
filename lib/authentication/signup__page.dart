@@ -107,6 +107,7 @@ class _SignUpPageState extends State<SignUpPage> {
           'lastName': _lastNameController.text.trim(),
           'email': _emailController.text.trim(),
           'dateOfBirth': _dobController.text.trim(),
+          'preference': [],
         });
 
         // Notify success

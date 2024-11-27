@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/chatbot_page.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:flutter_application/pages/profile_page.dart';
+import 'package:flutter_application/pages/progress_page.dart';
+import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
-class BottomNavBar extends StatelessWidget {
+//Nav bar for registered user.
+class CustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTabChange;
 
-  const BottomNavBar({
+  const CustomNavigationBar({
     Key? key,
     required this.selectedIndex,
     required this.onTabChange,
@@ -26,13 +32,48 @@ class BottomNavBar extends StatelessWidget {
         tabBorderRadius: 15,
         selectedIndex: selectedIndex,
         iconSize: 24,
-        onTabChange: onTabChange,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 1:
+                  return TaskPage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage(); 
+              }
+            }),
+          );
+        },
         tabs: const [
-          GButton(icon: Icons.home, text: 'Home'),
-          GButton(icon: Icons.task, text: 'Tasks'),
-          GButton(icon: Icons.sms, text: 'Chatbot'),
-          GButton(icon: Icons.poll, text: 'Progress'),
-          GButton(icon: Icons.person, text: 'Profile'),
+          GButton(
+            icon: Icons.home,
+            text: 'Home',
+          ),
+          GButton(
+            icon: Icons.task,
+            text: 'Tasks',
+          ),
+          GButton(
+            icon: Icons.sms,
+            text: 'Chatbot',
+          ),
+          GButton(
+            icon: Icons.poll,
+            text: 'Progress',
+          ),
+          GButton(
+            icon: Icons.person,
+            text: 'Profile',
+          ),
         ],
       ),
     );

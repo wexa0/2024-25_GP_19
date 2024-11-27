@@ -44,11 +44,11 @@ class Task {
       title: taskData['title'],
       scheduledDate: taskData['time'],
       priority: taskData['priority'],
-      reminder: [], // تعديل حسب الحاجة
-      timer: DateTime.now(), // تعديل حسب الحاجة
-      note: '', // تعديل حسب الحاجة
+      reminder: [],
+      timer: DateTime.now(),
+      note: '',
       completionStatus: taskData['completed'] ? 2 : 0,
-      userID: '', // تعديل حسب الحاجة
+      userID: '',
     );
   }
 
@@ -57,8 +57,6 @@ class Task {
       'completionStatus': status,
     });
   }
-
-
 
 
   // Update a task
@@ -136,7 +134,6 @@ return Task(
   priority: data['priority'],
   reminder: reminder,
   timer: (() {
-    // Attempt to parse timer field
     if (data['timer'] is Timestamp) {
       return (data['timer'] as Timestamp).toDate();
     } else if (data['timer'] is String) {
@@ -144,11 +141,11 @@ return Task(
         return DateTime.parse(data['timer']);
       } catch (e) {
         print("Invalid date format in timer field: ${data['timer']}");
-        return DateTime.now(); // Default value if parsing fails
+        return DateTime.now();
       }
     } else {
       print("Unexpected format for timer field: ${data['timer']}");
-      return DateTime.now(); // Default to current date/time
+      return DateTime.now(); 
     }
   })(),
   note: data['note'],

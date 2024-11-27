@@ -188,23 +188,25 @@ Map<String, bool> subtaskCompletionStatus = {};
           });
         }
 
-       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
-            .collection('SubTask')
-            .where('taskID', isEqualTo: widget.taskId)
-            .get();
+      QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+    .collection('SubTask')
+    .where('taskID', isEqualTo: widget.taskId)
+    .get();
 
-       List<String> fetchedSubtasks = [];
-        subtaskSnapshot.docs.forEach((doc) {
-          var subtaskData = doc.data() as Map<String, dynamic>;
-          String subtaskTitle = subtaskData['title'];
-          bool isCompleted =
-              subtaskData['completionStatus'] == 1; // Example value
+List<String> fetchedSubtasks = [];
+subtaskCompletionStatus.clear(); // Clear the existing map to avoid duplication
 
-          fetchedSubtasks.add(subtaskTitle);
-          subtaskCompletionStatus[subtaskTitle] = isCompleted;
+for (var doc in subtaskSnapshot.docs) {
+  var subtaskData = doc.data() as Map<String, dynamic>;
+  String subtaskTitle = subtaskData['title'];
+  bool isCompleted = subtaskData['completionStatus'] == 1; // Use Firestore data
 
-          subtaskControllers[subtaskTitle] =
-              TextEditingController(text: subtaskTitle);
+  fetchedSubtasks.add(subtaskTitle);
+  subtaskCompletionStatus[subtaskTitle] = isCompleted; // Populate the map
+
+  subtaskControllers[subtaskTitle] =
+      TextEditingController(text: subtaskTitle);
+
 
           // Load reminder data
           if (subtaskData['reminder'] != null) {
@@ -230,7 +232,7 @@ Map<String, bool> subtaskCompletionStatus = {};
           } else {
             subtaskReminders[subtaskTitle] = null;
           }
-        });
+        };
 
         setState(() {
           subtasks = fetchedSubtasks;
@@ -424,48 +426,50 @@ for (String subtask in subtasks) {
   }
 
 
-  Future<void> _handleCategoryChanges() async {
+ Future<void> _handleCategoryChanges() async {
     if (selectedCategory.isEmpty) return;
 
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    QuerySnapshot oldCategorySnapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('taskIDs', arrayContains: widget.taskId)
-        .where('userID', isEqualTo: currentUser.uid)
-        .get();
+    try {
+      // Remove task from any old category
+      QuerySnapshot oldCategorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('taskIDs', arrayContains: widget.taskId)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
 
-    if (oldCategorySnapshot.docs.isNotEmpty) {
-      DocumentReference oldCategoryRef =
-          oldCategorySnapshot.docs.first.reference;
-      await oldCategoryRef.update({
-        'taskIDs': FieldValue.arrayRemove([widget.taskId])
-      });
-    }
+      for (var oldCategoryDoc in oldCategorySnapshot.docs) {
+        await oldCategoryDoc.reference.update({
+          'taskIDs': FieldValue.arrayRemove([widget.taskId])
+        });
+      }
 
-    QuerySnapshot newCategorySnapshot = await FirebaseFirestore.instance
-        .collection('Category')
-        .where('categoryName', isEqualTo: selectedCategory)
-        .where('userID', isEqualTo: currentUser.uid)
-        .get();
+      // Add task to the selected category
+      QuerySnapshot newCategorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('categoryName', isEqualTo: selectedCategory)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
 
-    if (newCategorySnapshot.docs.isNotEmpty) {
-      DocumentReference newCategoryRef =
-          newCategorySnapshot.docs.first.reference;
-      await newCategoryRef.update({
-        'taskIDs': FieldValue.arrayUnion([widget.taskId])
-      });
-    } else {
-      DocumentReference newCategoryRef =
-          FirebaseFirestore.instance.collection('Category').doc();
-      await newCategoryRef.set({
-        'categoryName': selectedCategory,
-        'userID': currentUser.uid,
-        'taskIDs': [widget.taskId],
-      });
+      if (newCategorySnapshot.docs.isNotEmpty) {
+        await newCategorySnapshot.docs.first.reference.update({
+          'taskIDs': FieldValue.arrayUnion([widget.taskId])
+        });
+      } else {
+        // If the category does not exist, create it
+        await FirebaseFirestore.instance.collection('Category').add({
+          'categoryName': selectedCategory,
+          'userID': currentUser.uid,
+          'taskIDs': [widget.taskId],
+        });
+      }
+    } catch (e) {
+      print('Failed to handle category changes: $e');
     }
   }
+
 
   Future<void> _deleteTask() async {
     try {
@@ -697,9 +701,9 @@ await NotificationHandler.debugPendingNotifications();
     }
 
     // Update task completion status using the Task method
-    int taskStatus = 0; // Default to incomplete
+    int taskStatus = 0; 
     if (progress == 1.0) {
-      taskStatus = 2; // All subtasks completed
+      taskStatus = 2; 
     } else if (subtaskCompletionStatus.values.any((completed) => completed)) {
       taskStatus = 1; // At least one subtask completed
     }
@@ -818,7 +822,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
               children: [
                  _buildProgressBar(), 
                 SizedBox(height: 12),
-                
                 _buildTaskTitleSection(),
                 SizedBox(height: 20),
                 _buildSubtaskSection(),
@@ -1097,8 +1100,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
       ),
     );
   }
-
-  Widget _buildCategorySection() {
+Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1116,13 +1118,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   fontSize: 16,
                   color: darkGray,
                 ),
-              ),
-              Spacer(),
-              IconButton(
-                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
-                onPressed: () {
-                  _showCategoryEditDialog();
-                },
               ),
             ],
           ),
@@ -1146,10 +1141,24 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                 selected: selectedCategory == category,
                 selectedColor: Color(0xFF3B7292),
                 backgroundColor: Colors.grey[200],
-                onSelected: (bool selected) {
-                  setState(() {
-                    selectedCategory = category;
-                  });
+                onSelected: (bool selected) async {
+                  if (selectedCategory == category) {
+                    // Unselect and update Firestore
+                    await _updateCategoryInFirestore(remove: true);
+                    setState(() {
+                      selectedCategory = ''; // Unselect category
+                    });
+                  } else {
+                    // Switch to the new category and update Firestore
+                    if (selectedCategory.isNotEmpty) {
+                      // Remove from the previous category
+                      await _updateCategoryInFirestore(remove: true);
+                    }
+                    setState(() {
+                      selectedCategory = category; // Select the new category
+                    });
+                    await _updateCategoryInFirestore(remove: false);
+                  }
                 },
               );
             }).toList(),
@@ -1158,6 +1167,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
       ],
     );
   }
+
 
   void _showCategoryEditDialog() {
     List<String> tempCategories = List.from(categories);
@@ -1524,6 +1534,38 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         ) ??
         false;
   }
+  Future<void> _updateCategoryInFirestore({required bool remove}) async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || selectedCategory.isEmpty) return;
+
+    try {
+      QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('categoryName', isEqualTo: selectedCategory)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      if (categorySnapshot.docs.isNotEmpty) {
+        DocumentReference categoryRef = categorySnapshot.docs.first.reference;
+
+        if (remove) {
+          // Remove the task ID from the category
+          await categoryRef.update({
+            'taskIDs': FieldValue.arrayRemove([widget.taskId])
+          });
+        } else {
+          // Add the task ID to the category
+          await categoryRef.update({
+            'taskIDs': FieldValue.arrayUnion([widget.taskId])
+          });
+        }
+      }
+    } catch (e) {
+      print('Failed to update category in Firestore: $e');
+      _showTopNotification('Error updating category. Please try again.');
+    }
+  }
+
 
   void showDeleteConfirmationDialog() {
     showDialog(
@@ -1858,7 +1900,7 @@ Widget _buildSubtaskSection() {
                         print("Failed to delete subtask: $e");
                       }
                     },
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color(0xFFC2C2C2),
                     foregroundColor: Colors.white,
                     icon: Icons.delete,
                     label: 'Delete',
@@ -1895,7 +1937,7 @@ Widget _buildSubtaskSection() {
                             doc.reference.update({
                               'completionStatus':
                                   subtaskCompletionStatus[subtask] == true
-                                      ? 2
+                                      ? 1
                                       : 0,
                             });
                           }

@@ -1,9 +1,6 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,7 +11,6 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
-import 'package:flutter_application/models/BottomNavigationBar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,13 +50,13 @@ class HomePageState extends State<HomePage> {
     _fetchUserData(); // Fetch user data when the widget is initialized
 
     super.initState();
-     final List<Widget> _pages = [
-    HomePage(), // الصفحة الرئيسية
-    TaskPage(), // صفحة المهام
-    ChatbotpageWidget(), // صفحة الشات بوت
-    ProgressPage(), // صفحة التقدم
-    ProfilePage(), // صفحة الملف الشخصي
-  ];
+    _pages.addAll([
+      HomePageContent(onTabChange: onTabChange), // Pass the callback here
+      TaskPage(),
+      ChatbotpageWidget(),
+      ProgressPage(),
+      ProfilePage(),
+    ]);
   }
 
   void onTabChange(int index) {
@@ -101,13 +97,32 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 0;
     return Scaffold(
       appBar: _currentIndex == 0 ? _buildAppBar() : null,
-      backgroundColor: const Color.fromARGB(255, 245, 247, 248),
-      body: _pages[_currentIndex], // Show the current page
-      bottomNavigationBar: BottomNavBar(
-        selectedIndex: _currentIndex,
-        onTabChange: onTabChange,
+      body: _pages[_currentIndex],
+      bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+        onTabChange: (index) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) {
+              // قم بإرجاع الصفحة بناءً على الـindex
+              switch (index) {
+                case 0:
+                  return HomePage();
+                case 2:
+                  return ChatbotpageWidget();
+                case 3:
+                  return ProgressPage();
+                case 4:
+                  return ProfilePage();
+                default:
+                  return TaskPage();
+              }
+            }),
+          );
+        },
       ),
     );
   }
@@ -333,7 +348,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(1); // Navigate to TaskPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TaskPage(),
+                          ),
+                        ); // Navigate to TaskPage
                       },
                       child: Container(
                         height: 110,
@@ -476,7 +496,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 17, top: 10, right: 6),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(3); // Navigate to ProgressPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProgressPage(),
+                          ),
+                        ); // Navigate to ProgressPage
                       },
                       child: Container(
                         height: 110,
@@ -543,7 +568,12 @@ class HomePageContentState extends State<HomePageContent> {
                     padding: const EdgeInsets.only(left: 6, top: 10, right: 17),
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTabChange(2); // Navigate to ChatbotpageWidget
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatbotpageWidget(),
+                          ),
+                        ); // Navigate to ChatbotpageWidget
                       },
                       child: Container(
                         height: 110,

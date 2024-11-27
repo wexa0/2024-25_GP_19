@@ -104,11 +104,10 @@ class WelcomePage extends StatelessWidget {
                         child: TextButton(
                           onPressed: () {
                             // Navigate to attentionlens
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      GuestHomePage()), // Navigate to LoginPage
+                                  builder: (context) => GuestHomePage()),
                             );
                           },
                           style: TextButton.styleFrom(

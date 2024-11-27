@@ -18,6 +18,14 @@ class Category {
     await FirebaseFirestore.instance.collection('Category').doc(category.categoryID).set({
       'categoryName': category.categoryName,
       'userID': category.userID,
+      'taskIDs': [],
+    });
+  }
+
+  // Link a task to an existing category
+  static Future<void> linkTaskToCategory(String categoryID, String taskID) async {
+    await FirebaseFirestore.instance.collection('Category').doc(categoryID).update({
+      'taskIDs': FieldValue.arrayUnion([taskID]),
     });
   }
 
@@ -50,3 +58,4 @@ class Category {
   };
 }
 }
+

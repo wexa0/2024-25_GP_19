@@ -1,0 +1,67 @@
+import 'dart:math';
+
+class DailyMessageManager {
+
+
+  // List for empty list state
+  static const List<String> emptyStateMessages = [
+    "A new day, a new opportunity\n to achieve your goals!✨",
+    "Today is a blank canvas – make it\n productive!🚀",
+    "No tasks yet! Ready to conquer new challenges?🌟",
+    "Set your intentions for the day and\n take the first step!🎯",
+    "Every small step counts. What will you accomplish today?✨",
+    "Organize your day, and see\n the magic unfold!📅",
+    "Great things come to those who plan.\n Start adding your tasks!💡",
+    "A goal without a plan is just\n a wish. Start planning!🌟",
+    "Don’t wait for inspiration. Start\n planning and watch it come!🚀",
+    "Big ideas need small actions.\n What’s the first move today? 🤔",
+    "Visualize your success. Now, let’s\n take one small action toward it! 🌟",
+    "Feeling scattered? Choose one priority \n and dive in – progress feels amazing! 💡",
+    "Even a 5-minute task can make\na difference. Pick one and go!⏱",
+  ];
+
+  // List for complete list state
+  static const List<String> completionMessages = [
+    "Awesome job! You've conquered your\n to-do list today! 🌟",
+    "Way to go! Every task is completed.\n Keep up the great work! 🎉",
+    "You did it! Take a break,\n you've earned it. ✨",
+    "Mission accomplished! You're unstoppable! 🚀",
+    "All tasks completed! Time\n to relax and recharge. 🏆",
+    "Great job! You've been super\n productive today. 🎈",
+    "Excellent! Every task is ticked\n off. Keep this momentum going! 💪",
+    "Fantastic work! Enjoy some free\n time, you've earned it! 🌈",
+    "Brilliant effort! You've completed\n everything for today! 🙌",
+    "Amazing! Your to-do list is\n empty. Relax and enjoy your success! 🎊",
+    "Success! You've wrapped up all your \ntasks. Keep it going! 🎯",
+    "Wonderful! You've achieved all\n your goals for today. 🌟",
+    "Outstanding! All tasks done and\n dusted. Keep shining! 🔥",
+    "Phenomenal! You rocked your to-do\n list. Take a well-deserved break. 💼",
+    "You nailed it! No tasks left, you've\n been productive! 🥳",
+    "Victory! You've completed every task\n on your list. Great job! 🏅",
+    "Unstoppable! You've checked off\n everything for today. Celebrate! 🎉",
+    "Champion! All tasks are done. You're on a roll! 🥇",
+    "Incredible! Every single task is \ncompleted. Enjoy the day! 🌞",
+    "You’re a superstar! No tasks left.\n Keep being awesome! 🌟"
+  ];
+
+  /// Returns a consistent message for the day based on the provided list.
+  static String getFixedMessageForDay(List<String> messages) {
+    final today = DateTime.now();
+    final dateKey = "${today.year}-${today.month}-${today.day}"; // Unique key for the day
+    final hash = dateKey.hashCode; // Generate a hash based on the date
+    final random = Random(hash); // Use the hash as a seed
+    final index = random.nextInt(messages.length); // Consistent random index
+    return messages[index];
+  }
+
+  /// Returns the appropriate message for the current day based on task completion.
+  static String getDayMessage(List<Map<String, dynamic>> tasks) {
+    if (tasks.isEmpty) {
+      return getFixedMessageForDay(emptyStateMessages);
+    } else if (tasks.every((task) => task['completed'] == true)) {
+      return getFixedMessageForDay(completionMessages);
+    } else {
+      return "Keep pushing forward! You're doing great! 🚀";
+    }
+  }
+}

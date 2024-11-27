@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/welcome_page.dart';
-import 'dart:io'; // For File type
-//import 'dart:html' as html; // Import for web detection
-import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_application/Classes/User';
 import 'guest_profile_page.dart';
 
@@ -66,6 +63,7 @@ void _refreshUserData() {
 
   @override
   Widget build(BuildContext context) {
+    var selectedIndex = 4 ;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -84,7 +82,25 @@ void _refreshUserData() {
       backgroundColor: Color(0xFFF5F5F5),
       body: SafeArea(
         child: isLoading
-            ? const Center(child: CircularProgressIndicator())
+             ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    //loading 
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png', 
+                        width: 170,
+                        height: 170,
+                      ),
+                      const SizedBox(height: 0),
+                      Lottie.asset(
+                        'assets/animations/loading.json',
+                        width: 150,
+                        height: 150,
+                      ),
+                    ],
+                  ),
+                )
             : SingleChildScrollView(
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -288,6 +304,14 @@ void _refreshUserData() {
                   ],
                 ),
               ),
+      ),
+        bottomNavigationBar: CustomNavigationBar(
+        selectedIndex: selectedIndex,
+  onTabChange: (index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  },
       ),
     );
   }

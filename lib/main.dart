@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:flutter_application/services/notification_handler.dart'; // Import the new utility
 import 'package:flutter_application/pages/task_page.dart';
+import 'package:flutter_application/pages/home.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -71,10 +73,30 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AttentionLens',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const WelcomePage(), // Set the initial page to WelcomePage
+      home: const AuthWrapper(), 
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading spinner while waiting for auth state
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasData) {
+          // User is logged in, navigate to HomePage
+          return HomePage();
+        } else {
+          // User is not logged in, navigate to WelcomePage
+          return const WelcomePage();
+        }
+      },
     );
   }
 }
