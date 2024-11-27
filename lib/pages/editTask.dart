@@ -237,6 +237,24 @@ for (var doc in subtaskSnapshot.docs) {
         setState(() {
           subtasks = fetchedSubtasks;
           _updateProgress();
+          if (progress == 1.0) {
+    FirebaseFirestore.instance
+        .collection('Task')
+        .doc(widget.taskId)
+        .update({'completionStatus': 2});
+  } else if (progress > 0.0) {
+
+    FirebaseFirestore.instance
+        .collection('Task')
+        .doc(widget.taskId)
+        .update({'completionStatus': 1});
+  } else {
+
+    FirebaseFirestore.instance
+        .collection('Task')
+        .doc(widget.taskId)
+        .update({'completionStatus': 0});
+  }
         });
 
 
@@ -695,12 +713,17 @@ await NotificationHandler.debugPendingNotifications();
     }
 
     // Update task completion status using the Task method
+    int completedSubtasks = subtaskCompletionStatus.values.where((status) => status).length;
+
     int taskStatus = 0; 
-    if (progress == 1.0) {
-      taskStatus = 2; 
-    } else if (subtaskCompletionStatus.values.any((completed) => completed)) {
-      taskStatus = 1; // At least one subtask completed
-    }
+    if (completedSubtasks == 0) {
+  taskStatus = 0; 
+} else if (completedSubtasks == subtaskCompletionStatus.length) {
+  taskStatus = 2; 
+} else {
+  taskStatus = 1;
+}
+
 
     Task task = Task(
       taskID: widget.taskId,
@@ -998,9 +1021,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                 );
                 await task.updateCompletionStatus(taskStatus);
 
-                _showTopNotification(isTaskComplete
-                    ? 'Task marked as completed!'
-                    : 'Task marked as incomplete.');
               },
               child: Container(
                 width: 24.0,
@@ -1884,6 +1904,7 @@ Widget _buildSubtaskSection() {
                               ? completedSubtasks / subtasks.length
                               : 0.0;
                         });
+                    _showTopNotification("Subtask deleted successfully.");
 
                         print("Subtask $subtask deleted successfully.");
                       } catch (e) {
@@ -1893,7 +1914,7 @@ Widget _buildSubtaskSection() {
                     backgroundColor: const Color(0xFFC2C2C2),
                     foregroundColor: Colors.white,
                     icon: Icons.delete,
-                    label: 'Delete',
+
                   ),
                 ],
               ),
@@ -2011,7 +2032,7 @@ Widget _buildSubtaskSection() {
               ),
               suffixIcon: IconButton(
                 icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
-                onPressed: () {
+                onPressed: () async {
                   if (subtaskController.text.isNotEmpty) {
                     setState(() {
                       subtasks.add(subtaskController.text);
@@ -2029,7 +2050,26 @@ Widget _buildSubtaskSection() {
                           ? completedSubtasks / subtasks.length
                           : 0.0;
                     });
+                      DocumentReference newSubtaskRef =
+                    FirebaseFirestore.instance.collection('SubTask').doc();
+
+                    await newSubtaskRef.set({
+                      'completionStatus': 0,
+                      'taskID': widget.taskId,
+                      'title': subtasks.last,
+                      'reminder': null, 
+                    });
+
+                    // تحديث حالة المهمة لتصبح غير مكتملة
+                    await FirebaseFirestore.instance
+                        .collection('Task')
+                        .doc(widget.taskId)
+                        .update({
+                      'completionStatus': 0, 
+                    });
+                    
                   }
+                  
                 },
               ),
             ),

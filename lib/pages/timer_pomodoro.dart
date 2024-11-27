@@ -66,6 +66,7 @@ Timer? _timer;
 
   // Start the timer
 void _startTimer() {
+  if (mounted) {
   setState(() {
     _isRunning = true;
     if (_isFocusTime) {
@@ -87,9 +88,11 @@ void _startTimer() {
     }
     _timerText = _formatTime(_elapsedTime);
   });
+  }
 
   _timer = Timer.periodic(Duration(seconds: 1), (timer) {
     if (_elapsedTime > 0) {
+      if (mounted) {
       setState(() {
         _elapsedTime--;
         _timerText = _formatTime(_elapsedTime);
@@ -108,6 +111,7 @@ void _startTimer() {
           }
         }
       });
+      }
     } else {
       _stopTimer(); // Stop the timer when it reaches zero
     }
@@ -119,27 +123,35 @@ void _startTimer() {
 
   // Stop the timer
   void _stopTimer() {
-  setState(() {
-    _isRunning = false;
-  });
-
     _timer?.cancel();
   
+    if (mounted) {
+    setState(() {
+      _isRunning = false;
+    });
+  }
+
   _playEndSound();
 
   // After focus time ends, switch to break time
   if (_isFocusTime) {
+    
+    if (mounted) {
     setState(() {
       _isFocusTime = false; // Switch to break time
     });
+    }
   } else {
     // After break time, check if we need to switch to long break or back to focus time
     if (_completedRounds < widget.rounds - 1) {
       // If not the last round, increment the round and go back to focus time
+      
+    if (mounted) {
       setState(() {
         _isFocusTime = true; // Switch back to focus time
         displayshow = true; // Ensure the "LONG BREAK" text shows first
       });
+    }
       _completedRounds++; // Increment completed rounds after short break
     } else {
       // *Before transitioning to long break, show dialog*
@@ -359,9 +371,12 @@ void dispose() {
                   print("Completed Rounds: $_completedRounds");
                   _startTimer(); // Start the timer
                 }
+                
+                if (mounted) {
                 setState(() {
                   //isCompletionDialogShown = true; // Set the flag to true when the dialog is shown
                 });
+                }
               },
             ),
             TextButton(
@@ -412,9 +427,11 @@ void _resetTimer() {
       _pauseCount = 0; // Reset pause count after showing warning
     }
 
+    if (mounted) {
     setState(() {
       _isRunning = false; // Simply stop the timer without resetting the elapsed time
     });
+    }
 
     _timer?.cancel(); // Just pause the timer, no reset of elapsed time
   }
@@ -443,33 +460,46 @@ void _resetTimer() {
   }
 
   // Function to update Firestore when task is completed
-  Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
-  if(taskId ==subTaskID ){
-  try {
-    // Reference to the task document in Firestore using the taskId
-    DocumentReference taskRef = FirebaseFirestore.instance.collection('Task').doc(taskId);
+Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
+  if (taskId == subTaskID) {
+    // Mark main task as complete
+    await FirebaseFirestore.instance
+        .collection('Task')
+        .doc(taskId)
+        .update({'completionStatus': 2});
 
-    // Update the 'completionStatus' field to 2 (Completed)
-    await taskRef.update({'completionStatus': 2});
+    // Update all associated subtasks
+    QuerySnapshot subtasksSnapshot = await FirebaseFirestore.instance
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskId)
+        .get();
 
-     
-  } catch (e) {
-    print("Error updating task completion: $e");
+    for (var doc in subtasksSnapshot.docs) {
+      await doc.reference.update({'completionStatus': 1});
+    }
+  } else {
+    // Mark only the specific subtask as complete
+    await FirebaseFirestore.instance
+        .collection('SubTask')
+        .doc(subTaskID)
+        .update({'completionStatus': 1});
+
+    // Check if all subtasks are complete and update the main task
+    QuerySnapshot subtasksSnapshot = await FirebaseFirestore.instance
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskId)
+        .get();
+
+    bool allSubtasksComplete = subtasksSnapshot.docs
+        .every((doc) => doc['completionStatus'] == 1);
+
+    await FirebaseFirestore.instance
+        .collection('Task')
+        .doc(taskId)
+        .update({'completionStatus': allSubtasksComplete ? 2 : 0});
   }
-}else 
-if(taskId !=subTaskID ){
-  try {
-    // Reference to the task document in Firestore using the taskId
-    DocumentReference taskRef = FirebaseFirestore.instance.collection('SubTask').doc(subTaskID);
+}
 
-    // Update the 'completionStatus' field to 2 (Completed)
-    await taskRef.update({'completionStatus': 1});
-
-     
-  } catch (e) {
-    print("Error updating subtask completion: $e");
-  }
-}}
 
 
 

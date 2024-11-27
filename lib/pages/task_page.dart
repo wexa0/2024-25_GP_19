@@ -165,10 +165,8 @@ class TaskPageState extends State<TaskPage> {
       completionStatus: subtaskData['completed'] ? 1 : 0,
     );
 
-    // Call the instance method deleteSubTask from subtask class.
     await subtask.deleteSubTask();
 
-    // Remove the subtask locally and update the UI
     setState(() {
       final taskIndex = tasks.indexWhere((t) => t['id'] == taskData['id']);
       if (taskIndex != -1) {
@@ -176,6 +174,29 @@ class TaskPageState extends State<TaskPage> {
             .removeWhere((s) => s['id'] == subtask.subTaskID);
       }
     });
+    bool allSubtasksComplete = taskData['subtasks'].isEmpty ||
+      taskData['subtasks'].every((s) => s['completed'] == true);
+
+  if (allSubtasksComplete) {
+    await FirebaseFirestore.instance
+        .collection('Task')
+        .doc(taskData['id'])
+        .update({'completionStatus': 2});
+
+    setState(() {
+      taskData['completed'] = true;
+    });
+  } else {
+   
+    await FirebaseFirestore.instance
+        .collection('Task')
+        .doc(taskData['id'])
+        .update({'completionStatus': 1}); 
+
+    setState(() {
+      taskData['completed'] = false;
+    });
+  }
 
     // Show notification
     _showTopNotification("Subtask deleted successfully.");
@@ -1240,6 +1261,7 @@ class TaskPageState extends State<TaskPage> {
                                           toggleSubtaskCompletion(
                                               task, subtask),
                                       onSubtaskDeleted: (subtask) async {
+                                        
                                         // Create an instance of SubTask from the subtask data
                                         SubTask subtaskInstance = SubTask(
                                           subTaskID: subtask['id'],
@@ -1250,10 +1272,13 @@ class TaskPageState extends State<TaskPage> {
                                         );
                                         await subtaskInstance.deleteSubTask();
                                         setState(() {
+                                          
                                           task['subtasks'].remove(subtask);
+                                          
                                         });
                                         _showTopNotification(
                                             "Subtask deleted successfully.");
+                                      
                                       },
                                       getPriorityColor: getPriorityColor,
                                       onDeleteTask: () =>
@@ -1712,29 +1737,50 @@ class TaskCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.play_arrow),
-                   onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], subTaskID: task['id'], subTaskName: task['title'],taskName: task['title'])),
-                        );
-                      },
-                    ),
-                    if (task['subtasks'] != null &&
-                        task['subtasks']
-                            .isNotEmpty) // Show arrow if subtasks are present
-                      IconButton(
-                        icon: Icon(task['expanded']
-                            ? Icons.expand_less
-                            : Icons.expand_more),
-                        onPressed: onExpandToggle,
-                      ),
-                  ],
+   trailing: Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Tooltip(
+      message: task['completed']
+          ? "This task is already complete!" // Hint for completed task
+          : "Start task timer", // Hint for incomplete task
+      showDuration: Duration(milliseconds: 500), // Hint display duration
+      child: InkWell(
+        onTap: () {
+          if (task['completed']) {
+            // لا تفعل شيئاً لأن المهمة مكتملة
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TimerSelectionPage(
+                  taskId: task['id'],
+                  subTaskID: task['id'],
+                  subTaskName: task['title'],
+                  taskName: task['title'],
                 ),
+              ),
+            );
+          }
+        },
+        child: Icon(
+          Icons.play_arrow,
+          color: task['completed'] ? Colors.grey : Colors.grey, // Grey for completed task
+        ),
+      ),
+    ),
+    if (task['subtasks'] != null && task['subtasks'].isNotEmpty)
+      IconButton(
+        icon: Icon(task['expanded'] ? Icons.expand_less : Icons.expand_more),
+        onPressed: onExpandToggle,
+      ),
+  ],
+),
+
+
+
+
+
               ),
               if (task['expanded'] &&
                   task['subtasks'] != null &&
@@ -1810,23 +1856,33 @@ class TaskCard extends StatelessWidget {
                                   : TextDecoration.none,
                             ),
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.play_arrow),
-                            onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TimerSelectionPage(
-                                  taskId: task['id'] ?? '',
-                                  subTaskID: subtask['id'] ?? '',
-                                  subTaskName: subtask['title'] ?? '',
-                                  taskName: task['title'] ?? '',
-                                ),
-                              ),
-                            );
+                    trailing: Tooltip(
+  message: subtask['completed']
+      ? 'This subtask is already complete!' // Hint if subtask is complete
+      : 'Start subtask timer', // Hint if subtask is not complete
+  child: IconButton(
+    icon: Icon(Icons.play_arrow,
+        color: subtask['completed'] ? Colors.grey : Colors.grey), // Grey for completed, Blue for not
+    onPressed: subtask['completed']
+        ? null // Disable the button if the subtask is complete
+        : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TimerSelectionPage(
+                  taskId: task['id'] ?? '',
+                  subTaskID: subtask['id'] ?? '',
+                  subTaskName: subtask['title'] ?? '',
+                  taskName: task['title'] ?? '',
+                ),
+              ),
+            );
+          },
+  ),
+),
 
-                            },
-                          ),
+
+
                         ),
                       );
                     }).toList(),
