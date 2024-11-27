@@ -313,13 +313,12 @@ for (var doc in subtaskSnapshot.docs) {
         await NotificationHandler.cancelNotification(
             widget.taskId); // Cancel old reminder
         await _scheduleTaskNotification(
-          taskId: widget.taskId, // Task ID
-          taskTitle: taskNameController.text, // Task title
+          taskId: widget.taskId, 
+          taskTitle: taskNameController.text, 
           scheduledDateTime: reminderDateTime, // New reminder time
         );
       }
 
-      // Handle category changes
       await _handleCategoryChanges();
 
       // Delete removed subtasks from Firestore
@@ -521,7 +520,6 @@ await NotificationHandler.debugPendingNotifications();
           .delete();
 
       _showTopNotification('Task deleted successfully!');
-      // Pop back to the TaskPage
       Navigator.pop(
           context, true); // Passing `true` to indicate successful deletion
     } catch (e) {
@@ -596,7 +594,6 @@ await NotificationHandler.debugPendingNotifications();
           selectedTime.minute,
         );
 
-        // Convert it to Firebase Timestamp
         Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
 
         // Check for existing tasks with the same date and time
@@ -614,12 +611,10 @@ await NotificationHandler.debugPendingNotifications();
           return;
         }
 
-        // Save changes to Firebase
         await _saveChangesToFirebase();
 
         _showTopNotification('Task updated successfully!');
 
-        // Navigate back to TaskPage
         Navigator.pop(
             context, true); // Returning `true` to indicate a task update
       } catch (e) {
@@ -663,7 +658,7 @@ await NotificationHandler.debugPendingNotifications();
   }
   void _updateProgress() {
     if (subtasks.isEmpty) {
-      progress = 0.0; // No progress for tasks without subtasks
+      progress = 0.0; 
     } else {
       int completedSubtasks =
           subtaskCompletionStatus.values.where((completed) => completed).length;
@@ -683,7 +678,6 @@ await NotificationHandler.debugPendingNotifications();
           subtasks.isNotEmpty ? completedSubtasks / subtasks.length : 0.0;
     });
 
-    // Update subtask completion status in Firestore using SubTask method
     QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
         .collection('SubTask')
         .where('taskID', isEqualTo: widget.taskId)
@@ -769,7 +763,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         'Reminder for your task scheduled at $scheduledDateTime',
         scheduledTZDateTime,
         platformDetails,
-        payload: taskId, // Store taskId in the payload
+        payload: taskId, 
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -799,7 +793,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         appBar: AppBar(
           backgroundColor: Color(0xFFEAEFF0),
           elevation: 0,
-          centerTitle: true, // لضبط العنوان في المنتصف
+          centerTitle: true, 
 
           title: Center(
             child: Text(
@@ -846,7 +840,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(160, 50), // Set width and height
+                        minimumSize: Size(160, 50), 
                       ),
                       child: Text(
                         'Delete Task',
@@ -863,7 +857,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(160, 50), // Set width and height
+                        minimumSize: Size(160, 50), 
                       ),
                       child: Text(
                         'Save Changes',
@@ -969,7 +963,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
           children: [
             GestureDetector(
               onTap: () async {
-                bool isTaskComplete = progress < 1.0; // Toggle task completion
+                bool isTaskComplete = progress < 1.0; 
 
                 setState(() {
                   // Update all subtasks' completion statuses
@@ -979,7 +973,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   progress = isTaskComplete ? 1.0 : 0.0;
                 });
 
-                // Update all subtasks in Firestore using the SubTask method
                 QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
                     .collection('SubTask')
                     .where('taskID', isEqualTo: widget.taskId)
@@ -995,7 +988,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   await subTask.updateCompletionStatus(isTaskComplete ? 1 : 0);
                 }
 
-                // Update task completion status using the Task method
                 int taskStatus = isTaskComplete ? 2 : 0;
                 Task task = Task(
                   taskID: widget.taskId,
@@ -1143,19 +1135,17 @@ Widget _buildCategorySection() {
                 backgroundColor: Colors.grey[200],
                 onSelected: (bool selected) async {
                   if (selectedCategory == category) {
-                    // Unselect and update Firestore
                     await _updateCategoryInFirestore(remove: true);
                     setState(() {
-                      selectedCategory = ''; // Unselect category
+                      selectedCategory = ''; 
                     });
                   } else {
                     // Switch to the new category and update Firestore
                     if (selectedCategory.isNotEmpty) {
-                      // Remove from the previous category
                       await _updateCategoryInFirestore(remove: true);
                     }
                     setState(() {
-                      selectedCategory = category; // Select the new category
+                      selectedCategory = category; 
                     });
                     await _updateCategoryInFirestore(remove: false);
                   }
@@ -1572,7 +1562,7 @@ Widget _buildCategorySection() {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: lightGray, // Use the light gray as the background
+          backgroundColor: lightGray, 
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
@@ -1580,7 +1570,6 @@ Widget _buildCategorySection() {
             'Are you sure you want to delete this task?',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              // Match title text color with your dark gray
             ),
           ),
           actions: [
@@ -1590,7 +1579,7 @@ Widget _buildCategorySection() {
               },
               style: TextButton.styleFrom(
                 foregroundColor:
-                    mediumBlue, // Use mediumBlue for the Cancel button
+                    mediumBlue, 
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
@@ -1599,7 +1588,7 @@ Widget _buildCategorySection() {
             ),
             ElevatedButton(
               onPressed: () {
-                _deleteTask(); // Call the delete method
+                _deleteTask(); 
                 Navigator.of(context).pop(); // Close dialog after deleting
               },
               style: ElevatedButton.styleFrom(
@@ -1612,7 +1601,7 @@ Widget _buildCategorySection() {
               child: const Text(
                 'Delete',
                 style: TextStyle(
-                  color: Colors.white, // White text on Delete button
+                  color: Colors.white, 
                   fontWeight: FontWeight.bold,
                 ),
               ),
