@@ -8,6 +8,8 @@ import 'package:audioplayers/audioplayers.dart';  //audio import
 class TimerPomodoro extends StatefulWidget {
   final String taskId;   // The task ID
   final String taskName; // The task name
+  final String subTaskID;
+  final String subTaskName;
   final int focusMinutes;
   final int shortBreakMinutes;
   final int longBreakMinutes;
@@ -17,6 +19,8 @@ class TimerPomodoro extends StatefulWidget {
   TimerPomodoro({
     required this.taskId,
     required this.taskName,
+    required this.subTaskID,
+    required this.subTaskName,
     required this.focusMinutes,
     required this.shortBreakMinutes,
     required this.longBreakMinutes,
@@ -28,7 +32,9 @@ class TimerPomodoro extends StatefulWidget {
 }
 
 class _TimerPageState extends State<TimerPomodoro> {
-  late Timer _timer;
+Timer? _timer;
+   bool _isTimerInitialized = false; // Track if the timer is initialized
+
   int _elapsedTime = 0; // Time in seconds
   bool _isRunning = false;
   String _timerText = "00:00"; // Timer display text
@@ -47,6 +53,7 @@ class _TimerPageState extends State<TimerPomodoro> {
   bool accessed =true;
  String firstString = '';
 
+
   // Helper function to format time as mm:ss
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
@@ -58,61 +65,66 @@ class _TimerPageState extends State<TimerPomodoro> {
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
 
   // Start the timer
-   void _startTimer() {
-   
-    setState(() {
-      _isRunning = true;
-      if (_isFocusTime) {
-        // Set focus time when starting
+void _startTimer() {
+  setState(() {
+    _isRunning = true;
+    if (_isFocusTime) {
+      // Set focus time when starting
+      if (_elapsedTime == 0) {
+        _elapsedTime = widget.focusMinutes * 60; // Initialize focus time in seconds
+      }
+    } else {
+      // Decide whether it's short break or long break based on rounds
+      if (_completedRounds < widget.rounds - 1) {
         if (_elapsedTime == 0) {
-          _elapsedTime = widget.focusMinutes * 60; // Initialize focus time in seconds
+          _elapsedTime = widget.shortBreakMinutes * 60; // Short break
         }
       } else {
-        // Decide whether it's short break or long break based on rounds
-        if (_completedRounds < widget.rounds - 1) {
-          if (_elapsedTime == 0) {
-            _elapsedTime = widget.shortBreakMinutes * 60; // Short break
-          }
-        } else {
-          if (_elapsedTime == 0) {
-            _elapsedTime = widget.longBreakMinutes * 60; // Long break
-          }
+        if (_elapsedTime == 0) {
+          _elapsedTime = widget.longBreakMinutes * 60; // Long break
         }
       }
-      _timerText = _formatTime(_elapsedTime);
-    });
+    }
+    _timerText = _formatTime(_elapsedTime);
+  });
 
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_elapsedTime > 0) {
-        setState(() {
-          _elapsedTime--;
-          _timerText = _formatTime(_elapsedTime);
+  _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    if (_elapsedTime > 0) {
+      setState(() {
+        _elapsedTime--;
+        _timerText = _formatTime(_elapsedTime);
 
-          // If it's focus time, increment total focus time by 1 second
-          if (_isFocusTime) {
-             if(accessed){
-              firstString = "${first.day}/${first.month}/${first.year}";
-             accessed =false;
-               }
-              String scndString ="${second.day}/${second.month}/${second.year}";
-            if(scndString==firstString){
-            _totalFocusTime++;  // Increment focus time each second during focus period
+        // If it's focus time, increment total focus time by 1 second
+        if (_isFocusTime) {
+          if (accessed) {
+            firstString = "${first.day}/${first.month}/${first.year}";
+            accessed = false;
           }
-          else {
-              _scndDayTotalFocusTime++;
-          }}
-        });
-      } else {
-        _stopTimer(); // Stop the timer when it reaches zero
-      }
-    });
-  }
+          String scndString = "${second.day}/${second.month}/${second.year}";
+          if (scndString == firstString) {
+            _totalFocusTime++; // Increment focus time each second during focus period
+          } else {
+            _scndDayTotalFocusTime++;
+          }
+        }
+      });
+    } else {
+      _stopTimer(); // Stop the timer when it reaches zero
+    }
+  });
+}
+
+
+
+
   // Stop the timer
   void _stopTimer() {
   setState(() {
     _isRunning = false;
   });
-  _timer.cancel();
+
+    _timer?.cancel();
+  
   _playEndSound();
 
   // After focus time ends, switch to break time
@@ -130,13 +142,22 @@ class _TimerPageState extends State<TimerPomodoro> {
       });
       _completedRounds++; // Increment completed rounds after short break
     } else {
-      // **Before transitioning to long break, show dialog**
+      // *Before transitioning to long break, show dialog*
       // Show the completion dialog before the long break
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showCompletionDialog(); // Show dialog after the widget is built
       });
     }
   }
+}
+
+ @override
+void dispose() {
+  if (_isTimerInitialized) {
+    _timer?.cancel(); // Safely cancel the timer if initialized
+  }
+  _audioPlayer.dispose(); // Dispose of the audio player
+  super.dispose();
 }
 
 
@@ -297,7 +318,7 @@ class _TimerPageState extends State<TimerPomodoro> {
               ),
               onPressed: () async {
                 // Update task completion status in Firestore
-                await _updateTaskCompletionStatus(widget.taskId);
+                await _updateTaskCompletionStatus(widget.taskId, widget.subTaskID);
                 await _updateTasktimerStatus(widget.taskId);
                 _showCongratsDialog(); // Show the "Congratulations" dialog
 
@@ -372,14 +393,16 @@ class _TimerPageState extends State<TimerPomodoro> {
 }
 
   // Reset the timer
-  void _resetTimer() {
-    setState(() {
-      _elapsedTime = widget.focusMinutes * 60; // Reset to selected minutes
-      _timerText = _formatTime(_elapsedTime);
-      _isRunning = false;
-    });
-    _timer.cancel();
+void _resetTimer() {
+  setState(() {
+    _elapsedTime = widget.focusMinutes * 60;
+    _timerText = _formatTime(_elapsedTime);
+    _isRunning = false;
+  });
+  if (_isTimerInitialized) {
+    _timer?.cancel();
   }
+}
 
   // Function to handle pausing the timer
   void _pauseTimer() {
@@ -393,7 +416,7 @@ class _TimerPageState extends State<TimerPomodoro> {
       _isRunning = false; // Simply stop the timer without resetting the elapsed time
     });
 
-    _timer.cancel(); // Just pause the timer, no reset of elapsed time
+    _timer?.cancel(); // Just pause the timer, no reset of elapsed time
   }
 
   bool _isRadioChecked = false; // Radio button state (unchecked by default)
@@ -406,7 +429,7 @@ class _TimerPageState extends State<TimerPomodoro> {
 
     if (_isRadioChecked) {
       // Update the task completion status in Firestore
-      await _updateTaskCompletionStatus(widget.taskId); // Pass taskId from the widget
+      await _updateTaskCompletionStatus(widget.taskId, widget.subTaskID); // Pass taskId from the widget
       await _updateTasktimerStatus(widget.taskId);
        _showCongratsDialog();
        Future.delayed(Duration(seconds: 2), () {
@@ -420,7 +443,8 @@ class _TimerPageState extends State<TimerPomodoro> {
   }
 
   // Function to update Firestore when task is completed
-  Future<void> _updateTaskCompletionStatus(String taskId) async {
+  Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
+  if(taskId ==subTaskID ){
   try {
     // Reference to the task document in Firestore using the taskId
     DocumentReference taskRef = FirebaseFirestore.instance.collection('Task').doc(taskId);
@@ -432,9 +456,25 @@ class _TimerPageState extends State<TimerPomodoro> {
   } catch (e) {
     print("Error updating task completion: $e");
   }
-}
+}else 
+if(taskId !=subTaskID ){
+  try {
+    // Reference to the task document in Firestore using the taskId
+    DocumentReference taskRef = FirebaseFirestore.instance.collection('SubTask').doc(subTaskID);
+
+    // Update the 'completionStatus' field to 2 (Completed)
+    await taskRef.update({'completionStatus': 1});
+
+     
+  } catch (e) {
+    print("Error updating subtask completion: $e");
+  }
+}}
+
+
 
 Future<void> _updateTasktimerStatus(String taskId) async {
+
   try {
     
     // Reference to the task document in Firestore using the taskId
@@ -459,7 +499,36 @@ Future<void> _updateTasktimerStatus(String taskId) async {
   } catch (e) {
     print("Error updating task timer: $e");
   }
+
+// else if(subTaskID!= taskId){
+//   try {
+    
+//     // Reference to the task document in Firestore using the taskId
+//     DocumentReference taskRef = FirebaseFirestore.instance.collection('SubTask').doc(subTaskID);
+//    end = DateTime.now();
+//     String endDateTimeString = "${end.hour}:${end.minute} ${end.day}/${end.month}/${end.year}";
+
+//     String dateTimeString = "${now.hour}:${now.minute} ${now.day}/${now.month}/${now.year}";
+//     // Create a new entry with the current dateTime and timeElapsed
+//     Map<String, dynamic> timerEntry = {
+//       'firstDayStartDatetime': dateTimeString,
+//       'firstDayActualTimeSpent': _totalFocusTime,
+//       'secondDayEndDatetime': endDateTimeString,
+//       'secondDayActualTimeSpent': _scndDayTotalFocusTime,
+//     };
+
+//     await taskRef.update({
+//       'timer': FieldValue.arrayUnion([timerEntry]), // Add the new timer entry to the list
+//     });
+   
+     
+//   } catch (e) {
+//     print("Error updating task timer: $e");
+//   }}
+
 }
+
+
 
 void _playEndSound() async {
   // هذه طبعتها للتحقق من عمل الصوت
@@ -467,12 +536,8 @@ void _playEndSound() async {
   await _audioPlayer.play(AssetSource('sounds/countdown-timer.wav'));
   print("Sound played.");
 }
-  @override
-  void dispose() {
-    _timer.cancel();
-    _audioPlayer.dispose(); // Dispose of the audio player when done
-    super.dispose();
-  }
+
+
 
   @override
   void initState() {
@@ -481,6 +546,7 @@ void _playEndSound() async {
     _elapsedTime = widget.focusMinutes * 60;
     _timerText = _formatTime(_elapsedTime);
     _audioPlayer = AudioPlayer(); 
+    
   }
 
   @override
@@ -499,10 +565,12 @@ void _playEndSound() async {
         backgroundColor: backgroundColor,
         title: Padding(
           padding: EdgeInsets.only(top: 7.0), 
-          child: Text(
-              '${widget.taskName}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+         child: Text(
+  widget.taskId == widget.subTaskID
+      ? widget.taskName // Display taskId if taskId and subTaskId are equal
+      : widget.subTaskName, // Otherwise, display taskName
+  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+),
         ),
         leading: Padding(
           padding: EdgeInsets.only(left: 16.0, top: 13, bottom: 3),
@@ -638,7 +706,7 @@ Row(
       onPressed: _isRunning
           ? () async {
               // Mark the task as done when "Done" button is pressed
-              await _updateTaskCompletionStatus(widget.taskId); // Update Firestore
+              await _updateTaskCompletionStatus(widget.taskId, widget.subTaskID); // Update Firestore
               await _updateTasktimerStatus(widget.taskId);
               _resetTimer(); 
               

@@ -1717,10 +1717,10 @@ class TaskCard extends StatelessWidget {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.play_arrow),
-                      onPressed: () {
+                   onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], taskName: task['title'])),
+                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], subTaskID: task['id'], subTaskName: task['title'],taskName: task['title'])),
                         );
                       },
                     ),
@@ -1812,14 +1812,19 @@ class TaskCard extends StatelessWidget {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.play_arrow),
-                              onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => TimerSelectionPage(
-                                        taskId: task['id'],
-                                        taskName: task['title'])),
-                              );
+                            onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TimerSelectionPage(
+                                  taskId: task['id'] ?? '',
+                                  subTaskID: subtask['id'] ?? '',
+                                  subTaskName: subtask['title'] ?? '',
+                                  taskName: task['title'] ?? '',
+                                ),
+                              ),
+                            );
+
                             },
                           ),
                         ),

@@ -6,8 +6,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class TimerSelectionPage extends StatefulWidget {
   final String taskId; // The task ID
   final String taskName; // The task name
+  final String subTaskID; // The task name
+  final String subTaskName;
 
-  TimerSelectionPage({required this.taskId, required this.taskName});
+  TimerSelectionPage({required this.taskId, required this.subTaskID, required this.subTaskName, required this.taskName});
 
   @override
   _TimerSelectionPageState createState() => _TimerSelectionPageState();
@@ -36,8 +38,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
 
       if (userDoc.exists && userDoc.data() != null) {
         var data = userDoc.data() as Map<String, dynamic>;
-        if (data.containsKey('preference')) {
-          var preferences = data['preference'];
+        if (data.containsKey('preferences')) {
+          var preferences = data['preferences'];
           setState(() {
             _focusMinutes = preferences['focusMinutes'];
             _shortBreakMinutes = preferences['shortBreakMinutes'];
@@ -245,6 +247,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                           builder: (context) => TimerPomodoro(
                             taskId: widget.taskId,
                             taskName: widget.taskName,
+                            subTaskID: widget.subTaskID,
+                            subTaskName: widget.subTaskName,
                             focusMinutes: _focusMinutes,
                             shortBreakMinutes: _shortBreakMinutes,
                             longBreakMinutes: _longBreakMinutes,
@@ -257,7 +261,11 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 30.0),
                       child: Text(
                         "Start Timer",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      )
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -395,7 +403,6 @@ Future<void> _initializeSettings() async {
     await Future.delayed(Duration(milliseconds:10)); // Wait 1 second before checking again
     loaded = await _loadPreferences(); // Recheck the preferences
   }
-
   if (loaded) {
     _openTimeSelector();
  
@@ -466,7 +473,7 @@ Future<void> _initializeSettings() async {
             children: [
               _buildTopTimeBlock("Focus", _focusMinutes),
                 Divider(
-                        color:Color.fromRGBO(16, 74, 115, 1),           // Set the color of the divider
+                        color:Color(0xFF104A73),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
@@ -474,15 +481,15 @@ Future<void> _initializeSettings() async {
                       ),
               _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
                Divider(
-                        color:Color.fromRGBO(16, 74, 115, 0.377),         // Set the color of the divider
+                        color:Color(0xFF104A73),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
                          height: 0,   
-                      ),
+                      ), 
               _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
-               Divider(
-                        color:Color.fromRGBO(16, 74, 115, 1),           // Set the color of the divider
+                Divider(
+                        color:Color(0xFF104A73),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right

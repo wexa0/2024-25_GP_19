@@ -97,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-
+ 
         // Add user details to Firestore 'User' collection
         await FirebaseFirestore.instance
             .collection('User')
@@ -107,7 +107,12 @@ class _SignUpPageState extends State<SignUpPage> {
           'lastName': _lastNameController.text.trim(),
           'email': _emailController.text.trim(),
           'dateOfBirth': _dobController.text.trim(),
-          'preference': [],
+           'preferences': {
+              'focusMinutes': 25,
+              'shortBreakMinutes': 5,
+              'longBreakMinutes': 30,
+              'rounds': 4,
+            },
         });
 
         // Notify success

@@ -22,7 +22,7 @@ class ProgressPage extends StatefulWidget {
 class _ProgressPageState extends State<ProgressPage> {
   String? userID;
   int selectedIndex = 3;
-  String selectedSegment = "Time";
+  String selectedSegment = "Task";
   String selectedTime = "Daily";
   int periodOffset = 0; // Tracks the offset for the date period navigation
 
@@ -111,7 +111,9 @@ class _ProgressPageState extends State<ProgressPage> {
                         _buildDateNavigation(
                             formattedCurrentDate(selectedTime, periodOffset)),
                         const SizedBox(height: 10),
-                        _buildProgressMessageCard(),
+                        if (selectedSegment == "Task") ...[
+                          _buildProgressMessageCard(),
+                        ],
                         const SizedBox(height: 10),
                         _buildTaskSummaryCards(),
                         const SizedBox(height: 20),
@@ -124,7 +126,6 @@ class _ProgressPageState extends State<ProgressPage> {
                           _buildStreakCalendar(),
                           const SizedBox(height: 40),
                           _buildTimeSpentSection(),
-                          //_buildTaskSpentTimeSection(),
                         ],
                       ],
                     ),
@@ -400,9 +401,9 @@ class _ProgressPageState extends State<ProgressPage> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _buildTaskCard("Completed Task", counts['completed'].toString(),
-            widthFactor: 0.4),
-        _buildTaskCard("Pending Task", counts['pending'].toString(),
-            widthFactor: 0.4),
+            widthFactor: 0.4, color: Color(0xFF24AB79)),
+        _buildTaskCard("Pending Task", (counts['pending']).toString(),
+            widthFactor: 0.4, color: const Color(0xFFF9A15A)),
       ],
     );
   }
@@ -441,13 +442,13 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   Widget _buildTaskCard(String title, String count,
-      {required double widthFactor}) {
+      {required double widthFactor, Color color = const Color(0xFFE2E2E2)}) {
     return Container(
       width: MediaQuery.of(context).size.width * widthFactor,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E2E2),
+        color: color, // Use the specified color or default to light gray
         borderRadius: BorderRadius.circular(15),
         boxShadow: const [
           BoxShadow(
@@ -488,7 +489,6 @@ class _ProgressPageState extends State<ProgressPage> {
 
         // Use the calculated streak dates from the Future
         List<DateTime> streakDates = snapshot.data ?? [];
-        DateTime today = DateTime.now();
 
         return Container(
           decoration: BoxDecoration(
@@ -593,8 +593,10 @@ class _ProgressPageState extends State<ProgressPage> {
           if (timerEntry is Map) {
             // Ensure `time`, `startTime`, and `endTime` fields are not empty after trimming
             final timeField = timerEntry['time']?.toString().trim();
-            final startTimeField = timerEntry['startTime']?.toString().trim();
-            final endTimeField = timerEntry['endTime']?.toString().trim();
+            final startTimeField =
+                timerEntry['firstDayActualTimeSpent']?.toString().trim();
+            final endTimeField =
+                timerEntry['secondDayActualTimeSpent']?.toString().trim();
 
             // Check for valid `time` and corresponding `dateTime`
             if (timeField != "" && timeField != null) {
@@ -604,13 +606,15 @@ class _ProgressPageState extends State<ProgressPage> {
 
             // Check for valid `startTime` and corresponding `startDateTime`
             if (startTimeField != "" && startTimeField != null) {
-              final startDateTime = parseDateTime(timerEntry['startDateTime']);
+              final startDateTime =
+                  parseDateTime(timerEntry['firstDayStartDatetime']);
               if (startDateTime != null) streakDates.add(startDateTime);
             }
 
             // Check for valid `endTime` and corresponding `endDateTime`
             if (endTimeField != "" && endTimeField != null) {
-              final endDateTime = parseDateTime(timerEntry['endDateTime']);
+              final endDateTime =
+                  parseDateTime(timerEntry['secondDayEndDatetime']);
               if (endDateTime != null) streakDates.add(endDateTime);
             }
           }
@@ -924,15 +928,15 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  Widget _buildTimeSpentSection() {
-    Future<List<TaskTimerData>> _fetchTimeSpentData() async {
-      // Fetch the current user
-      final user = FirebaseAuth.instance.currentUser;
+  Future<List<TaskTimerData>> _fetchTimeSpentData() async {
+    // Fetch the current user
+    final user = FirebaseAuth.instance.currentUser;
 
-      if (user == null) {
-        return []; // No user, return an empty list
-      }
+    if (user == null) {
+      return []; // No user, return an empty list
+    }
 
+    try {
       // Query Firestore for tasks
       final tasksSnapshot = await FirebaseFirestore.instance
           .collection('Task')
@@ -953,30 +957,45 @@ class _ProgressPageState extends State<ProgressPage> {
 
       for (var doc in tasksSnapshot.docs) {
         final data = doc.data();
-
         final timerList = data['timer'];
-        final scheduledDate = (data['scheduledDate'] as Timestamp?)?.toDate();
         final category = data['category'] ?? 'Uncategorized';
 
-        if (timerList is List && scheduledDate != null) {
-          if ((scheduledDate.isAfter(startOfPeriod) ||
-                  scheduledDate.isAtSameMomentAs(startOfPeriod)) &&
-              (scheduledDate.isBefore(endOfPeriod) ||
-                  scheduledDate.isAtSameMomentAs(endOfPeriod))) {
-            for (var timerEntry in timerList) {
-              if (timerEntry is Map) {
-                final timeField = timerEntry['time']?.toString().trim();
-                double totalSeconds = 0.0;
-                if (timeField != null && timeField != "") {
-                  totalSeconds += double.tryParse(timeField) ?? 0.0;
-                }
+        if (timerList is List) {
+          for (var timerEntry in timerList) {
+            if (timerEntry is Map) {
+              // Extract startTime and endTime directly
+              final startTimeField =
+                  timerEntry['firstDayActualTimeSpent']?.toString().trim();
+              final endTimeField =
+                  timerEntry['secondDayActualTimeSpent']?.toString().trim();
+              final periodDateTime =
+                  parseDateTime(timerEntry['firstDayStartDatetime'])?.toUtc() ??
+                      parseDateTime(timerEntry['secondDayEndDatetime'])
+                          ?.toUtc();
 
-                if (totalSeconds > 0) {
-                  final period = getPeriodLabel(scheduledDate);
+              // Calculate time in hours from startTime and endTime
+              double totalSeconds = 0.0;
+              if (startTimeField != null &&
+                  endTimeField != null &&
+                  startTimeField.isNotEmpty &&
+                  endTimeField.isNotEmpty) {
+                final startSeconds = double.tryParse(startTimeField) ?? 0.0;
+                final endSeconds = double.tryParse(endTimeField) ?? 0.0;
+                totalSeconds +=
+                    (endSeconds + startSeconds); // Use values directly
+              }
+
+              // Ensure the calculated time is valid and periodDateTime is in range
+              if (totalSeconds > 0 && periodDateTime != null) {
+                if ((periodDateTime.isAfter(startOfPeriod) ||
+                        periodDateTime.isAtSameMomentAs(startOfPeriod)) &&
+                    (periodDateTime.isBefore(endOfPeriod) ||
+                        periodDateTime.isAtSameMomentAs(endOfPeriod))) {
+                  final period = getPeriodLabel(periodDateTime);
                   hoursByPeriodAndCategory[period] ??= {};
                   hoursByPeriodAndCategory[period]![category] =
                       (hoursByPeriodAndCategory[period]![category] ?? 0.0) +
-                          (totalSeconds / 3600.0);
+                          (totalSeconds / 3600.0); // Convert to hours
                 }
               }
             }
@@ -990,7 +1009,7 @@ class _ProgressPageState extends State<ProgressPage> {
         final categoryData = hoursByPeriodAndCategory[period] ?? {};
         final allCategories = {
           'Uncategorized'
-        }; // Add all predefined categories if needed
+        }; // Add more categories as needed
 
         // Add all missing categories with 0.0 hours
         allCategories.forEach((category) {
@@ -1008,8 +1027,13 @@ class _ProgressPageState extends State<ProgressPage> {
       chartData.sort((a, b) => a.period.compareTo(b.period));
 
       return chartData;
+    } catch (e) {
+      print("Error fetching time spent data: $e");
+      return []; // Return an empty list in case of an error
     }
+  }
 
+  Widget _buildTimeSpentSection() {
     return FutureBuilder<List<TaskTimerData>>(
       future: _fetchTimeSpentData(),
       builder: (context, snapshot) {
@@ -1082,19 +1106,6 @@ class _ProgressPageState extends State<ProgressPage> {
         xValueMapper: (data, _) => data.period,
         yValueMapper: (data, _) => data.hours,
         name: entry.key,
-        dataLabelSettings: DataLabelSettings(isVisible: true),
-      );
-    }).toList();
-  }
-
-  List<ChartSeries<TaskTimerData, String>> _buildStackedTimeSpentSeries(
-      List<TaskTimerData> data, Set<String> categories) {
-    return categories.map((category) {
-      return StackedBarSeries<TaskTimerData, String>(
-        dataSource: data.where((entry) => entry.category == category).toList(),
-        xValueMapper: (entry, _) => entry.period, // Period should be a String
-        yValueMapper: (entry, _) => entry.hours, // Hours should be a double
-        name: category, // Legend shows the category
         dataLabelSettings: DataLabelSettings(isVisible: true),
       );
     }).toList();
@@ -1629,7 +1640,7 @@ class _ProgressPageState extends State<ProgressPage> {
 
     return {
       'uncompleted': uncompleted,
-      'pending': pending,
+      'pending': pending + uncompleted,
       'completed': completed,
     };
   }
