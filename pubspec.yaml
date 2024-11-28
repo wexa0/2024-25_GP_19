@@ -140,6 +140,9 @@ flutter:
     - assets/images/chatProfile.png
     - assets/sounds/countdown-timer.wav
     - assets/sounds/simple-notification.mp3
+    - assets/images/check.png
+    - assets/images/arrow.png
+
    
     
 
@@ -174,6 +177,7 @@ flutter:
           weight: 400
         - asset: fonts/Poppins-SemiBold.ttf
           weight: 600
+   
   # fonts:
   #   - family: Schyler
   #     fonts:

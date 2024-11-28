@@ -338,7 +338,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 Icon(Icons.logout,
                                     color: Color.fromRGBO(54, 54, 54, 1)),
-                                SizedBox(width: 8),
+                                SizedBox(width: 0),
                                 Expanded(
                                   child: Center(
                                     child: Text(

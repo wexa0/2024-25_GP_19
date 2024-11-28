@@ -9,9 +9,9 @@ import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/timer_selector.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:flutter_application/pages/timer_page';
 import 'package:flutter_application/pages/addTaskForm.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -374,29 +374,52 @@ class _CalendarPageState extends State<CalendarPage> {
               ] else ...[
                 //If no tasks for today.
                 if (tasks.isEmpty && selectedCategories.first == 'All')
-                  Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 40),
-                        Image.asset(
-                          'assets/images/empty_list.png',
-                          width: 110,
-                          height: 110,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          getDayMessage(),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF3B7292),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 50),
-                      ],
-                    ),
-                  )
+                 Center(
+                      
+  child: Column(
+    
+  mainAxisSize: MainAxisSize.min,
+  children: [
+        const SizedBox(height: 20),
+
+    Image.asset(
+      'assets/images/empty_list.png',
+      width: 120,
+    ),
+    const SizedBox(height: 20),
+    Stack(
+      alignment: Alignment.center,
+      children: [      
+        Text(
+          "Nothing to Do!",
+          style: const TextStyle(
+            fontSize: 23,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF3B7292),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 10),
+
+    Column(
+      children: [
+        Text(
+          getDayMessage(),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 17,
+            color: Color.fromARGB(255, 101, 156, 181),
+          ),
+          textAlign: TextAlign.center,
+        ),
+       
+      ],
+    ),
+    const SizedBox(height: 20),
+  ],
+)
+)
                 else
                   Expanded(
                     child: (!tasks.any((task) =>
@@ -625,28 +648,49 @@ class _CalendarPageState extends State<CalendarPage> {
                               // if all tasks are completed.
                               if (areAllTasksCompleted() &&
                                   selectedCategories.contains('All'))
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 5),
-                                      Image.asset(
-                                        'assets/images/done.png',
-                                        height: 90,
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Text(
-                                        getDayMessage(),
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF3B7292),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 20),
-                                    ],
-                                  ),
-                                ),
+                                 Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+         Image.asset(
+      'assets/images/done.png',
+      width: 140,
+    ),
+     
+        const SizedBox(height: 20),
+        Text(
+          "Congratulations!",
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 23,
+            fontWeight: FontWeight.w700,
+            color:const Color(0xFF24AB79),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Text(
+            getDayMessage(),
+           style: TextStyle(
+            fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF546E7A), 
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 30),
+
+       
+      ],
+    ),
+  ),
+
+
 
                               // Show Completed Tasks section if all tasks completed.
                               if (tasks.any((task) =>
@@ -888,8 +932,8 @@ class _CalendarPageState extends State<CalendarPage> {
       return "No tasks for the selected date.";
     } else if (areAllTasksCompleted()) {
       dailyMessages[formattedDate] =
-          "All tasks for the selected date have been completed! 🌟";
-      return "All tasks for the selected date have been completed! 🌟";
+          "All tasks for the selected date have been completed! ";
+      return "All tasks for the selected date have been completed! ";
     }
 
     return "Keep pushing forward! You're doing great! 🚀";
@@ -1722,6 +1766,7 @@ class TaskCard extends StatelessWidget {
                       DateFormat('h:mm a').format(task['time']),
                     ),
                     if (totalSubtasks > 0)
+                    if (totalSubtasks > 0)
                       Row(
                         children: List.generate(totalSubtasks, (index) {
                           return Padding(
@@ -1729,10 +1774,12 @@ class TaskCard extends StatelessWidget {
                                 const EdgeInsets.symmetric(horizontal: 2.0),
                             child: Icon(
                               Icons.circle,
-                              size: 10,
+                              size: 15,
                               color: index < completedSubtasks
-                                  ? const Color(0xFF3B7292)
-                                  : Colors.grey,
+                                  ? const Color(
+                                      0xFF24AB79) 
+                                  : Colors
+                                      .grey, 
                             ),
                           );
                         }),
@@ -1756,11 +1803,11 @@ class TaskCard extends StatelessWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => TimerSelectionPage(
-                                  taskId: task['id'],
-                                  subTaskID: task['id'],
-                                  subTaskName: task['title'],
-                                  taskName: task['title'],
-                                ),
+                                    taskId: task['id'],
+                                    subTaskID: task['id'],
+                                    subTaskName: task['title'],
+                                    taskName: task['title'],
+                                    page: "2"),
                               ),
                             );
                           }
@@ -1769,7 +1816,8 @@ class TaskCard extends StatelessWidget {
                           Icons.play_arrow,
                           color: task['completed']
                               ? Colors.grey
-                              : Colors.grey, 
+                              : const Color(
+                                  0xFF3B7292), // Grey for completed task
                         ),
                       ),
                     ),
@@ -1865,8 +1913,8 @@ class TaskCard extends StatelessWidget {
                               icon: Icon(Icons.play_arrow,
                                   color: subtask['completed']
                                       ? Colors.grey
-                                      : Colors
-                                          .grey), // Grey for completed, Blue for not
+                                      : const Color(
+                                          0xFF3B7292)), // Grey for completed, Blue for not
                               onPressed: subtask['completed']
                                   ? null // Disable the button if the subtask is complete
                                   : () {
@@ -1875,11 +1923,13 @@ class TaskCard extends StatelessWidget {
                                         MaterialPageRoute(
                                           builder: (context) =>
                                               TimerSelectionPage(
-                                            taskId: task['id'] ?? '',
-                                            subTaskID: subtask['id'] ?? '',
-                                            subTaskName: subtask['title'] ?? '',
-                                            taskName: task['title'] ?? '',
-                                          ),
+                                                  taskId: task['id'] ?? '',
+                                                  subTaskID:
+                                                      subtask['id'] ?? '',
+                                                  subTaskName:
+                                                      subtask['title'] ?? '',
+                                                  taskName: task['title'] ?? '',
+                                                  page: "2"),
                                         ),
                                       );
                                     },

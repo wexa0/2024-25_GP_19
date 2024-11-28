@@ -4,6 +4,7 @@ import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
@@ -14,7 +15,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
-import 'dart:math';
 import 'package:flutter_application/models/DailyMessageManager';
 
 class TaskPage extends StatefulWidget {
@@ -982,57 +982,104 @@ class TaskPageState extends State<TaskPage> {
                     // if the user is a guest user.
                    if(userID == null)
                     Center(
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 80),
-                            Image.asset(
-                              'assets/images/empty_list.png',
-                              width: 150,
-                              height: 150,
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              message,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF3B7292),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 50),
-                          ],
-                        ),
-                      )
+                      
+  child: Column(
+    
+  mainAxisSize: MainAxisSize.min,
+  children: [
+        const SizedBox(height: 20),
+
+    Image.asset(
+      'assets/images/empty_list.png',
+      width: 120,
+    ),
+    const SizedBox(height: 20),
+    Stack(
+      alignment: Alignment.center,
+      children: [      
+        Text(
+          "Nothing to Do!",
+          style: const TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF3B7292),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 10),
+
+    Column(
+      children: [
+        Text(
+          message,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromARGB(255, 101, 156, 181),
+          ),
+          textAlign: TextAlign.center,
+        ),
+       
+      ],
+    ),
+    const SizedBox(height: 20),
+  ],
+)
+)
                       else
                     //If the user is registered and no tasks for today.
                     if ((tasks.isEmpty ||
                         !tasks.any((task) =>
                             task['time'].isAfter(startOfDay!) &&
                             task['time'].isBefore(endOfDay!))) && selectedCategories.first == 'All')
-                      Center(
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 80),
-                            Image.asset(
-                              'assets/images/empty_list.png',
-                              width: 150,
-                              height: 150,
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              message,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF3B7292),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 50),
-                          ],
-                        ),
-                      )
+                     Center(
+                      
+  child: Column(
+    
+  mainAxisSize: MainAxisSize.min,
+  children: [
+        const SizedBox(height: 20),
+
+    Image.asset(
+      'assets/images/empty_list.png',
+      width: 120,
+    ),
+    const SizedBox(height: 20),
+    Stack(
+      alignment: Alignment.center,
+      children: [      
+        Text(
+          "Nothing to Do!",
+          style: const TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF3B7292),
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 10),
+
+    Column(
+      children: [
+        Text(
+          message,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color.fromARGB(255, 101, 156, 181),
+          ),
+          textAlign: TextAlign.center,
+        ),
+       
+      ],
+    ),
+    const SizedBox(height: 20),
+  ],
+)
+)
+
 
                     else
                       Expanded(
@@ -1289,30 +1336,49 @@ class TaskPageState extends State<TaskPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  if (areAllTasksCompleted() &&
-                                      selectedCategories.contains('All'))
-                                    Center(
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(height: 70),
-                                          Image.asset(
-                                            'assets/images/done.png',
-                                            height: 110,
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Text(
-                                            message,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF3B7292),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 20),
-                                        ],
-                                      ),
-                                    ),
+                               if (areAllTasksCompleted() && selectedCategories.contains('All'))
+  Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+         Image.asset(
+      'assets/images/done.png',
+      width: 160,
+    ),
+     
+        const SizedBox(height: 20),
+        Text(
+          "Congratulations!",
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color:const Color(0xFF24AB79),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Text(
+            message,
+           style: TextStyle(
+            fontFamily: 'Poppins',
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF546E7A), 
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 30),
+
+       
+      ],
+    ),
+  ),
+
 
                                   // Show Completed Tasks section if all tasks completed.
                                   if (tasks.any((task) =>
@@ -1725,10 +1791,10 @@ class TaskCard extends StatelessWidget {
                                 const EdgeInsets.symmetric(horizontal: 2.0),
                             child: Icon(
                               Icons.circle,
-                              size: 10,
+                              size: 15,
                               color: index < completedSubtasks
                                   ? const Color(
-                                      0xFF3B7292) 
+                                      0xFF24AB79) 
                                   : Colors
                                       .grey, 
                             ),
@@ -1757,6 +1823,7 @@ class TaskCard extends StatelessWidget {
                   subTaskID: task['id'],
                   subTaskName: task['title'],
                   taskName: task['title'],
+                  page:"1"
                 ),
               ),
             );
@@ -1764,7 +1831,7 @@ class TaskCard extends StatelessWidget {
         },
         child: Icon(
           Icons.play_arrow,
-          color: task['completed'] ? Colors.grey : Colors.grey, // Grey for completed task
+          color: task['completed'] ?Colors.grey: const Color(0xFF3B7292), // Grey for completed task
         ),
       ),
     ),
@@ -1861,7 +1928,7 @@ class TaskCard extends StatelessWidget {
       : 'Start subtask timer', // Hint if subtask is not complete
   child: IconButton(
     icon: Icon(Icons.play_arrow,
-        color: subtask['completed'] ? Colors.grey : Colors.grey), // Grey for completed, Blue for not
+        color: subtask['completed'] ? Colors.grey: const Color(0xFF3B7292) ), // Grey for completed, Blue for not
     onPressed: subtask['completed']
         ? null // Disable the button if the subtask is complete
         : () {
@@ -1873,6 +1940,7 @@ class TaskCard extends StatelessWidget {
                   subTaskID: subtask['id'] ?? '',
                   subTaskName: subtask['title'] ?? '',
                   taskName: task['title'] ?? '',
+                  page :"1"
                 ),
               ),
             );

@@ -1034,61 +1034,73 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   Widget _buildTimeSpentSection() {
-    return FutureBuilder<List<TaskTimerData>>(
-      future: _fetchTimeSpentData(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  return FutureBuilder<List<TaskTimerData>>(
+    future: _fetchTimeSpentData(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        if (snapshot.hasError) {
-          return const Center(child: Text("Error loading time spent data"));
-        }
+      if (snapshot.hasError) {
+        return const Center(child: Text("Error loading time spent data"));
+      }
 
-        final chartData = snapshot.data ?? [];
+      final chartData = snapshot.data ?? [];
 
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9F9F9),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9F9F9),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Time Spent (Hours)",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // Dropdown to select category
+            DropdownUnderWidget(
+              availableCategories: availableCategories,
+              selectedCategory: selectedCategory,
+              onCategoryChange: (category) {
+                handleCategoryChange(category);
+              },
+            ),
+
+            const SizedBox(height: 20), // Space between dropdown and chart
+            SfCartesianChart(
+              legend: Legend(isVisible: true),
+              primaryXAxis: CategoryAxis(
+                majorGridLines: MajorGridLines(width: 0),
+                labelRotation: -45,
               ),
-            ],
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Time Spent (Hours)",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              primaryYAxis: NumericAxis(
+                minimum: 0,
+                majorGridLines:
+                    MajorGridLines(width: 1, color: Colors.grey.shade400),
+                labelFormat: '{value} hrs',
               ),
-              const SizedBox(height: 16),
-              SfCartesianChart(
-                legend: Legend(isVisible: true),
-                primaryXAxis: CategoryAxis(
-                  majorGridLines: MajorGridLines(width: 0),
-                  labelRotation: -45,
-                ),
-                primaryYAxis: NumericAxis(
-                  minimum: 0,
-                  majorGridLines:
-                      MajorGridLines(width: 1, color: Colors.grey.shade400),
-                  labelFormat: '{value} hrs',
-                ),
-                series: _buildTimeSpentSeries(chartData),
-                tooltipBehavior: TooltipBehavior(enable: true),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+              series: _buildTimeSpentSeries(chartData),
+              tooltipBehavior: TooltipBehavior(enable: true),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   /// Build the chart series for time spent visualization
   List<ChartSeries<TaskTimerData, String>> _buildTimeSpentSeries(
@@ -1466,12 +1478,11 @@ class _ProgressPageState extends State<ProgressPage> {
                 totalSpentHours += (double.tryParse(timeField) ?? 0.0) / 3600.0;
               }
             }
-
             // Check for valid `startTime` and `endTime`
-            final startTimeField = timerEntry['startTime']?.toString().trim();
-            final endTimeField = timerEntry['endTime']?.toString().trim();
-            final startDateTime = parseDateTime(timerEntry['startDateTime']);
-            final endDateTime = parseDateTime(timerEntry['endDateTime']);
+            final startTimeField = timerEntry['firstDayActualTimeSpent']?.toString().trim();
+            final endTimeField = timerEntry['secondDayActualTimeSpent']?.toString().trim();
+            final startDateTime = parseDateTime(timerEntry['firstDayStartDatetime']);
+            final endDateTime = parseDateTime(timerEntry['secondDayEndDatetime']);
 
             if (startTimeField != "" &&
                 startTimeField != null &&

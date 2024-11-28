@@ -8,8 +8,8 @@ class TimerSelectionPage extends StatefulWidget {
   final String taskName; // The task name
   final String subTaskID; // The task name
   final String subTaskName;
-
-  TimerSelectionPage({required this.taskId, required this.subTaskID, required this.subTaskName, required this.taskName});
+  final String page;
+  TimerSelectionPage({required this.taskId, required this.subTaskID, required this.subTaskName, required this.taskName,  required this.page});
 
   @override
   _TimerSelectionPageState createState() => _TimerSelectionPageState();
@@ -253,6 +253,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                             shortBreakMinutes: _shortBreakMinutes,
                             longBreakMinutes: _longBreakMinutes,
                             rounds: _rounds,
+                            page:widget.page,
                           ),
                         ),
                       );
@@ -473,7 +474,7 @@ Future<void> _initializeSettings() async {
             children: [
               _buildTopTimeBlock("Focus", _focusMinutes),
                 Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+                        color:Color.fromRGBO(16, 74, 115, 1),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
@@ -481,7 +482,7 @@ Future<void> _initializeSettings() async {
                       ),
               _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
                Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+                        color:Color.fromRGBO(16, 74, 115, 0.405),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
@@ -489,7 +490,7 @@ Future<void> _initializeSettings() async {
                       ), 
               _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
                 Divider(
-                        color:Color(0xFF104A73),          // Set the color of the divider
+                        color:Color.fromRGBO(16, 74, 115, 1),          // Set the color of the divider
                         thickness: 0.5,                // Set the thickness of the divider
                         indent: 20,                  // Set the indent on the left
                         endIndent: 20,               // Set the indent on the right
