@@ -18,7 +18,7 @@ import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/DailyMessageManager';
 
 class TaskPage extends StatefulWidget {
-const TaskPage({Key? key}) : super(key: key);
+  const TaskPage({Key? key}) : super(key: key);
   @override
   TaskPageState createState() => TaskPageState();
 }
@@ -134,10 +134,9 @@ class TaskPageState extends State<TaskPage> {
     });
   }
 
-
   bool areAllTasksCompleted() {
     if (tasks.isEmpty) {
-      return false; 
+      return false;
     }
     return tasks.every((task) => task['completed'] == true);
   }
@@ -175,28 +174,27 @@ class TaskPageState extends State<TaskPage> {
       }
     });
     bool allSubtasksComplete = taskData['subtasks'].isEmpty ||
-      taskData['subtasks'].every((s) => s['completed'] == true);
+        taskData['subtasks'].every((s) => s['completed'] == true);
 
-  if (allSubtasksComplete) {
-    await FirebaseFirestore.instance
-        .collection('Task')
-        .doc(taskData['id'])
-        .update({'completionStatus': 2});
+    if (allSubtasksComplete) {
+      await FirebaseFirestore.instance
+          .collection('Task')
+          .doc(taskData['id'])
+          .update({'completionStatus': 2});
 
-    setState(() {
-      taskData['completed'] = true;
-    });
-  } else {
-   
-    await FirebaseFirestore.instance
-        .collection('Task')
-        .doc(taskData['id'])
-        .update({'completionStatus': 1}); 
+      setState(() {
+        taskData['completed'] = true;
+      });
+    } else {
+      await FirebaseFirestore.instance
+          .collection('Task')
+          .doc(taskData['id'])
+          .update({'completionStatus': 1});
 
-    setState(() {
-      taskData['completed'] = false;
-    });
-  }
+      setState(() {
+        taskData['completed'] = false;
+      });
+    }
 
     // Show notification
     _showTopNotification("Subtask deleted successfully.");
@@ -215,7 +213,6 @@ class TaskPageState extends State<TaskPage> {
       fetchTasksFromFirestore();
     }
   }
-
 
   String getFormattedDate() {
     final now = DateTime.now();
@@ -247,8 +244,7 @@ class TaskPageState extends State<TaskPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor:
-                  const Color(0xFFF5F7F8), 
+              backgroundColor: const Color(0xFFF5F7F8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -263,13 +259,12 @@ class TaskPageState extends State<TaskPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   RadioListTile<String>(
-                    activeColor:
-                        const Color(0xFF79A3B7), 
+                    activeColor: const Color(0xFF79A3B7),
                     title: const Text(
                       'View as List',
                       style: TextStyle(
-                        color: Color(0xFF545454), 
-                        fontWeight: FontWeight.w500, 
+                        color: Color(0xFF545454),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'list',
@@ -281,8 +276,7 @@ class TaskPageState extends State<TaskPage> {
                     },
                   ),
                   RadioListTile<String>(
-                    activeColor:
-                        const Color(0xFF79A3B7), 
+                    activeColor: const Color(0xFF79A3B7),
                     title: const Text(
                       'View as Calendar',
                       style: TextStyle(
@@ -306,11 +300,9 @@ class TaskPageState extends State<TaskPage> {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.white, 
+                    backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                          color: Color(0xFF79A3B7)), 
+                      side: const BorderSide(color: Color(0xFF79A3B7)),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
@@ -361,8 +353,7 @@ class TaskPageState extends State<TaskPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor:
-                  const Color(0xFFF5F7F8), 
+              backgroundColor: const Color(0xFFF5F7F8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -370,7 +361,7 @@ class TaskPageState extends State<TaskPage> {
                 'Sort by',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 0, 0, 0), 
+                  color: Color.fromARGB(255, 0, 0, 0),
                 ),
               ),
               content: Column(
@@ -381,7 +372,7 @@ class TaskPageState extends State<TaskPage> {
                     title: const Text(
                       'Time',
                       style: TextStyle(
-                        color: Color(0xFF545454), 
+                        color: Color(0xFF545454),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -398,8 +389,8 @@ class TaskPageState extends State<TaskPage> {
                     title: const Text(
                       'Priority',
                       style: TextStyle(
-                        color: Color(0xFF545454), 
-                        fontWeight: FontWeight.w500, 
+                        color: Color(0xFF545454),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'priority',
@@ -418,10 +409,9 @@ class TaskPageState extends State<TaskPage> {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white, 
+                    backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                          color: Color(0xFF79A3B7)), 
+                      side: const BorderSide(color: Color(0xFF79A3B7)),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
@@ -436,13 +426,12 @@ class TaskPageState extends State<TaskPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      sortTasks(); 
+                      sortTasks();
                     });
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF79A3B7), 
+                    backgroundColor: const Color(0xFF79A3B7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -450,7 +439,7 @@ class TaskPageState extends State<TaskPage> {
                   child: const Text(
                     'Apply',
                     style: TextStyle(
-                      color: Colors.white, 
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -470,11 +459,10 @@ class TaskPageState extends State<TaskPage> {
   }
 
   void sortTasks() {
-   //sort by priority
+    //sort by priority
     if (selectedSort == 'priority') {
-      tasks.sort((a, b) =>
-          b['priority'].compareTo(a['priority'])); 
-    //sort by time
+      tasks.sort((a, b) => b['priority'].compareTo(a['priority']));
+      //sort by time
     } else if (selectedSort == 'timeline') {
       try {
         tasks.sort((a, b) {
@@ -484,13 +472,13 @@ class TaskPageState extends State<TaskPage> {
           DateTime timeB = b['time'] is DateTime
               ? b['time']
               : DateTime.parse(b['time'].toString());
-          return timeA.compareTo(timeB); 
+          return timeA.compareTo(timeB);
         });
       } catch (e) {
         print('General error: $e');
       }
     }
-    setState(() {}); 
+    setState(() {});
   }
 
   Widget _buildLegendCircle(Color color, String label) {
@@ -524,7 +512,7 @@ class TaskPageState extends State<TaskPage> {
             'Category',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 6, 6, 6), 
+              color: Color.fromARGB(255, 6, 6, 6),
             ),
           ),
           content: StatefulBuilder(
@@ -568,8 +556,7 @@ class TaskPageState extends State<TaskPage> {
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: Color(0xFFFAFBFF)
-                                  .withOpacity(1.0), 
+                              color: Color(0xFFFAFBFF).withOpacity(1.0),
                               offset: Offset(-5, -5),
                               blurRadius: 10,
                             ),
@@ -579,7 +566,7 @@ class TaskPageState extends State<TaskPage> {
                           label: Text(
                             category,
                             style: const TextStyle(
-                              color: Colors.white, 
+                              color: Colors.white,
                             ),
                           ),
                           selected: isSelected,
@@ -613,10 +600,9 @@ class TaskPageState extends State<TaskPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildLegendCircle(Colors.grey, 'No Tasks'),
                         _buildLegendCircle(
-                            Colors.grey, 'No Tasks'),
-                        _buildLegendCircle(
-                            const Color(0xFFF9A15A), 'Pending Tasks'), 
+                            const Color(0xFFF9A15A), 'Pending Tasks'),
                         _buildLegendCircle(
                             Color(0xFF24AB79), 'Completed Tasks '),
                       ],
@@ -632,8 +618,7 @@ class TaskPageState extends State<TaskPage> {
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFFF5F7F8), 
+                backgroundColor: const Color(0xFFF5F7F8),
                 shape: RoundedRectangleBorder(
                   side: const BorderSide(color: Color(0xFF79A3B7)),
                   borderRadius: BorderRadius.circular(8.0),
@@ -720,8 +705,7 @@ class TaskPageState extends State<TaskPage> {
 
   void toggleSubtaskCompletion(
       Map<String, dynamic> task, Map<String, dynamic> subtask) async {
-    bool newSubtaskCompletionStatus =
-        !subtask['completed']; 
+    bool newSubtaskCompletionStatus = !subtask['completed'];
 
     setState(() {
       subtask['completed'] = newSubtaskCompletionStatus;
@@ -741,13 +725,13 @@ class TaskPageState extends State<TaskPage> {
 
     int newTaskStatus;
     if (allSubtasksComplete) {
-      newTaskStatus = 2; 
+      newTaskStatus = 2;
       task['completed'] = true;
     } else if (anySubtaskComplete) {
-      newTaskStatus = 1; 
+      newTaskStatus = 1;
       task['completed'] = false;
     } else {
-      newTaskStatus = 0; 
+      newTaskStatus = 0;
       task['completed'] = false;
     }
     if (mounted) {
@@ -776,7 +760,7 @@ class TaskPageState extends State<TaskPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -793,7 +777,7 @@ class TaskPageState extends State<TaskPage> {
             ElevatedButton(
               onPressed: () {
                 deleteTask(task);
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -980,107 +964,94 @@ class TaskPageState extends State<TaskPage> {
                       ),
                     ),
                     // if the user is a guest user.
-                   if(userID == null)
-                    Center(
-                      
-  child: Column(
-    
-  mainAxisSize: MainAxisSize.min,
-  children: [
-        const SizedBox(height: 20),
-
-    Image.asset(
-      'assets/images/empty_list.png',
-      width: 120,
-    ),
-    const SizedBox(height: 20),
-    Stack(
-      alignment: Alignment.center,
-      children: [      
-        Text(
-          "Nothing to Do!",
-          style: const TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF3B7292),
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 10),
-
-    Column(
-      children: [
-        Text(
-          message,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Color.fromARGB(255, 101, 156, 181),
-          ),
-          textAlign: TextAlign.center,
-        ),
-       
-      ],
-    ),
-    const SizedBox(height: 20),
-  ],
-)
-)
-                      else
+                    if (userID == null)
+                      Center(
+                          child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 20),
+                          Image.asset(
+                            'assets/images/empty_list.png',
+                            width: 120,
+                          ),
+                          const SizedBox(height: 20),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Text(
+                                "Nothing to Do!",
+                                style: const TextStyle(
+                                  fontSize: 27,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF3B7292),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Column(
+                            children: [
+                              Text(
+                                message,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color.fromARGB(255, 101, 156, 181),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ))
+                    else
                     //If the user is registered and no tasks for today.
                     if ((tasks.isEmpty ||
-                        !tasks.any((task) =>
-                            task['time'].isAfter(startOfDay!) &&
-                            task['time'].isBefore(endOfDay!))) && selectedCategories.first == 'All')
-                     Center(
-                      
-  child: Column(
-    
-  mainAxisSize: MainAxisSize.min,
-  children: [
-        const SizedBox(height: 20),
-
-    Image.asset(
-      'assets/images/empty_list.png',
-      width: 120,
-    ),
-    const SizedBox(height: 20),
-    Stack(
-      alignment: Alignment.center,
-      children: [      
-        Text(
-          "Nothing to Do!",
-          style: const TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF3B7292),
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 10),
-
-    Column(
-      children: [
-        Text(
-          message,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Color.fromARGB(255, 101, 156, 181),
-          ),
-          textAlign: TextAlign.center,
-        ),
-       
-      ],
-    ),
-    const SizedBox(height: 20),
-  ],
-)
-)
-
-
+                            !tasks.any((task) =>
+                                task['time'].isAfter(startOfDay!) &&
+                                task['time'].isBefore(endOfDay!))) &&
+                        selectedCategories.first == 'All')
+                      Center(
+                          child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 20),
+                          Image.asset(
+                            'assets/images/empty_list.png',
+                            width: 120,
+                          ),
+                          const SizedBox(height: 20),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Text(
+                                "Nothing to Do!",
+                                style: const TextStyle(
+                                  fontSize: 27,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF3B7292),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Column(
+                            children: [
+                              Text(
+                                message,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Color.fromARGB(255, 101, 156, 181),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ))
                     else
                       Expanded(
                         child: (!tasks.any((task) =>
@@ -1096,7 +1067,7 @@ class TaskPageState extends State<TaskPage> {
                                   SizedBox(height: 18),
                                   if (selectedCategories.first != 'All')
                                     Wrap(
-                                     alignment: WrapAlignment.start,
+                                      alignment: WrapAlignment.start,
                                       spacing: 8.0,
                                       children:
                                           selectedCategories.map((category) {
@@ -1109,33 +1080,27 @@ class TaskPageState extends State<TaskPage> {
                                                     task['categories']
                                                         .contains(category))
                                                 .every((task) =>
-                                                    task['completed'] ==
-                                                    true); 
+                                                    task['completed'] == true);
                                         bool hasPendingTasks = tasks
                                             .where((task) =>
                                                 task['categories'] != null &&
                                                 task['categories']
                                                     .contains(category))
                                             .any((task) =>
-                                                task['completed'] ==
-                                                false); 
+                                                task['completed'] == false);
                                         bool hasNoTasks = tasks.every((task) =>
                                             task['categories'] == null ||
-                                            !task['categories'].contains(
-                                                category)); 
+                                            !task['categories']
+                                                .contains(category));
                                         Color chipColor;
                                         if (hasNoTasks) {
-                                          chipColor = Colors
-                                              .grey; 
+                                          chipColor = Colors.grey;
                                         } else if (allTasksComplete) {
-                                          chipColor = const Color(
-                                              0xFF24AB79);
+                                          chipColor = const Color(0xFF24AB79);
                                         } else if (hasPendingTasks) {
-                                          chipColor = const Color(
-                                              0xFFF9A15A);
+                                          chipColor = const Color(0xFFF9A15A);
                                         } else {
-                                          chipColor =
-                                              Colors.grey; 
+                                          chipColor = Colors.grey;
                                         }
                                         return ActionChip(
                                           label: Text(category),
@@ -1150,8 +1115,7 @@ class TaskPageState extends State<TaskPage> {
                                           },
                                           avatar: const Icon(Icons.close,
                                               size: 18, color: Colors.white),
-                                          backgroundColor:
-                                              chipColor,
+                                          backgroundColor: chipColor,
                                           labelStyle: const TextStyle(
                                               color: Colors.white),
                                         );
@@ -1179,7 +1143,6 @@ class TaskPageState extends State<TaskPage> {
                                   ),
                                 ],
                               )
-                              
                             : ListView(
                                 children: [
                                   SizedBox(height: 18),
@@ -1198,33 +1161,27 @@ class TaskPageState extends State<TaskPage> {
                                                     task['categories']
                                                         .contains(category))
                                                 .every((task) =>
-                                                    task['completed'] ==
-                                                    true); 
+                                                    task['completed'] == true);
                                         bool hasPendingTasks = tasks
                                             .where((task) =>
                                                 task['categories'] != null &&
                                                 task['categories']
                                                     .contains(category))
                                             .any((task) =>
-                                                task['completed'] ==
-                                                false); 
+                                                task['completed'] == false);
                                         bool hasNoTasks = tasks.every((task) =>
                                             task['categories'] == null ||
-                                            !task['categories'].contains(
-                                                category)); 
+                                            !task['categories']
+                                                .contains(category));
                                         Color chipColor;
                                         if (hasNoTasks) {
-                                          chipColor = Colors
-                                              .grey; 
+                                          chipColor = Colors.grey;
                                         } else if (allTasksComplete) {
-                                          chipColor = const Color(
-                                              0xFF24AB79); 
+                                          chipColor = const Color(0xFF24AB79);
                                         } else if (hasPendingTasks) {
-                                          chipColor = const Color(
-                                              0xFFF9A15A); 
+                                          chipColor = const Color(0xFFF9A15A);
                                         } else {
-                                          chipColor =
-                                              Colors.grey; 
+                                          chipColor = Colors.grey;
                                         }
 
                                         return ActionChip(
@@ -1240,8 +1197,7 @@ class TaskPageState extends State<TaskPage> {
                                           },
                                           avatar: const Icon(Icons.close,
                                               size: 18, color: Colors.white),
-                                          backgroundColor:
-                                              chipColor, 
+                                          backgroundColor: chipColor,
                                           labelStyle: const TextStyle(
                                               color: Colors.white),
                                         );
@@ -1308,7 +1264,6 @@ class TaskPageState extends State<TaskPage> {
                                           toggleSubtaskCompletion(
                                               task, subtask),
                                       onSubtaskDeleted: (subtask) async {
-                                        
                                         // Create an instance of SubTask from the subtask data
                                         SubTask subtaskInstance = SubTask(
                                           subTaskID: subtask['id'],
@@ -1319,13 +1274,10 @@ class TaskPageState extends State<TaskPage> {
                                         );
                                         await subtaskInstance.deleteSubTask();
                                         setState(() {
-                                          
                                           task['subtasks'].remove(subtask);
-                                          
                                         });
                                         _showTopNotification(
                                             "Subtask deleted successfully.");
-                                      
                                       },
                                       getPriorityColor: getPriorityColor,
                                       onDeleteTask: () =>
@@ -1336,49 +1288,47 @@ class TaskPageState extends State<TaskPage> {
                                   ),
                                   const SizedBox(height: 16),
 
-                               if (areAllTasksCompleted() && selectedCategories.contains('All'))
-  Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-         Image.asset(
-      'assets/images/done.png',
-      width: 160,
-    ),
-     
-        const SizedBox(height: 20),
-        Text(
-          "Congratulations!",
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color:const Color(0xFF24AB79),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Text(
-            message,
-           style: TextStyle(
-            fontFamily: 'Poppins',
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF546E7A), 
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(height: 30),
-
-       
-      ],
-    ),
-  ),
-
+                                  if (areAllTasksCompleted() &&
+                                      selectedCategories.contains('All'))
+                                    Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Image.asset(
+                                            'assets/images/done.png',
+                                            width: 160,
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Text(
+                                            "Congratulations!",
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF24AB79),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 20.0),
+                                            child: Text(
+                                              message,
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w800,
+                                                color: Color(0xFF546E7A),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 30),
+                                        ],
+                                      ),
+                                    ),
 
                                   // Show Completed Tasks section if all tasks completed.
                                   if (tasks.any((task) =>
@@ -1463,7 +1413,7 @@ class TaskPageState extends State<TaskPage> {
                 ),
         ),
 
-       // Allows the floating action button to be dragged and repositioned within screen bounds.
+        // Allows the floating action button to be dragged and repositioned within screen bounds.
         floatingActionButton: Overlay(
           initialEntries: [
             OverlayEntry(
@@ -1584,7 +1534,7 @@ class TaskPageState extends State<TaskPage> {
           ],
         ),
         bottomNavigationBar: userID != null
-        //showing nav bar for registered user.
+            //showing nav bar for registered user.
             ? CustomNavigationBar(
                 selectedIndex: selectedIndex,
                 onTabChange: (index) {
@@ -1593,7 +1543,7 @@ class TaskPageState extends State<TaskPage> {
                   });
                 },
               )
-               //showing nav bar for guest user.
+            //showing nav bar for guest user.
             : GuestCustomNavigationBar(
                 selectedIndex: selectedIndex,
                 onTabChange: (index) {
@@ -1628,7 +1578,7 @@ class TaskCard extends StatelessWidget {
     required this.getPriorityColor,
     required this.onDeleteTask,
     required this.onEditTask,
-     required this.onRefresh,
+    required this.onRefresh,
   }) : super(key: key);
 
   void showDeleteConfirmationDialog(
@@ -1780,73 +1730,77 @@ class TaskCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DateFormat('h:mm a')
-                          .format(task['time']),
+                      DateFormat('h:mm a').format(task['time']),
                     ),
                     if (totalSubtasks > 0)
                       Row(
                         children: List.generate(totalSubtasks, (index) {
+                          bool isCompleted = index < completedSubtasks;
+
                           return Padding(
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 2.0),
-                            child: Icon(
-                              Icons.circle,
-                              size: 15,
-                              color: index < completedSubtasks
-                                  ? const Color(
-                                      0xFF24AB79) 
-                                  : Colors
-                                      .grey, 
+                            child: Tooltip(
+                              message:
+                                  '${completedSubtasks}/${totalSubtasks} subtasks completed',
+                              child: Icon(
+                                Icons.circle,
+                                size: 15,
+                                color: isCompleted
+                                    ? const Color(
+                                        0xFF24AB79)
+                                    : Colors.grey, 
+                              ),
                             ),
                           );
                         }),
                       ),
                   ],
                 ),
-   trailing: Row(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    Tooltip(
-      message: task['completed']
-          ? "This task is already complete!" // Hint for completed task
-          : "Start task timer", // Hint for incomplete task
-      showDuration: Duration(milliseconds: 500), // Hint display duration
-      child: InkWell(
-        onTap: () {
-          if (task['completed']) {
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TimerSelectionPage(
-                  taskId: task['id'],
-                  subTaskID: task['id'],
-                  subTaskName: task['title'],
-                  taskName: task['title'],
-                  page:"1"
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Tooltip(
+                      message: task['completed']
+                          ? "This task is already complete!" // Hint for completed task
+                          : "Start task timer", // Hint for incomplete task
+                      showDuration:
+                          Duration(milliseconds: 500), // Hint display duration
+                      child: InkWell(
+                        onTap: () {
+                          if (task['completed']) {
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TimerSelectionPage(
+                                    taskId: task['id'],
+                                    subTaskID: task['id'],
+                                    subTaskName: task['title'],
+                                    taskName: task['title'],
+                                    page: "1"),
+                              ),
+                            );
+                          }
+                        },
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: task['completed']
+                              ? Colors.grey
+                              : const Color(
+                                  0xFF3B7292), // Grey for completed task
+                        ),
+                      ),
+                    ),
+                    if (task['subtasks'] != null && task['subtasks'].isNotEmpty)
+                      IconButton(
+                        icon: Icon(task['expanded']
+                            ? Icons.expand_less
+                            : Icons.expand_more),
+                        onPressed: onExpandToggle,
+                      ),
+                  ],
                 ),
-              ),
-            );
-          }
-        },
-        child: Icon(
-          Icons.play_arrow,
-          color: task['completed'] ?Colors.grey: const Color(0xFF3B7292), // Grey for completed task
-        ),
-      ),
-    ),
-    if (task['subtasks'] != null && task['subtasks'].isNotEmpty)
-      IconButton(
-        icon: Icon(task['expanded'] ? Icons.expand_less : Icons.expand_more),
-        onPressed: onExpandToggle,
-      ),
-  ],
-),
-
-
-
-
-
               ),
               if (task['expanded'] &&
                   task['subtasks'] != null &&
@@ -1878,10 +1832,10 @@ class TaskCard extends StatelessWidget {
                               MaterialPageRoute(
                                 builder: (context) =>
                                     EditTaskPage(taskId: task['id']),
-                             ),
+                              ),
                             ).then((result) {
                               if (result == true) {
-                                onRefresh(); 
+                                onRefresh();
                               }
                             });
                           },
@@ -1922,34 +1876,36 @@ class TaskCard extends StatelessWidget {
                                   : TextDecoration.none,
                             ),
                           ),
-                    trailing: Tooltip(
-  message: subtask['completed']
-      ? 'This subtask is already complete!' // Hint if subtask is complete
-      : 'Start subtask timer', // Hint if subtask is not complete
-  child: IconButton(
-    icon: Icon(Icons.play_arrow,
-        color: subtask['completed'] ? Colors.grey: const Color(0xFF3B7292) ), // Grey for completed, Blue for not
-    onPressed: subtask['completed']
-        ? null // Disable the button if the subtask is complete
-        : () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TimerSelectionPage(
-                  taskId: task['id'] ?? '',
-                  subTaskID: subtask['id'] ?? '',
-                  subTaskName: subtask['title'] ?? '',
-                  taskName: task['title'] ?? '',
-                  page :"1"
-                ),
-              ),
-            );
-          },
-  ),
-),
-
-
-
+                          trailing: Tooltip(
+                            message: subtask['completed']
+                                ? 'This subtask is already complete!' // Hint if subtask is complete
+                                : 'Start subtask timer', // Hint if subtask is not complete
+                            child: IconButton(
+                              icon: Icon(Icons.play_arrow,
+                                  color: subtask['completed']
+                                      ? Colors.grey
+                                      : const Color(
+                                          0xFF3B7292)), // Grey for completed, Blue for not
+                              onPressed: subtask['completed']
+                                  ? null // Disable the button if the subtask is complete
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TimerSelectionPage(
+                                                  taskId: task['id'] ?? '',
+                                                  subTaskID:
+                                                      subtask['id'] ?? '',
+                                                  subTaskName:
+                                                      subtask['title'] ?? '',
+                                                  taskName: task['title'] ?? '',
+                                                  page: "1"),
+                                        ),
+                                      );
+                                    },
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),

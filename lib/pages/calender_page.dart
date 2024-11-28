@@ -1766,24 +1766,26 @@ class TaskCard extends StatelessWidget {
                       DateFormat('h:mm a').format(task['time']),
                     ),
                     if (totalSubtasks > 0)
-                    if (totalSubtasks > 0)
                       Row(
-                        children: List.generate(totalSubtasks, (index) {
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 2.0),
-                            child: Icon(
-                              Icons.circle,
-                              size: 15,
-                              color: index < completedSubtasks
-                                  ? const Color(
-                                      0xFF24AB79) 
-                                  : Colors
-                                      .grey, 
-                            ),
-                          );
-                        }),
-                      ),
+  children: List.generate(totalSubtasks, (index) {
+    bool isCompleted = index < completedSubtasks;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+      child: Tooltip(
+        message: '${completedSubtasks}/${totalSubtasks} subtasks completed',
+        child: Icon(
+          Icons.circle,
+          size: 15,
+          color: isCompleted
+              ? const Color(0xFF24AB79) 
+              : Colors.grey, 
+        ),
+      ),
+    );
+  }),
+),
+
                   ],
                 ),
                 trailing: Row(
