@@ -40,8 +40,8 @@ class _CalendarPageState extends State<CalendarPage> {
   List<String> availableCategories = []; // store categories from Firestore.
   Map<DateTime, String> dailyMessagesCache = {};
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay = DateTime.now(); 
-  List<Map<String, dynamic>> tasks = []; 
+  DateTime? _selectedDay = DateTime.now();
+  List<Map<String, dynamic>> tasks = [];
   bool isLoading = true;
   String? userID;
   Map<DateTime, List<Map<String, dynamic>>> _taskIndicators = {};
@@ -74,16 +74,14 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
-
   Future<void> _fetchUserID() async {
     User? user = FirebaseAuth.instance.currentUser;
     setState(() {
-      userID = user?.uid; 
+      userID = user?.uid;
     });
   }
 
-
-/// Fetches tasks, categories, and subtasks from Firestore and filters them by the selected day.
+  /// Fetches tasks, categories, and subtasks from Firestore and filters them by the selected day.
   Future<void> fetchTasksFromFirestore() async {
     setState(() {
       isLoading = true;
@@ -133,7 +131,7 @@ class _CalendarPageState extends State<CalendarPage> {
         });
       }
     }
-  generateTaskIndicators();
+    generateTaskIndicators();
     setState(() {
       isLoading = false;
     });
@@ -159,16 +157,15 @@ class _CalendarPageState extends State<CalendarPage> {
         'time': task.scheduledDate,
         'priority': task.priority,
         'completed': task.completionStatus == 2,
-        'categories': [], 
+        'categories': [],
       });
     }
     return allTasks;
   }
 
-
-/// Function to group tasks by date and update task indicators.
+  /// Function to group tasks by date and update task indicators.
   void generateTaskIndicators() async {
-    _taskIndicators.clear(); 
+    _taskIndicators.clear();
     List<Map<String, dynamic>> allTasks = await fetchAllTasks();
 
     for (var task in allTasks) {
@@ -179,9 +176,9 @@ class _CalendarPageState extends State<CalendarPage> {
       );
 
       if (!_taskIndicators.containsKey(taskDate)) {
-        _taskIndicators[taskDate] = []; 
+        _taskIndicators[taskDate] = [];
       }
-      _taskIndicators[taskDate]!.add(task); 
+      _taskIndicators[taskDate]!.add(task);
     }
     setState(() {});
   }
@@ -195,8 +192,6 @@ class _CalendarPageState extends State<CalendarPage> {
   String getFormattedDate() {
     return DateFormat('EEE, d MMM yyyy').format(_focusedDay);
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +274,8 @@ class _CalendarPageState extends State<CalendarPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              TableCalendar( // for calender view.
+              TableCalendar(
+                // for calender view.
                 firstDay: DateTime.utc(2010, 10, 16),
                 lastDay: DateTime.utc(2030, 3, 14),
                 focusedDay: _focusedDay,
@@ -304,7 +300,6 @@ class _CalendarPageState extends State<CalendarPage> {
                     return [];
                   }
                   return _taskIndicators.containsKey(adjustedDay)
-                  
                       ? ['Task Indicator']
                       : [];
                 },
@@ -426,33 +421,27 @@ class _CalendarPageState extends State<CalendarPage> {
                                                 task['categories']
                                                     .contains(category))
                                             .every((task) =>
-                                                task['completed'] ==
-                                                true); 
+                                                task['completed'] == true);
                                     bool hasPendingTasks = tasks
                                         .where((task) =>
                                             task['categories'] != null &&
                                             task['categories']
                                                 .contains(category))
                                         .any((task) =>
-                                            task['completed'] ==
-                                            false); 
+                                            task['completed'] == false);
                                     bool hasNoTasks = tasks.every((task) =>
                                         task['categories'] == null ||
-                                        !task['categories'].contains(
-                                            category)); 
+                                        !task['categories'].contains(category));
 
                                     Color chipColor;
                                     if (hasNoTasks) {
-                                      chipColor = Colors
-                                          .grey;
+                                      chipColor = Colors.grey;
                                     } else if (allTasksComplete) {
-                                      chipColor = const Color(
-                                          0xFF24AB79); 
+                                      chipColor = const Color(0xFF24AB79);
                                     } else if (hasPendingTasks) {
-                                      chipColor = const Color(
-                                          0xFFF9A15A); 
+                                      chipColor = const Color(0xFFF9A15A);
                                     } else {
-                                      chipColor = Colors.grey; 
+                                      chipColor = Colors.grey;
                                     }
                                     return ActionChip(
                                       label: Text(category),
@@ -466,8 +455,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                       },
                                       avatar: const Icon(Icons.close,
                                           size: 18, color: Colors.white),
-                                      backgroundColor:
-                                          chipColor, 
+                                      backgroundColor: chipColor,
                                       labelStyle:
                                           const TextStyle(color: Colors.white),
                                     );
@@ -510,30 +498,24 @@ class _CalendarPageState extends State<CalendarPage> {
                                                 task['categories']
                                                     .contains(category))
                                             .every((task) =>
-                                                task['completed'] ==
-                                                true); 
+                                                task['completed'] == true);
                                     bool hasPendingTasks = tasks
                                         .where((task) =>
                                             task['categories'] != null &&
                                             task['categories']
                                                 .contains(category))
                                         .any((task) =>
-                                            task['completed'] ==
-                                            false); 
+                                            task['completed'] == false);
                                     bool hasNoTasks = tasks.every((task) =>
                                         task['categories'] == null ||
-                                        !task['categories'].contains(
-                                            category)); 
+                                        !task['categories'].contains(category));
                                     Color chipColor;
                                     if (hasNoTasks) {
-                                      chipColor = Colors
-                                          .grey; 
+                                      chipColor = Colors.grey;
                                     } else if (allTasksComplete) {
-                                      chipColor = const Color(
-                                          0xFF24AB79); 
+                                      chipColor = const Color(0xFF24AB79);
                                     } else if (hasPendingTasks) {
-                                      chipColor = const Color(
-                                          0xFFF9A15A); 
+                                      chipColor = const Color(0xFFF9A15A);
                                     } else {
                                       chipColor = Colors.grey;
                                     }
@@ -552,8 +534,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                       },
                                       avatar: const Icon(Icons.close,
                                           size: 18, color: Colors.white),
-                                      backgroundColor:
-                                          chipColor, 
+                                      backgroundColor: chipColor,
                                       labelStyle:
                                           const TextStyle(color: Colors.white),
                                     );
@@ -637,11 +618,13 @@ class _CalendarPageState extends State<CalendarPage> {
                                   onDeleteTask: () =>
                                       showDeleteConfirmationDialog(task),
                                   onEditTask: () => editTask(task),
+                                  onRefresh: fetchTasksFromFirestore,
                                 ),
                               ),
                               const SizedBox(height: 16),
                               // if all tasks are completed.
-                              if (areAllTasksCompleted() && selectedCategories.contains('All'))
+                              if (areAllTasksCompleted() &&
+                                  selectedCategories.contains('All'))
                                 Center(
                                   child: Column(
                                     children: [
@@ -729,7 +712,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                     setState(() {
                                       task['subtasks'].remove(subtask);
                                     });
-                                    setState(() {}); 
+                                    setState(() {});
                                     _showTopNotification(
                                         "Subtask deleted successfully.");
                                   },
@@ -737,6 +720,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   onDeleteTask: () =>
                                       showDeleteConfirmationDialog(task),
                                   onEditTask: () => editTask(task),
+                                  onRefresh: fetchTasksFromFirestore,
                                 ),
                               ),
                             ],
@@ -746,7 +730,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ],
           ),
         ),
-       // Allows the floating action button to be dragged and repositioned within screen bounds.
+        // Allows the floating action button to be dragged and repositioned within screen bounds.
         floatingActionButton: Overlay(
           initialEntries: [
             OverlayEntry(
@@ -866,7 +850,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ],
         ),
         bottomNavigationBar: userID != null
-        //showing nav bar for registered user.
+            //showing nav bar for registered user.
             ? CustomNavigationBar(
                 selectedIndex: selectedIndex,
                 onTabChange: (index) {
@@ -888,18 +872,14 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-
   String getDayMessage() {
-
     //for current day.
     String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDay!);
     if (isSameDay(_selectedDay!, DateTime.now())) {
       if (tasks.isEmpty) {
-        return DailyMessageManager.getDayMessage(
-            tasks); 
+        return DailyMessageManager.getDayMessage(tasks);
       } else if (areAllTasksCompleted()) {
-        return DailyMessageManager.getDayMessage(
-            tasks); 
+        return DailyMessageManager.getDayMessage(tasks);
       }
     }
     // for another days.
@@ -917,7 +897,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   bool areAllTasksCompleted() {
     if (tasks.isEmpty) {
-      return false; 
+      return false;
     }
     return tasks.every((task) => task['completed']);
   }
@@ -931,8 +911,8 @@ class _CalendarPageState extends State<CalendarPage> {
       tasks.removeWhere((t) => t['id'] == taskData['id']);
       getDayMessage();
     });
-  generateTaskIndicators(); 
-  setState(() {}); 
+    generateTaskIndicators();
+    setState(() {});
     // Show notification
     _showTopNotification("Task deleted successfully.");
   }
@@ -989,7 +969,7 @@ class _CalendarPageState extends State<CalendarPage> {
     // If result is true, refresh the task list
     if (result == true) {
       fetchTasksFromFirestore();
-      generateTaskIndicators(); 
+      generateTaskIndicators();
     }
   }
 
@@ -1111,7 +1091,7 @@ class _CalendarPageState extends State<CalendarPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFFF5F7F8), 
+          backgroundColor: const Color(0xFFF5F7F8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
@@ -1119,7 +1099,7 @@ class _CalendarPageState extends State<CalendarPage> {
             'Category',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 6, 6, 6), 
+              color: Color.fromARGB(255, 6, 6, 6),
             ),
           ),
           content: StatefulBuilder(
@@ -1159,10 +1139,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       return Container(
                         decoration: BoxDecoration(
                           boxShadow: [
-
                             BoxShadow(
-                              color: Color(0xFFFAFBFF)
-                                  .withOpacity(1.0), 
+                              color: Color(0xFFFAFBFF).withOpacity(1.0),
                               offset: Offset(-5, -5),
                               blurRadius: 10,
                             ),
@@ -1172,7 +1150,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           label: Text(
                             category,
                             style: const TextStyle(
-                              color: Colors.white, 
+                              color: Colors.white,
                             ),
                           ),
                           selected: isSelected,
@@ -1182,18 +1160,15 @@ class _CalendarPageState extends State<CalendarPage> {
                             setState(() {
                               if (selected) {
                                 if (category == 'All') {
-                            
                                   tempSelectedCategories.clear();
                                   tempSelectedCategories.add('All');
                                 } else {
-                                 
                                   tempSelectedCategories.remove('All');
                                   tempSelectedCategories.add(category);
                                 }
                               } else {
                                 tempSelectedCategories.remove(category);
                                 if (tempSelectedCategories.isEmpty) {
-                                 
                                   tempSelectedCategories.add('All');
                                 }
                               }
@@ -1209,10 +1184,9 @@ class _CalendarPageState extends State<CalendarPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildLegendCircle(Colors.grey, 'No Tasks'),
                         _buildLegendCircle(
-                            Colors.grey, 'No Tasks'), 
-                        _buildLegendCircle(
-                            const Color(0xFFF9A15A), 'Pending Tasks'), 
+                            const Color(0xFFF9A15A), 'Pending Tasks'),
                         _buildLegendCircle(
                             Color(0xFF24AB79), 'Completed Tasks '),
                       ],
@@ -1228,8 +1202,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFFF5F7F8), 
+                backgroundColor: const Color(0xFFF5F7F8),
                 shape: RoundedRectangleBorder(
                   side: const BorderSide(color: Color(0xFF79A3B7)),
                   borderRadius: BorderRadius.circular(8.0),
@@ -1280,8 +1253,7 @@ class _CalendarPageState extends State<CalendarPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor:
-                  const Color(0xFFF5F7F8),
+              backgroundColor: const Color(0xFFF5F7F8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.0),
               ),
@@ -1289,8 +1261,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 'Sort by',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(
-                      255, 6, 6, 6),
+                  color: Color.fromARGB(255, 6, 6, 6),
                 ),
               ),
               content: Column(
@@ -1301,8 +1272,8 @@ class _CalendarPageState extends State<CalendarPage> {
                     title: const Text(
                       'Time',
                       style: TextStyle(
-                        color: Color(0xFF545454), 
-                        fontWeight: FontWeight.w500, 
+                        color: Color(0xFF545454),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'timeline',
@@ -1319,7 +1290,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       'Priority',
                       style: TextStyle(
                         color: Color(0xFF545454),
-                        fontWeight: FontWeight.w500, 
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     value: 'priority',
@@ -1338,17 +1309,16 @@ class _CalendarPageState extends State<CalendarPage> {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white, 
+                    backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                          color: Color(0xFF79A3B7)), 
+                      side: const BorderSide(color: Color(0xFF79A3B7)),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
                   child: const Text(
                     'Cancel',
                     style: TextStyle(
-                      color: Color(0xFF79A3B7), 
+                      color: Color(0xFF79A3B7),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1356,13 +1326,12 @@ class _CalendarPageState extends State<CalendarPage> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
-                      sortTasks(); 
+                      sortTasks();
                     });
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF79A3B7), 
+                    backgroundColor: const Color(0xFF79A3B7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -1370,7 +1339,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   child: const Text(
                     'Apply',
                     style: TextStyle(
-                      color: Colors.white, 
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1386,9 +1355,8 @@ class _CalendarPageState extends State<CalendarPage> {
   void sortTasks() {
     //sort by priority
     if (selectedSort == 'priority') {
-      tasks.sort((a, b) =>
-          b['priority'].compareTo(a['priority'])); 
-    //sort by time
+      tasks.sort((a, b) => b['priority'].compareTo(a['priority']));
+      //sort by time
     } else if (selectedSort == 'timeline') {
       try {
         tasks.sort((a, b) {
@@ -1398,13 +1366,13 @@ class _CalendarPageState extends State<CalendarPage> {
           DateTime timeB = b['time'] is DateTime
               ? b['time']
               : DateTime.parse(b['time'].toString());
-          return timeA.compareTo(timeB); 
+          return timeA.compareTo(timeB);
         });
       } catch (e) {
         print('General error: $e');
       }
     }
-    setState(() {}); 
+    setState(() {});
   }
 
   void toggleTaskCompletion(Map<String, dynamic> taskData) async {
@@ -1413,9 +1381,9 @@ class _CalendarPageState extends State<CalendarPage> {
 
     setState(() {
       taskData['completed'] = newTaskCompletionStatus;
-      selectedCompletionMessage = null; 
+      selectedCompletionMessage = null;
     });
-  // If the task is marked as completed.
+    // If the task is marked as completed.
     if (newTaskCompletionStatus) {
       for (var subtask in taskData['subtasks']) {
         setState(() {
@@ -1428,11 +1396,13 @@ class _CalendarPageState extends State<CalendarPage> {
                 completionStatus: 1)
             .updateCompletionStatus(1);
       }
-      await task.updateCompletionStatus(2); // Update the task's status as completed in the database.
+      await task.updateCompletionStatus(
+          2); // Update the task's status as completed in the database.
     } else {
       for (var subtask in taskData['subtasks']) {
         setState(() {
-          subtask['completed'] = false;  // Mark all subtasks as not completed in UI.
+          subtask['completed'] =
+              false; // Mark all subtasks as not completed in UI.
         });
         // Update the completion status of each subtask in the database.
         await SubTask(
@@ -1442,7 +1412,8 @@ class _CalendarPageState extends State<CalendarPage> {
                 completionStatus: 0)
             .updateCompletionStatus(0);
       }
-      await task.updateCompletionStatus(0);// Update the task's status as not completed in the database.
+      await task.updateCompletionStatus(
+          0); // Update the task's status as not completed in the database.
     }
 
     if (mounted) {
@@ -1452,8 +1423,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   void toggleSubtaskCompletion(
       Map<String, dynamic> task, Map<String, dynamic> subtask) async {
-    bool newSubtaskCompletionStatus =
-        !subtask['completed']; 
+    bool newSubtaskCompletionStatus = !subtask['completed'];
 
     setState(() {
       subtask['completed'] = newSubtaskCompletionStatus;
@@ -1467,15 +1437,14 @@ class _CalendarPageState extends State<CalendarPage> {
         .update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
 
     // Determine the new status of the parent task based on subtasks' statuses.
-    bool allSubtasksComplete =
-        task['subtasks'].every((s) => s['completed'] == true); // Check if all subtasks are complete.
-    bool anySubtaskComplete =
-        task['subtasks'].any((s) => s['completed'] == true); // Check if any subtask is complete.
-
+    bool allSubtasksComplete = task['subtasks'].every(
+        (s) => s['completed'] == true); // Check if all subtasks are complete.
+    bool anySubtaskComplete = task['subtasks'].any(
+        (s) => s['completed'] == true); // Check if any subtask is complete.
 
     int newTaskStatus;
     if (allSubtasksComplete) {
-      newTaskStatus = 2;  // Task is fully completed.
+      newTaskStatus = 2; // Task is fully completed.
       task['completed'] = true;
     } else if (anySubtaskComplete) {
       newTaskStatus = 1; // Task is partially completed.
@@ -1485,7 +1454,7 @@ class _CalendarPageState extends State<CalendarPage> {
       task['completed'] = false;
     }
     if (mounted) {
-      setState(() {}); 
+      setState(() {});
     }
     // Update the task's completion status in the database.
     await firestore
@@ -1510,7 +1479,7 @@ class _CalendarPageState extends State<CalendarPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -1527,7 +1496,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ElevatedButton(
               onPressed: () {
                 deleteTask(task);
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -1586,6 +1555,7 @@ class TaskCard extends StatelessWidget {
   final Color Function(int) getPriorityColor;
   final VoidCallback onDeleteTask;
   final VoidCallback onEditTask;
+  final VoidCallback onRefresh;
 
   const TaskCard({
     Key? key,
@@ -1597,6 +1567,7 @@ class TaskCard extends StatelessWidget {
     required this.getPriorityColor,
     required this.onDeleteTask,
     required this.onEditTask,
+    required this.onRefresh,
   }) : super(key: key);
 
   void showDeleteConfirmationDialog(
@@ -1748,8 +1719,7 @@ class TaskCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DateFormat('h:mm a')
-                          .format(task['time']),
+                      DateFormat('h:mm a').format(task['time']),
                     ),
                     if (totalSubtasks > 0)
                       Row(
@@ -1761,10 +1731,8 @@ class TaskCard extends StatelessWidget {
                               Icons.circle,
                               size: 10,
                               color: index < completedSubtasks
-                                  ? const Color(
-                                      0xFF3B7292)
-                                  : Colors
-                                      .grey, 
+                                  ? const Color(0xFF3B7292)
+                                  : Colors.grey,
                             ),
                           );
                         }),
@@ -1774,18 +1742,38 @@ class TaskCard extends StatelessWidget {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.play_arrow),
-                   onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => TimerSelectionPage(taskId: task['id'], subTaskID: task['id'], subTaskName: task['title'],taskName: task['title'])),
-                        );
-                      },
+                    Tooltip(
+                      message: task['completed']
+                          ? "This task is already complete!" // Hint for completed task
+                          : "Start task timer", // Hint for incomplete task
+                      showDuration:
+                          Duration(milliseconds: 500), // Hint display duration
+                      child: InkWell(
+                        onTap: () {
+                          if (task['completed']) {
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TimerSelectionPage(
+                                  taskId: task['id'],
+                                  subTaskID: task['id'],
+                                  subTaskName: task['title'],
+                                  taskName: task['title'],
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: task['completed']
+                              ? Colors.grey
+                              : Colors.grey, 
+                        ),
+                      ),
                     ),
-                    if (task['subtasks'] != null &&
-                        task['subtasks']
-                            .isNotEmpty) // Show arrow if subtasks are present
+                    if (task['subtasks'] != null && task['subtasks'].isNotEmpty)
                       IconButton(
                         icon: Icon(task['expanded']
                             ? Icons.expand_less
@@ -1826,7 +1814,11 @@ class TaskCard extends StatelessWidget {
                                 builder: (context) =>
                                     EditTaskPage(taskId: task['id']),
                               ),
-                            );
+                            ).then((result) {
+                              if (result == true) {
+                                onRefresh();
+                              }
+                            });
                           },
                           leading: Tooltip(
                             message: "Mark SubTask as complete!", //hint
@@ -1865,19 +1857,33 @@ class TaskCard extends StatelessWidget {
                                   : TextDecoration.none,
                             ),
                           ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.play_arrow),
-                          onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => TimerSelectionPage(
-                                        taskId: task['id'],
-                                        subTaskID: subtask['id'],
-                                        subTaskName: subtask['title'],
-                                        taskName: task['title'])),
-                              );
-                            },
+                          trailing: Tooltip(
+                            message: subtask['completed']
+                                ? 'This subtask is already complete!' // Hint if subtask is complete
+                                : 'Start subtask timer', // Hint if subtask is not complete
+                            child: IconButton(
+                              icon: Icon(Icons.play_arrow,
+                                  color: subtask['completed']
+                                      ? Colors.grey
+                                      : Colors
+                                          .grey), // Grey for completed, Blue for not
+                              onPressed: subtask['completed']
+                                  ? null // Disable the button if the subtask is complete
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              TimerSelectionPage(
+                                            taskId: task['id'] ?? '',
+                                            subTaskID: subtask['id'] ?? '',
+                                            subTaskName: subtask['title'] ?? '',
+                                            taskName: task['title'] ?? '',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                            ),
                           ),
                         ),
                       );

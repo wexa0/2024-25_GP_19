@@ -1748,7 +1748,6 @@ class TaskCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (task['completed']) {
-            // لا تفعل شيئاً لأن المهمة مكتملة
           } else {
             Navigator.push(
               context,
