@@ -65,6 +65,7 @@ dependencies:
   syncfusion_flutter_charts: ^21.2.4
   toggle_switch: ^2.3.0
   streak_calendar: ^1.1.2
+  liquid_progress_indicator_v2: ^0.5.0
 
 dev_dependencies:
   flutter_test:

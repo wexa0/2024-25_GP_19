@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/Classes/Task';
+import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,9 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:flutter_application/Classes/Category';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:streak_calendar/streak_calendar.dart';
+import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
+import 'dart:math' as math;
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({Key? key}) : super(key: key);
@@ -177,11 +179,11 @@ class _ProgressPageState extends State<ProgressPage> {
         double completionPercentage =
             totalTasks == 0 ? 0.0 : counts['completed']! / totalTasks;
 
-        // Format percentage to display with two decimal places
+        // Format percentage to display
         String formattedPercentage =
             (completionPercentage * 100).toStringAsFixed(0);
 
-        // Generate the appropriate progress message based on the calculated percentage
+        // Updated progress message
         String getProgressMessage(double percentage, int totalTasks) {
           if (totalTasks == 0) {
             return "It looks like you haven’t started planning yet! Let’s set some goals and begin your journey—Ateena is here to help!";
@@ -202,45 +204,91 @@ class _ProgressPageState extends State<ProgressPage> {
           }
         }
 
-        // Get the screen width for responsive design
-        double screenWidth = MediaQuery.of(context).size.width;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Trophy Liquid Fill
+         SizedBox(
+  height: 200,
+  width: 200,
+  child: LiquidCustomProgressIndicator(
+    value: completionPercentage, // Percentage for fill
+    valueColor: AlwaysStoppedAnimation<Color>(
+      const Color.fromARGB(255, 255, 209, 59), // Static yellow color
+    ),
+    backgroundColor: const Color(0xFFF8F4F4), // Unfilled part color
+    direction: Axis.vertical, // Fill direction
+    shapePath: _buildStarPath(), // Star shape
+    center: Text(
+      "$formattedPercentage%",
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+    ),
+  ),
+),
 
-        // Adjust widthFactor as 80% of the screen width (can adjust as needed)
-        double widthFactor = 0.85;
 
-        return Center(
-          child: Container(
-            width:
-                screenWidth * widthFactor, // Adjust width based on widthFactor
-            padding: const EdgeInsets.symmetric(
-                vertical: 16, horizontal: 22), // Same padding as _buildTaskCard
-            margin: const EdgeInsets.symmetric(
-                vertical: 10), // Same margin as _buildTaskCard
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E2E2), // Set background color
-              borderRadius: BorderRadius.circular(15), // Rounded corners
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26, // Shadow color
-                  blurRadius: 1, // Shadow blur effect
-                  offset: Offset(0, 2), // Shadow position
+              const SizedBox(height: 16),
+              Text(
+                getProgressMessage(completionPercentage, totalTasks),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Dynamic progress message based on the calculation
-                Text(
-                  getProgressMessage(completionPercentage, totalTasks),
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Path _buildStarPath() {
+    const double outerRadius = 100; // Outer radius of the star
+    const double innerRadius = 50; // Inner radius of the star
+    const int numPoints = 5; // Number of points for the star
+
+    final Path path = Path();
+    final double angle = (2 * math.pi) / numPoints;
+
+    for (int i = 0; i < numPoints * 2; i++) {
+      // Alternate between outer and inner radius
+      final double radius = (i % 2 == 0) ? outerRadius : innerRadius;
+
+      // Calculate the x and y coordinates
+      final double x = outerRadius +
+          radius * math.cos(i * angle - math.pi / 2); // Offset by -90 degrees
+      final double y = outerRadius +
+          radius * math.sin(i * angle - math.pi / 2); // Offset by -90 degrees
+
+      if (i == 0) {
+        path.moveTo(x, y); // Move to the first point
+      } else {
+        path.lineTo(x, y); // Draw lines to subsequent points
+      }
+    }
+
+    path.close(); // Close the path to complete the star
+    return path;
   }
 
   Widget _buildSegment(String label, {required bool isSelected}) {
@@ -411,7 +459,7 @@ class _ProgressPageState extends State<ProgressPage> {
 //this will be modified
   Widget _buildTotalTimeCard() {
     return FutureBuilder<double>(
-      future: _fetchSpentHoursByPeriod(selectedTime), // Fetch spent hours
+      future: _fetchSpentMinByPeriod(selectedTime), // Fetch spent hours
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -428,17 +476,27 @@ class _ProgressPageState extends State<ProgressPage> {
         }
 
         // Get the total spent hours
-        final spentHours = snapshot.data ?? 0.0;
+        final spentMin = snapshot.data ?? 0.0;
 
         return Center(
           child: _buildTaskCard(
             "Time Spent",
-            "${spentHours.toStringAsFixed(2)} Hours", // Display hours with two decimal points
+            _formatTimeSpent(spentMin), // Dynamically format the time
             widthFactor: 0.85, // Wider card for Time view
           ),
         );
       },
     );
+  }
+
+  String _formatTimeSpent(double spentMin) {
+    if (spentMin < 60) {
+      return "${spentMin.toStringAsFixed(2)} Minutes"; // Less than 60 minutes
+    } else {
+      int hours = spentMin ~/ 60; // Calculate hours
+      int minutes = (spentMin % 60).toInt(); // Calculate remaining minutes
+      return "$hours Hours ${minutes.toString()} Minutes"; // Display hours and minutes
+    }
   }
 
   Widget _buildTaskCard(String title, String count,
@@ -901,6 +959,27 @@ class _ProgressPageState extends State<ProgressPage> {
                     primaryXAxis: CategoryAxis(
                       majorGridLines:
                           MajorGridLines(width: 0), // Hide vertical grid lines
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black, // Default label color
+                      ),
+                      axisLabelFormatter: (AxisLabelRenderDetails details) {
+                        final String periodLabel = details.text;
+                        // Check if the label matches the current period
+                        final bool isCurrentPeriod =
+                            periodLabel == getPeriodLabel(currentDate);
+
+                        return ChartAxisLabel(
+                          periodLabel,
+                          TextStyle(
+                            fontSize: 12,
+                            fontWeight: isCurrentPeriod
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isCurrentPeriod ? Colors.blue : Colors.black,
+                          ),
+                        );
+                      },
                     ),
                     primaryYAxis: NumericAxis(
                       minimum: 0,
@@ -918,7 +997,7 @@ class _ProgressPageState extends State<ProgressPage> {
                     ),
                     series: _buildStackedSeries(chartData),
                     tooltipBehavior: TooltipBehavior(enable: true),
-                  ),
+                  )
                 ],
               ),
             );
@@ -1034,73 +1113,94 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   Widget _buildTimeSpentSection() {
-  return FutureBuilder<List<TaskTimerData>>(
-    future: _fetchTimeSpentData(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
+    return FutureBuilder<List<TaskTimerData>>(
+      future: _fetchTimeSpentData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-      if (snapshot.hasError) {
-        return const Center(child: Text("Error loading time spent data"));
-      }
+        if (snapshot.hasError) {
+          return const Center(child: Text("Error loading time spent data"));
+        }
 
-      final chartData = snapshot.data ?? [];
+        final chartData = snapshot.data ?? [];
 
-      return Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Time Spent (Hours)",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+        // Get the current period label based on the selected time and offset
+        final currentPeriodLabel = getPeriodLabel(
+          getCurrentDate(selectedTime, periodOffset),
+        );
 
-            // Dropdown to select category
-            DropdownUnderWidget(
-              availableCategories: availableCategories,
-              selectedCategory: selectedCategory,
-              onCategoryChange: (category) {
-                handleCategoryChange(category);
-              },
-            ),
-
-            const SizedBox(height: 20), // Space between dropdown and chart
-            SfCartesianChart(
-              legend: Legend(isVisible: true),
-              primaryXAxis: CategoryAxis(
-                majorGridLines: MajorGridLines(width: 0),
-                labelRotation: -45,
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F9F9),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
-              primaryYAxis: NumericAxis(
-                minimum: 0,
-                majorGridLines:
-                    MajorGridLines(width: 1, color: Colors.grey.shade400),
-                labelFormat: '{value} hrs',
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Time Spent",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              series: _buildTimeSpentSeries(chartData),
-              tooltipBehavior: TooltipBehavior(enable: true),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              const SizedBox(height: 16),
 
+              // Dropdown to select category
+              DropdownUnderWidget(
+                availableCategories: availableCategories,
+                selectedCategory: selectedCategory,
+                onCategoryChange: (category) {
+                  handleCategoryChange(category);
+                },
+              ),
+
+              const SizedBox(height: 20), // Space between dropdown and chart
+              SfCartesianChart(
+                legend: Legend(isVisible: true),
+                primaryXAxis: CategoryAxis(
+                  majorGridLines: MajorGridLines(width: 0), // Hide grid lines
+                  labelRotation: -45, // Rotate labels for better visibility
+                  axisLabelFormatter: (AxisLabelRenderDetails details) {
+                    final String label = details.text;
+                    final bool isCurrentPeriod = label == currentPeriodLabel;
+
+                    return ChartAxisLabel(
+                      label,
+                      TextStyle(
+                        fontSize: 12,
+                        fontWeight: isCurrentPeriod
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isCurrentPeriod ? Colors.blue : Colors.black,
+                      ),
+                    );
+                  },
+                ),
+                primaryYAxis: NumericAxis(
+                  minimum: 0,
+                  majorGridLines: MajorGridLines(
+                    width: 1,
+                    color: Colors.grey.shade400,
+                  ),
+                  labelFormat: '{value} hrs',
+                ),
+                series: _buildTimeSpentSeries(chartData),
+                tooltipBehavior: TooltipBehavior(enable: true),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   /// Build the chart series for time spent visualization
   List<ChartSeries<TaskTimerData, String>> _buildTimeSpentSeries(
@@ -1216,8 +1316,7 @@ class _ProgressPageState extends State<ProgressPage> {
   String getPeriodLabel(DateTime scheduledDate) {
     switch (selectedTime) {
       case 'Daily':
-        return DateFormat('yyyy-MM-dd')
-            .format(scheduledDate); // Sortable format
+        return DateFormat('MM-dd').format(scheduledDate); // Sortable format
       case 'Weekly':
         return 'Week ${getWeekNumber(scheduledDate)}'; // Week number or date range
       case 'Monthly':
@@ -1430,7 +1529,7 @@ class _ProgressPageState extends State<ProgressPage> {
     return filteredTasks; // Return the filtered list of tasks
   }
 
-  Future<double> _fetchSpentHoursByPeriod(String selectedTime) async {
+  Future<double> _fetchSpentMinByPeriod(String selectedTime) async {
     // Fetch the current user
     final user = FirebaseAuth.instance.currentUser;
 
@@ -1451,7 +1550,7 @@ class _ProgressPageState extends State<ProgressPage> {
     print("Start of period: $startOfPeriod");
     print("End of period: $endOfPeriod");
 
-    double totalSpentHours = 0.0;
+    double totalSpentMin = 0.0;
 
     // Fetch tasks for the current user
     final tasksSnapshot = await FirebaseFirestore.instance
@@ -1475,14 +1574,18 @@ class _ProgressPageState extends State<ProgressPage> {
               if (dateTime.isAfter(startOfPeriod) &&
                   dateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentHours += (double.tryParse(timeField) ?? 0.0) / 3600.0;
+                totalSpentMin += (double.tryParse(timeField) ?? 0.0) / 60.0;
               }
             }
             // Check for valid `startTime` and `endTime`
-            final startTimeField = timerEntry['firstDayActualTimeSpent']?.toString().trim();
-            final endTimeField = timerEntry['secondDayActualTimeSpent']?.toString().trim();
-            final startDateTime = parseDateTime(timerEntry['firstDayStartDatetime']);
-            final endDateTime = parseDateTime(timerEntry['secondDayEndDatetime']);
+            final startTimeField =
+                timerEntry['firstDayActualTimeSpent']?.toString().trim();
+            final endTimeField =
+                timerEntry['secondDayActualTimeSpent']?.toString().trim();
+            final startDateTime =
+                parseDateTime(timerEntry['firstDayStartDatetime']);
+            final endDateTime =
+                parseDateTime(timerEntry['secondDayEndDatetime']);
 
             if (startTimeField != "" &&
                 startTimeField != null &&
@@ -1490,8 +1593,8 @@ class _ProgressPageState extends State<ProgressPage> {
               if (startDateTime.isAfter(startOfPeriod) &&
                   startDateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentHours +=
-                    (double.tryParse(startTimeField) ?? 0.0) / 3600.0;
+                totalSpentMin +=
+                    (double.tryParse(startTimeField) ?? 0.0) / 60.0;
               }
             }
 
@@ -1501,8 +1604,7 @@ class _ProgressPageState extends State<ProgressPage> {
               if (endDateTime.isAfter(startOfPeriod) &&
                   endDateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentHours +=
-                    (double.tryParse(endTimeField) ?? 0.0) / 3600.0;
+                totalSpentMin += (double.tryParse(endTimeField) ?? 0.0) / 60.0;
               }
             }
           }
@@ -1510,9 +1612,9 @@ class _ProgressPageState extends State<ProgressPage> {
       }
     }
 
-    print("Total spent hours in the period: $totalSpentHours");
+    print("Total spent hours in the period: $totalSpentMin");
 
-    return totalSpentHours;
+    return totalSpentMin;
   }
 
   Future<Map<String, int>> countTasksByCategory(

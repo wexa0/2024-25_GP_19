@@ -6,6 +6,7 @@ import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_application/services/notification_handler.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_application/pages/timer_selector.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/DailyMessageManager';
 
+
 class TaskPage extends StatefulWidget {
   const TaskPage({Key? key}) : super(key: key);
   @override
@@ -24,6 +26,8 @@ class TaskPage extends StatefulWidget {
 }
 
 class TaskPageState extends State<TaskPage> {
+
+ 
   String selectedSort = 'timeline';
   bool showEmptyState = true;
   String? userID;
@@ -142,8 +146,15 @@ class TaskPageState extends State<TaskPage> {
   }
 
   void deleteTask(Map<String, dynamic> taskData) async {
-    // Call the static deleteTask method on the Task class
+    // Cancel the task reminder
+    await NotificationHandler.cancelNotification(taskData['id']);
+     // Cancel notifications for all subtasks
+    for (var subtask in taskData['subtasks']) {
+      await NotificationHandler.cancelNotification(subtask['id']);
+    }
     await Task.deleteTask(taskData['id']);
+
+   
 
     // Remove the task locally and update the UI
     setState(() {
@@ -156,6 +167,8 @@ class TaskPageState extends State<TaskPage> {
 
   void deleteSubTask(
       Map<String, dynamic> taskData, Map<String, dynamic> subtaskData) async {
+
+   await NotificationHandler.cancelNotification(subtaskData['id']);
     // Create an instance of SubTask using the provided data
     SubTask subtask = SubTask(
       subTaskID: subtaskData['id'],
@@ -681,8 +694,11 @@ class TaskPageState extends State<TaskPage> {
                 title: subtask['title'],
                 completionStatus: 1)
             .updateCompletionStatus(1);
+             // Cancel notification for the subtask
+        await NotificationHandler.cancelNotification(subtask['id']);
       }
       await task.updateCompletionStatus(2);
+       await NotificationHandler.cancelNotification(task.taskID);
     } else {
       for (var subtask in taskData['subtasks']) {
         setState(() {
@@ -718,6 +734,10 @@ class TaskPageState extends State<TaskPage> {
         .doc(subtask['id'])
         .update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
 
+         if (newSubtaskCompletionStatus) {
+    await NotificationHandler.cancelNotification(subtask['id']);
+         }
+
     bool allSubtasksComplete =
         task['subtasks'].every((s) => s['completed'] == true);
     bool anySubtaskComplete =
@@ -727,6 +747,8 @@ class TaskPageState extends State<TaskPage> {
     if (allSubtasksComplete) {
       newTaskStatus = 2;
       task['completed'] = true;
+       // Cancel notification for the main task
+      await NotificationHandler.cancelNotification(task['id']);
     } else if (anySubtaskComplete) {
       newTaskStatus = 1;
       task['completed'] = false;

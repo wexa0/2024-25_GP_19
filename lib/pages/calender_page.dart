@@ -9,7 +9,6 @@ import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/timer_selector.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_application/pages/addTaskForm.dart';

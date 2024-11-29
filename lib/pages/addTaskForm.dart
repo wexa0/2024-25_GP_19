@@ -159,13 +159,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
       User? currentUser = await _getCurrentUser();
       if (currentUser == null) return null;
 
-    final DateTime taskDateTime = DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-      selectedTime.hour,
-      selectedTime.minute,
-    );
+      final DateTime taskDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
 
       DateTime? reminderDateTime;
 
@@ -205,6 +205,24 @@ class _AddTaskPageState extends State<AddTaskPage> {
         'userID': currentUser.uid,
       });
 
+      if (selectedCategory.isNotEmpty) {
+        QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+            .collection('Category')
+            .where('categoryName', isEqualTo: selectedCategory)
+            .where('userID', isEqualTo: currentUser.uid)
+            .get();
+
+        if (categorySnapshot.docs.isNotEmpty) {
+          DocumentReference categoryDoc = categorySnapshot.docs.first.reference;
+          await categoryDoc.update({
+            'taskIDs':
+                FieldValue.arrayUnion([taskId]), // Add taskId to taskIDs array
+          });
+        } else {
+          print("Category not found: $selectedCategory");
+        }
+      }
+
       // Schedule main task notification if reminder is valid
       if (isReminderOn && reminderDateTime != null) {
         await _scheduleTaskNotification(
@@ -232,8 +250,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
         // Validate subtask reminder
         if (subtaskReminderDateTime != null &&
             subtaskReminderDateTime.isBefore(DateTime.now())) {
-          print("Invalid subtask reminder for: $subtask");
-          continue;
+          _showTopNotification(
+              "Reminder date for subtask '$subtask' is in the past. Please select a future date.");
+          print("Reminder date is in the past for subtask: $subtask");
+          return null; // Skip scheduling this invalid reminder
         }
 
         DocumentReference subtaskRef =
@@ -266,7 +286,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-
   int _getPriorityValue() {
     switch (selectedPriority) {
       case 'Urgent':
@@ -291,11 +310,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
     if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
       try {
-        String? taskId = await _saveTaskToFirebase(); 
+        String? taskId = await _saveTaskToFirebase();
 
         if (taskId != null) {
-        
-         
           DateTime? reminderDateTime;
 
           if (selectedReminderOption != null &&
@@ -308,12 +325,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
           if (reminderDateTime != null) {
             if (reminderDateTime.isBefore(DateTime.now())) {
+              _showTopNotification(
+                  "Reminder date is in the past. Please select a future date.");
               print(
                   "Reminder date is in the past. Please select a future date.");
             } else {
               // Schedule the reminder notification
               await _scheduleTaskNotification(
-                taskId: taskId, 
+                taskId: taskId,
                 taskTitle: taskNameController.text,
                 scheduledDateTime: reminderDateTime,
               );
@@ -333,11 +352,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   void _showTopNotification(String message) {
-    final overlayState =
-        Navigator.of(context).overlay; 
+    final overlayState = Navigator.of(context).overlay;
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height * 0.1, 
+        top: MediaQuery.of(context).size.height * 0.1,
         left: 20,
         right: 20,
         child: Material(
@@ -369,7 +387,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     });
   }
 
- Future<void> _scheduleTaskNotification({
+  Future<void> _scheduleTaskNotification({
     required String taskId,
     required String taskTitle,
     required DateTime scheduledDateTime,
@@ -395,7 +413,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       'Task Reminders',
       channelDescription: 'Task reminders with customizable intervals',
       actions: [markDoneAction],
-    ); 
+    );
 
     final platformDetails = NotificationDetails(android: androidDetails);
 
@@ -406,7 +424,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
         'Reminder for your subtask scheduled at $scheduledDateTime',
         scheduledTZDateTime,
         platformDetails,
-        payload: taskId, 
+        payload: taskId,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -416,11 +434,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
       print("Failed to schedule notification: $e");
     }
   }
-int _generateNotificationId(String documentId) {
+
+  int _generateNotificationId(String documentId) {
     return documentId
         .hashCode; // Convert the Firestore document ID to an integer
   }
-
 
   @override
   @override
@@ -491,7 +509,7 @@ int _generateNotificationId(String documentId) {
               SizedBox(height: 20),
               _buildReminderSection(),
               SizedBox(height: 20),
-              _buildTimerSection(),
+
               TextField(
                 controller: notesController,
                 maxLines: 4,
@@ -640,7 +658,6 @@ int _generateNotificationId(String documentId) {
                           EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     ),
                   ),
-                  
                   trailing: IconButton(
                     icon: Icon(
                       Icons.notifications,
@@ -675,6 +692,11 @@ int _generateNotificationId(String documentId) {
               suffixIcon: IconButton(
                 icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
                 onPressed: () {
+                  if (subtasks.length >= 10) {
+                    _showTopNotification('You can only add up to 10 subtasks.');
+                    return;
+                  }
+
                   if (subtaskController.text.isNotEmpty) {
                     setState(() {
                       subtasks.add(subtaskController.text);
@@ -691,7 +713,7 @@ int _generateNotificationId(String documentId) {
     );
   }
 
- Widget _buildCategorySection() {
+  Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -756,7 +778,6 @@ int _generateNotificationId(String documentId) {
       ],
     );
   }
-
 
   void _showCategoryEditDialog() {
     List<String> tempCategories = List.from(categories);
@@ -885,12 +906,11 @@ int _generateNotificationId(String documentId) {
                                 ),
                               ),
                             ),
-                           IconButton(
+                            IconButton(
                               icon: Icon(
                                 Icons.arrow_upward,
-                                color:
-                                    mediumBlue, 
-                                size: 24.0, 
+                                color: mediumBlue,
+                                size: 24.0,
                               ),
                               onPressed: () {
                                 if (categoryController.text.isNotEmpty) {
@@ -1206,7 +1226,6 @@ int _generateNotificationId(String documentId) {
               selectedPriority = label;
               priorityIconColor = color;
 
-          
               // _preselectReminderBasedOnPriority(label);
             });
           },
@@ -1301,27 +1320,7 @@ int _generateNotificationId(String documentId) {
   Map<String, dynamic>? selectedReminderOption;
   DateTime? customReminderDateTime;
 
-  Widget _buildTimerSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Timer Section
-        ListTile(
-          leading: Icon(Icons.timer, color: Color(0xFF3B7292)),
-          title: Text(
-            'Set Timer',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: darkGray,
-            ),
-          ),
-        ),
-        SizedBox(height: 20),
-      ],
-    );
-  }
+  
 
   Widget _buildReminderSection() {
     return Padding(
@@ -1359,11 +1358,10 @@ int _generateNotificationId(String documentId) {
                   });
                 },
                 activeColor: mediumBlue, // Thumb color when switch is ON
-                activeTrackColor: lightBlue, 
+                activeTrackColor: lightBlue,
                 inactiveThumbColor: const Color.fromARGB(
                     255, 172, 172, 172), // Thumb color when switch is OFF
-                inactiveTrackColor:
-                    Colors.grey[350], 
+                inactiveTrackColor: Colors.grey[350],
               ),
             ],
           ),
@@ -1806,6 +1804,4 @@ int _generateNotificationId(String documentId) {
     }
     return null;
   }
-
-  
 }

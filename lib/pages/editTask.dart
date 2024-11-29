@@ -11,7 +11,6 @@ import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Category';
 
-
 class EditTaskPage extends StatefulWidget {
   final String taskId;
 
@@ -22,7 +21,7 @@ class EditTaskPage extends StatefulWidget {
 }
 
 class _EditTaskPageState extends State<EditTaskPage> {
-   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   User? _user = FirebaseAuth.instance.currentUser;
@@ -50,7 +49,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   bool _isTimeMissing = false;
 
   bool isReminderOn = false;
- List<Map<String, dynamic>> reminderOptions = [
+  List<Map<String, dynamic>> reminderOptions = [
     {"id": 1, "label": "1 day before", "duration": Duration(days: 1)},
     {"id": 2, "label": "3 hours before", "duration": Duration(hours: 3)},
     {"id": 3, "label": "1 hour before", "duration": Duration(hours: 1)},
@@ -62,7 +61,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
   Map<String, dynamic>? selectedReminderOption;
   DateTime? customReminderDateTime;
 
-  Map<String, bool> subtaskCompletionStatus = {}; 
+  Map<String, bool> subtaskCompletionStatus = {};
   double progress = 0.0; // Current progress (0.0 to 1.0)
 
   Color darkBlue = Color(0xFF104A73);
@@ -147,8 +146,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   .format(context);
           selectedTime =
               TimeOfDay.fromDateTime(taskData['scheduledDate'].toDate());
-         // Load reminder details
-         final DateTime taskDateTime = DateTime(
+          // Load reminder details
+          final DateTime taskDateTime = DateTime(
             selectedDate.year,
             selectedDate.month,
             selectedDate.day,
@@ -172,7 +171,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
               },
             );
           }
-
         });
 
         QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
@@ -188,25 +186,27 @@ class _EditTaskPageState extends State<EditTaskPage> {
           });
         }
 
-      QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
-    .collection('SubTask')
-    .where('taskID', isEqualTo: widget.taskId)
-    .get();
+        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+            .collection('SubTask')
+            .where('taskID', isEqualTo: widget.taskId)
+            .get();
 
-List<String> fetchedSubtasks = [];
-subtaskCompletionStatus.clear(); // Clear the existing map to avoid duplication
+        List<String> fetchedSubtasks = [];
+        subtaskCompletionStatus
+            .clear(); // Clear the existing map to avoid duplication
 
-for (var doc in subtaskSnapshot.docs) {
-  var subtaskData = doc.data() as Map<String, dynamic>;
-  String subtaskTitle = subtaskData['title'];
-  bool isCompleted = subtaskData['completionStatus'] == 1; // Use Firestore data
+        for (var doc in subtaskSnapshot.docs) {
+          var subtaskData = doc.data() as Map<String, dynamic>;
+          String subtaskTitle = subtaskData['title'];
+          bool isCompleted =
+              subtaskData['completionStatus'] == 1; // Use Firestore data
 
-  fetchedSubtasks.add(subtaskTitle);
-  subtaskCompletionStatus[subtaskTitle] = isCompleted; // Populate the map
+          fetchedSubtasks.add(subtaskTitle);
+          subtaskCompletionStatus[subtaskTitle] =
+              isCompleted; // Populate the map
 
-  subtaskControllers[subtaskTitle] =
-      TextEditingController(text: subtaskTitle);
-
+          subtaskControllers[subtaskTitle] =
+              TextEditingController(text: subtaskTitle);
 
           // Load reminder data
           if (subtaskData['reminder'] != null) {
@@ -232,41 +232,36 @@ for (var doc in subtaskSnapshot.docs) {
           } else {
             subtaskReminders[subtaskTitle] = null;
           }
-        };
+        }
+        ;
 
         setState(() {
           subtasks = fetchedSubtasks;
           _updateProgress();
           if (progress == 1.0) {
-    FirebaseFirestore.instance
-        .collection('Task')
-        .doc(widget.taskId)
-        .update({'completionStatus': 2});
-  } else if (progress > 0.0) {
-
-    FirebaseFirestore.instance
-        .collection('Task')
-        .doc(widget.taskId)
-        .update({'completionStatus': 1});
-  } else {
-
-    FirebaseFirestore.instance
-        .collection('Task')
-        .doc(widget.taskId)
-        .update({'completionStatus': 0});
-  }
+            FirebaseFirestore.instance
+                .collection('Task')
+                .doc(widget.taskId)
+                .update({'completionStatus': 2});
+          } else if (progress > 0.0) {
+            FirebaseFirestore.instance
+                .collection('Task')
+                .doc(widget.taskId)
+                .update({'completionStatus': 1});
+          } else {
+            FirebaseFirestore.instance
+                .collection('Task')
+                .doc(widget.taskId)
+                .update({'completionStatus': 0});
+          }
         });
-
-
-
-
       }
     } catch (e) {
       print('Failed to load task details: $e');
     }
   }
 
- Future<void> _saveChangesToFirebase() async {
+  Future<void> _saveChangesToFirebase() async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
@@ -279,8 +274,16 @@ for (var doc in subtaskSnapshot.docs) {
         selectedTime.minute,
       );
 
-      Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
+      // Validate Task Time
+      if (taskDateTime.isBefore(DateTime.now())) {
+        _showTopNotification(
+          'Scheduled date and time must be in the future.',
+        );
+        return;
+      }
 
+      // Check for Duplicate Tasks
+      Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
       QuerySnapshot existingTaskSnapshot = await FirebaseFirestore.instance
           .collection('Task')
           .where('userID', isEqualTo: currentUser.uid)
@@ -295,24 +298,18 @@ for (var doc in subtaskSnapshot.docs) {
         return;
       }
 
-      DateTime? reminderDateTime;
-      if (isReminderOn) {
-        if (selectedReminderOption?['duration'] != null) {
-          reminderDateTime =
-              taskDateTime.subtract(selectedReminderOption!['duration']);
-        } else if (customReminderDateTime != null) {
-          reminderDateTime = customReminderDateTime;
-        }
-
-        // Ensure reminder is valid and in the future
-        if (reminderDateTime != null &&
-            reminderDateTime.isBefore(DateTime.now())) {
-          _showTopNotification("Reminder time must be in the future.");
-          return;
-        }
+      // Validate Task Reminder
+      DateTime? reminderDateTime = _validateReminder(
+        isReminderOn,
+        taskDateTime,
+        selectedReminderOption,
+        customReminderDateTime,
+      );
+      if (reminderDateTime == null && isReminderOn) {
+        return; // Invalid reminder
       }
 
-      // Update the main task in Firestore
+      // Update Main Task in Firestore
       await FirebaseFirestore.instance
           .collection('Task')
           .doc(widget.taskId)
@@ -321,119 +318,30 @@ for (var doc in subtaskSnapshot.docs) {
         'note': notesController.text,
         'priority': _getPriorityValue(),
         'scheduledDate': taskTimestamp,
-        'reminder': isReminderOn && reminderDateTime != null
+        'reminder': reminderDateTime != null
             ? Timestamp.fromDate(reminderDateTime)
             : null,
       });
 
-      // Handle main task notification
+      // Schedule or Cancel Notification for Main Task
       if (isReminderOn && reminderDateTime != null) {
-        await NotificationHandler.cancelNotification(
-            widget.taskId); // Cancel old reminder
+        await NotificationHandler.cancelNotification(widget.taskId);
         await _scheduleTaskNotification(
-          taskId: widget.taskId, 
-          taskTitle: taskNameController.text, 
-          scheduledDateTime: reminderDateTime, // New reminder time
+          taskId: widget.taskId,
+          taskTitle: taskNameController.text,
+          scheduledDateTime: reminderDateTime,
         );
+      } else {
+        await NotificationHandler.cancelNotification(widget.taskId);
       }
 
+      // Handle Category Updates
       await _handleCategoryChanges();
 
-      // Delete removed subtasks from Firestore
-      for (String deletedSubtask in deletedSubtasks) {
-        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
-            .collection('SubTask')
-            .where('taskID', isEqualTo: widget.taskId)
-            .where('title', isEqualTo: deletedSubtask)
-            .get();
+      // Handle Subtask Updates
+      await _updateSubtasks(taskDateTime);
 
-        for (var doc in subtaskSnapshot.docs) {
-          await doc.reference.delete();
-        }
-      }
-for (String subtask in subtasks) {
-        final subtaskTitle = subtaskControllers[subtask]?.text ?? subtask;
-
-        QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
-            .collection('SubTask')
-            .where('taskID', isEqualTo: widget.taskId)
-            .where('title', isEqualTo: subtask)
-            .get();
-
-        // Determine the reminder for the subtask
-        DateTime? subtaskReminderDateTime;
-        if (subtaskReminders[subtask] != null) {
-          if (subtaskReminders[subtask]!['customDateTime'] != null) {
-            subtaskReminderDateTime =
-                subtaskReminders[subtask]!['customDateTime'];
-          } else if (subtaskReminders[subtask]!['duration'] != null) {
-            subtaskReminderDateTime =
-                taskDateTime.subtract(subtaskReminders[subtask]!['duration']);
-          }
-
-          // Ensure reminder is valid (not in the past)
-          if (subtaskReminderDateTime != null &&
-              subtaskReminderDateTime.isBefore(DateTime.now())) {
-            print("Skipping past subtask reminder for: $subtaskTitle");
-            subtaskReminderDateTime = null;
-          }
-        }
-
-        print(
-            "Final reminder details for subtask $subtaskTitle: $subtaskReminderDateTime");
-
-        // Save reminder to Firestore
-        if (subtaskSnapshot.docs.isNotEmpty) {
-          // Update existing subtask
-          DocumentReference subtaskRef = subtaskSnapshot.docs.first.reference;
-
-          await subtaskRef.update({
-            'title': subtaskTitle,
-            'reminder': subtaskReminderDateTime != null
-                ? Timestamp.fromDate(subtaskReminderDateTime)
-                : null,
-          });
-
-          print("Updated reminder in Firestore for subtask: $subtaskTitle");
-
-          // Schedule a notification for the subtask
-          if (subtaskReminderDateTime != null) {
-            await _scheduleTaskNotification(
-              taskId: subtaskRef.id,
-              taskTitle: subtaskTitle,
-              scheduledDateTime: subtaskReminderDateTime,
-            );
-          }
-        } else {
-          // Create a new subtask
-          DocumentReference newSubtaskRef =
-              FirebaseFirestore.instance.collection('SubTask').doc();
-
-          await newSubtaskRef.set({
-            'completionStatus': 0,
-            'taskID': widget.taskId,
-            'timer': '',
-            'title': subtaskTitle,
-            'reminder': subtaskReminderDateTime != null
-                ? Timestamp.fromDate(subtaskReminderDateTime)
-                : null,
-          });
-
-          print("Created new subtask with reminder: $subtaskReminderDateTime");
-
-          // Schedule a notification for the new subtask
-          if (subtaskReminderDateTime != null) {
-            await _scheduleTaskNotification(
-              taskId: newSubtaskRef.id,
-              taskTitle: subtaskTitle,
-              scheduledDateTime: subtaskReminderDateTime,
-            );
-          }
-        }
-      }
-
-
-      // Notify success
+      // Notify Success
       _showTopNotification('Task updated successfully!');
       deletedSubtasks.clear();
     } catch (e) {
@@ -442,8 +350,127 @@ for (String subtask in subtasks) {
     }
   }
 
+  Future<void> _updateSubtasks(DateTime taskDateTime) async {
+    // Delete removed subtasks
+    for (String deletedSubtask in deletedSubtasks) {
+      QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+          .collection('SubTask')
+          .where('taskID', isEqualTo: widget.taskId)
+          .where('title', isEqualTo: deletedSubtask)
+          .get();
 
- Future<void> _handleCategoryChanges() async {
+      for (var doc in subtaskSnapshot.docs) {
+        await doc.reference.delete();
+        await NotificationHandler.cancelNotification(
+            doc.id); // Cancel notification
+      }
+    }
+
+    // Add or Update existing subtasks
+    for (String subtask in subtasks) {
+      final subtaskTitle = subtaskControllers[subtask]?.text ?? subtask;
+
+      QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
+          .collection('SubTask')
+          .where('taskID', isEqualTo: widget.taskId)
+          .where('title', isEqualTo: subtask)
+          .get();
+
+      DateTime? subtaskReminderDateTime = _validateSubtaskReminder(
+        subtask,
+        subtaskReminders[subtask],
+        taskDateTime,
+      );
+
+      if (subtaskSnapshot.docs.isNotEmpty) {
+        // Update existing subtask
+        DocumentReference subtaskRef = subtaskSnapshot.docs.first.reference;
+
+        await subtaskRef.update({
+          'title': subtaskTitle,
+          'reminder': subtaskReminderDateTime != null
+              ? Timestamp.fromDate(subtaskReminderDateTime)
+              : null,
+        });
+
+        // Update Notification for Subtask
+        if (subtaskReminderDateTime != null) {
+          await _scheduleTaskNotification(
+            taskId: subtaskRef.id,
+            taskTitle: subtaskTitle,
+            scheduledDateTime: subtaskReminderDateTime,
+          );
+        } else {
+          await NotificationHandler.cancelNotification(subtaskRef.id);
+        }
+      } else {
+        // Create new subtask
+        DocumentReference newSubtaskRef =
+            FirebaseFirestore.instance.collection('SubTask').doc();
+
+        await newSubtaskRef.set({
+          'completionStatus': 0,
+          'taskID': widget.taskId,
+          'timer': '',
+          'title': subtaskTitle,
+          'reminder': subtaskReminderDateTime != null
+              ? Timestamp.fromDate(subtaskReminderDateTime)
+              : null,
+        });
+
+        // Schedule Notification for New Subtask
+        if (subtaskReminderDateTime != null) {
+          await _scheduleTaskNotification(
+            taskId: newSubtaskRef.id,
+            taskTitle: subtaskTitle,
+            scheduledDateTime: subtaskReminderDateTime,
+          );
+        }
+      }
+    }
+  }
+
+  DateTime? _validateReminder(bool isReminderOn, DateTime taskDateTime,
+      Map<String, dynamic>? selectedOption, DateTime? customReminder) {
+    if (!isReminderOn) return null;
+
+    DateTime? reminderDateTime;
+    if (selectedOption?['duration'] != null) {
+      reminderDateTime = taskDateTime.subtract(selectedOption!['duration']);
+    } else if (customReminder != null) {
+      reminderDateTime = customReminder;
+    }
+
+    if (reminderDateTime != null && reminderDateTime.isBefore(DateTime.now())) {
+      _showTopNotification("Reminder time must be in the future.");
+      return null;
+    }
+
+    return reminderDateTime;
+  }
+
+  DateTime? _validateSubtaskReminder(String subtask,
+      Map<String, dynamic>? reminderData, DateTime taskDateTime) {
+    if (reminderData == null) return null;
+
+    DateTime? reminderDateTime;
+    if (reminderData['customDateTime'] != null) {
+      reminderDateTime = reminderData['customDateTime'];
+    } else if (reminderData['duration'] != null) {
+      reminderDateTime = taskDateTime.subtract(reminderData['duration']);
+    }
+
+    if (reminderDateTime != null && reminderDateTime.isBefore(DateTime.now())) {
+      _showTopNotification(
+        "Reminder for subtask '$subtask' is in the past. Please update it.",
+      );
+      return null;
+    }
+
+    return reminderDateTime;
+  }
+
+  Future<void> _handleCategoryChanges() async {
     if (selectedCategory.isEmpty) return;
 
     User? currentUser = FirebaseAuth.instance.currentUser;
@@ -487,21 +514,20 @@ for (String subtask in subtasks) {
     }
   }
 
-
   Future<void> _deleteTask() async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) return;
 
-       await NotificationHandler.cancelNotification(widget.taskId);
-await NotificationHandler.debugPendingNotifications();
+      await NotificationHandler.cancelNotification(widget.taskId);
+      await NotificationHandler.debugPendingNotifications();
       // Delete subtasks
       QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
           .collection('SubTask')
           .where('taskID', isEqualTo: widget.taskId)
           .get();
 
-     for (var subtaskDoc in subtaskSnapshot.docs) {
+      for (var subtaskDoc in subtaskSnapshot.docs) {
         print(
             "Attempting to cancel notification for subtask ID: ${subtaskDoc.id}");
         await NotificationHandler.cancelNotification(subtaskDoc.id);
@@ -538,8 +564,9 @@ await NotificationHandler.debugPendingNotifications();
           .delete();
 
       _showTopNotification('Task deleted successfully!');
+      // Pop back to the TaskPage
       Navigator.pop(
-          context, true); // Passing `true` to indicate successful deletion
+          context, true); // Passing true to indicate successful deletion
     } catch (e) {
       print('Failed to delete task and subtasks: $e');
       _showTopNotification('Failed to delete task. Please try again.');
@@ -601,7 +628,9 @@ await NotificationHandler.debugPendingNotifications();
     if (!_isTitleMissing && !_isDateMissing && !_isTimeMissing) {
       try {
         User? currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null) return;
+        if (currentUser == null) {
+          throw Exception("No current user is logged in.");
+        }
 
         // Create the full DateTime object using the selected date and time
         final DateTime taskDateTime = DateTime(
@@ -612,6 +641,7 @@ await NotificationHandler.debugPendingNotifications();
           selectedTime.minute,
         );
 
+        // Convert it to Firebase Timestamp
         Timestamp taskTimestamp = Timestamp.fromDate(taskDateTime);
 
         // Check for existing tasks with the same date and time
@@ -622,20 +652,31 @@ await NotificationHandler.debugPendingNotifications();
             .where(FieldPath.documentId, isNotEqualTo: widget.taskId)
             .get();
 
-        // If a task exists, show a message to the user
         if (existingTaskSnapshot.docs.isNotEmpty) {
-          _showTopNotification(
+          throw Exception(
               'Another task already exists with the same date and time. Please choose a different time.');
-          return;
         }
 
+        // Validate reminder
+        DateTime? reminderDateTime = _validateReminder(
+          isReminderOn,
+          taskDateTime,
+          selectedReminderOption,
+          customReminderDateTime,
+        );
+        if (isReminderOn && reminderDateTime == null) {
+          throw Exception("Invalid reminder date or time.");
+        }
+
+        // Save changes to Firebase
         await _saveChangesToFirebase();
 
+        // Show success message only if everything is successful
         _showTopNotification('Task updated successfully!');
-
-        Navigator.pop(
-            context, true); // Returning `true` to indicate a task update
+        Navigator.pop(context, true); // Returning true to indicate success
       } catch (e) {
+        // Log and show error messages for failures
+        print('Error updating task: $e');
         _showTopNotification('Failed to update task: $e');
       }
     } else {
@@ -674,9 +715,10 @@ await NotificationHandler.debugPendingNotifications();
       overlayEntry.remove();
     });
   }
+
   void _updateProgress() {
     if (subtasks.isEmpty) {
-      progress = 0.0; 
+      progress = 0.0; // No progress for tasks without subtasks
     } else {
       int completedSubtasks =
           subtaskCompletionStatus.values.where((completed) => completed).length;
@@ -684,7 +726,7 @@ await NotificationHandler.debugPendingNotifications();
     }
   }
 
- void _toggleSubtaskCompletion(String subtask) async {
+  void _toggleSubtaskCompletion(String subtask) async {
     setState(() {
       subtaskCompletionStatus[subtask] =
           !(subtaskCompletionStatus[subtask] ?? false);
@@ -696,6 +738,7 @@ await NotificationHandler.debugPendingNotifications();
           subtasks.isNotEmpty ? completedSubtasks / subtasks.length : 0.0;
     });
 
+    // Update subtask completion status in Firestore using SubTask method
     QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
         .collection('SubTask')
         .where('taskID', isEqualTo: widget.taskId)
@@ -713,17 +756,12 @@ await NotificationHandler.debugPendingNotifications();
     }
 
     // Update task completion status using the Task method
-    int completedSubtasks = subtaskCompletionStatus.values.where((status) => status).length;
-
-    int taskStatus = 0; 
-    if (completedSubtasks == 0) {
-  taskStatus = 0; 
-} else if (completedSubtasks == subtaskCompletionStatus.length) {
-  taskStatus = 2; 
-} else {
-  taskStatus = 1;
-}
-
+    int taskStatus = 0;
+    if (progress == 1.0) {
+      taskStatus = 2;
+    } else if (subtaskCompletionStatus.values.any((completed) => completed)) {
+      taskStatus = 1; // At least one subtask completed
+    }
 
     Task task = Task(
       taskID: widget.taskId,
@@ -737,12 +775,16 @@ await NotificationHandler.debugPendingNotifications();
       userID: FirebaseAuth.instance.currentUser!.uid,
     );
     await task.updateCompletionStatus(taskStatus);
-
-
   }
 
-  
-
+  bool _isReminderValid(DateTime reminderDateTime, String itemName) {
+    if (reminderDateTime.isBefore(DateTime.now())) {
+      _showTopNotification(
+          "Reminder date for '$itemName' is in the past. Please select a future date.");
+      return false;
+    }
+    return true;
+  }
 
   Future<void> _scheduleTaskNotification({
     required String taskId,
@@ -756,7 +798,8 @@ await NotificationHandler.debugPendingNotifications();
       print("Failed to schedule notification: Date must be in the future.");
       return;
     }
-print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $scheduledDateTime");
+    print(
+        "Scheduling notification for taskId: $taskId, title: $taskTitle, at: $scheduledDateTime");
 
     final int notificationId = _generateNotificationId(taskId); // Unique ID
 
@@ -782,11 +825,10 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         'Reminder for your task scheduled at $scheduledDateTime',
         scheduledTZDateTime,
         platformDetails,
-        payload: taskId, 
+        payload: taskId, // Store taskId in the payload
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-      
       );
       print("Notification scheduled successfully! ID: $notificationId");
     } catch (e) {
@@ -798,7 +840,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
     return documentId
         .hashCode; // Convert the Firestore document ID to an integer
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -812,7 +853,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         appBar: AppBar(
           backgroundColor: Color(0xFFEAEFF0),
           elevation: 0,
-          centerTitle: true, 
+          centerTitle: true, // لضبط العنوان في المنتصف
 
           title: Center(
             child: Text(
@@ -833,7 +874,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 _buildProgressBar(), 
+                _buildProgressBar(),
                 SizedBox(height: 12),
                 _buildTaskTitleSection(),
                 SizedBox(height: 20),
@@ -845,7 +886,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                 SizedBox(height: 20),
                 _buildPrioritySection(),
                 SizedBox(height: 30),
-                 _buildReminderSection(),
+                _buildReminderSection(),
                 SizedBox(height: 20),
                 _buildNotesSection(),
                 SizedBox(height: 20),
@@ -859,7 +900,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(160, 50), 
+                        minimumSize: Size(160, 50), // Set width and height
                       ),
                       child: Text(
                         'Delete Task',
@@ -876,7 +917,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        minimumSize: Size(160, 50), 
+                        minimumSize: Size(160, 50), // Set width and height
                       ),
                       child: Text(
                         'Save Changes',
@@ -967,6 +1008,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
         ) ??
         false;
   }
+
   Widget _buildTaskTitleSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -982,7 +1024,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
           children: [
             GestureDetector(
               onTap: () async {
-                bool isTaskComplete = progress < 1.0; 
+                bool isTaskComplete = progress < 1.0; // Toggle task completion
 
                 setState(() {
                   // Update all subtasks' completion statuses
@@ -992,6 +1034,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   progress = isTaskComplete ? 1.0 : 0.0;
                 });
 
+                // Update all subtasks in Firestore using the SubTask method
                 QuerySnapshot subtaskSnapshot = await FirebaseFirestore.instance
                     .collection('SubTask')
                     .where('taskID', isEqualTo: widget.taskId)
@@ -1007,6 +1050,7 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   await subTask.updateCompletionStatus(isTaskComplete ? 1 : 0);
                 }
 
+                // Update task completion status using the Task method
                 int taskStatus = isTaskComplete ? 2 : 0;
                 Task task = Task(
                   taskID: widget.taskId,
@@ -1020,7 +1064,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
                   userID: FirebaseAuth.instance.currentUser!.uid,
                 );
                 await task.updateCompletionStatus(taskStatus);
-
               },
               child: Container(
                 width: 24.0,
@@ -1068,7 +1111,6 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
     );
   }
 
-
   Widget _buildNotesSection() {
     return Padding(
       padding: const EdgeInsets.only(left: 14.0),
@@ -1108,7 +1150,8 @@ print("Scheduling notification for taskId: $taskId, title: $taskTitle, at: $sche
       ),
     );
   }
-Widget _buildCategorySection() {
+
+  Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1156,15 +1199,24 @@ Widget _buildCategorySection() {
                 selected: selectedCategory == category,
                 selectedColor: Color(0xFF3B7292),
                 backgroundColor: Colors.grey[200],
-                onSelected: (bool selected) {
-                  setState(() {
-                    // If the selected category is already active, unselect it
-                    if (selectedCategory == category) {
-                      selectedCategory = '';
-                    } else {
-                      selectedCategory = category;
+                onSelected: (bool selected) async {
+                  if (selectedCategory == category) {
+                    // Unselect and update Firestore
+                    await _updateCategoryInFirestore(remove: true);
+                    setState(() {
+                      selectedCategory = ''; // Unselect category
+                    });
+                  } else {
+                    // Switch to the new category and update Firestore
+                    if (selectedCategory.isNotEmpty) {
+                      // Remove from the previous category
+                      await _updateCategoryInFirestore(remove: true);
                     }
-                  });
+                    setState(() {
+                      selectedCategory = category; // Select the new category
+                    });
+                    await _updateCategoryInFirestore(remove: false);
+                  }
                 },
               );
             }).toList(),
@@ -1173,7 +1225,6 @@ Widget _buildCategorySection() {
       ],
     );
   }
-
 
   void _showCategoryEditDialog() {
     List<String> tempCategories = List.from(categories);
@@ -1306,12 +1357,7 @@ Widget _buildCategorySection() {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(
-                                Icons.arrow_upward, 
-                                color:
-                                    mediumBlue,
-                                size: 24.0,
-                              ),
+                              icon: Icon(Icons.send, color: mediumBlue),
                               onPressed: () {
                                 if (categoryController.text.isNotEmpty) {
                                   if (tempCategories.length < 7) {
@@ -1545,6 +1591,7 @@ Widget _buildCategorySection() {
         ) ??
         false;
   }
+
   Future<void> _updateCategoryInFirestore({required bool remove}) async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || selectedCategory.isEmpty) return;
@@ -1577,13 +1624,12 @@ Widget _buildCategorySection() {
     }
   }
 
-
   void showDeleteConfirmationDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: lightGray, 
+          backgroundColor: lightGray, // Use the light gray as the background
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
@@ -1591,6 +1637,7 @@ Widget _buildCategorySection() {
             'Are you sure you want to delete this task?',
             style: TextStyle(
               fontWeight: FontWeight.bold,
+              // Match title text color with your dark gray
             ),
           ),
           actions: [
@@ -1600,7 +1647,7 @@ Widget _buildCategorySection() {
               },
               style: TextButton.styleFrom(
                 foregroundColor:
-                    mediumBlue, 
+                    mediumBlue, // Use mediumBlue for the Cancel button
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
@@ -1609,7 +1656,7 @@ Widget _buildCategorySection() {
             ),
             ElevatedButton(
               onPressed: () {
-                _deleteTask(); 
+                _deleteTask(); // Call the delete method
                 Navigator.of(context).pop(); // Close dialog after deleting
               },
               style: ElevatedButton.styleFrom(
@@ -1622,7 +1669,7 @@ Widget _buildCategorySection() {
               child: const Text(
                 'Delete',
                 style: TextStyle(
-                  color: Colors.white, 
+                  color: Colors.white, // White text on Delete button
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1633,7 +1680,7 @@ Widget _buildCategorySection() {
     );
   }
 
-Widget _buildReminderSection() {
+  Widget _buildReminderSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -1659,7 +1706,7 @@ Widget _buildReminderSection() {
               ),
               Switch(
                 value: isReminderOn,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     isReminderOn = value;
                     if (!isReminderOn) {
@@ -1667,6 +1714,18 @@ Widget _buildReminderSection() {
                       customReminderDateTime = null;
                     }
                   });
+
+                  if (!value) {
+                    // Cancel reminder for the task when the switch is turned off
+                    await NotificationHandler.cancelNotification(widget.taskId);
+
+                    // Update Firestore to remove the reminder
+                    await FirebaseFirestore.instance
+                        .collection('Task')
+                        .doc(widget.taskId)
+                        .update({'reminder': null});
+                    print("Reminder canceled for task: ${widget.taskId}");
+                  }
                 },
                 activeColor: mediumBlue,
                 activeTrackColor: lightBlue,
@@ -1756,7 +1815,7 @@ Widget _buildReminderSection() {
     );
   }
 
- Future<void> _pickCustomReminderTime() async {
+  Future<void> _pickCustomReminderTime() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -1834,10 +1893,9 @@ Widget _buildReminderSection() {
     }
   }
 
+  Map<String, Map<String, dynamic>?> subtaskReminders = {};
 
-Map<String, Map<String, dynamic>?> subtaskReminders = {};
-
-Widget _buildSubtaskSection() {
+  Widget _buildSubtaskSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1904,7 +1962,7 @@ Widget _buildSubtaskSection() {
                               ? completedSubtasks / subtasks.length
                               : 0.0;
                         });
-                    _showTopNotification("Subtask deleted successfully.");
+                        _showTopNotification("Subtask deleted successfully.");
 
                         print("Subtask $subtask deleted successfully.");
                       } catch (e) {
@@ -1914,7 +1972,6 @@ Widget _buildSubtaskSection() {
                     backgroundColor: const Color(0xFFC2C2C2),
                     foregroundColor: Colors.white,
                     icon: Icons.delete,
-
                   ),
                 ],
               ),
@@ -2050,14 +2107,14 @@ Widget _buildSubtaskSection() {
                           ? completedSubtasks / subtasks.length
                           : 0.0;
                     });
-                      DocumentReference newSubtaskRef =
-                    FirebaseFirestore.instance.collection('SubTask').doc();
+                    DocumentReference newSubtaskRef =
+                        FirebaseFirestore.instance.collection('SubTask').doc();
 
                     await newSubtaskRef.set({
                       'completionStatus': 0,
                       'taskID': widget.taskId,
                       'title': subtasks.last,
-                      'reminder': null, 
+                      'reminder': null,
                     });
 
                     // تحديث حالة المهمة لتصبح غير مكتملة
@@ -2065,11 +2122,9 @@ Widget _buildSubtaskSection() {
                         .collection('Task')
                         .doc(widget.taskId)
                         .update({
-                      'completionStatus': 0, 
+                      'completionStatus': 0,
                     });
-                    
                   }
-                  
                 },
               ),
             ),
@@ -2078,9 +2133,6 @@ Widget _buildSubtaskSection() {
       ],
     );
   }
-
-
-
 
   Widget _buildProgressBar() {
     if (subtasks.isEmpty)
@@ -2098,7 +2150,6 @@ Widget _buildSubtaskSection() {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              
               Text(
                 "$completedSubtasks/$totalSubtasks subtasks completed",
                 style: TextStyle(
@@ -2143,8 +2194,7 @@ Widget _buildSubtaskSection() {
     );
   }
 
-
-Future<void> _showSubtaskReminderDialog(String subtask) async {
+  Future<void> _showSubtaskReminderDialog(String subtask) async {
     bool isReminderOn = subtaskReminders[subtask] != null;
     Map<String, dynamic>? selectedOption = subtaskReminders[subtask];
 
@@ -2324,8 +2374,7 @@ Future<void> _showSubtaskReminderDialog(String subtask) async {
     );
   }
 
-
-Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
+  Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -2388,8 +2437,7 @@ Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
     return null;
   }
 
-
-Future<DateTime?> _pickSubtaskReminderTime() async {
+  Future<DateTime?> _pickSubtaskReminderTime() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -2443,7 +2491,6 @@ Future<DateTime?> _pickSubtaskReminderTime() async {
 
     return null;
   }
-
 
   Widget _buildDateTimePicker() {
     return Column(

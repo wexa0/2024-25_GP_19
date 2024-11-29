@@ -71,16 +71,41 @@ class Task {
       'completionStatus': task.completionStatus,
     });
   }
-  static Future<void> deleteTask(String taskID) async {
-    // Fetch subtasks and delete each one
+static Future<void> deleteTask(String taskID) async {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  try {
+    // Find the Category document containing this taskID
+    QuerySnapshot categorySnapshot = await firestore
+        .collection('Category')
+        .where('taskIDs', arrayContains: taskID)
+        .get();
+
+    if (categorySnapshot.docs.isNotEmpty) {
+      // Remove the taskID from the taskIDs array in the associated Category document
+      DocumentReference categoryDoc = categorySnapshot.docs.first.reference;
+      await categoryDoc.update({
+        'taskIDs': FieldValue.arrayRemove([taskID]),
+      });
+      print("Task removed from Category successfully.");
+    }
+
+    // Fetch subtasks associated with the task and delete them
     List<SubTask> subtasks = await SubTask.fetchSubtasksForTask(taskID);
     for (var subtask in subtasks) {
       await subtask.deleteSubTask();
     }
 
-    // Delete the main task
-    await FirebaseFirestore.instance.collection('Task').doc(taskID).delete();
+    // Finally, delete the main task
+    await firestore.collection('Task').doc(taskID).delete();
+
+    print("Task and associated data deleted successfully.");
+  } catch (e) {
+    print("Error deleting task: $e");
+    rethrow;
   }
+}
+
   // Fetch tasks for a user
 static Future<List<Task>> fetchTasksForUser(String userID) async {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
