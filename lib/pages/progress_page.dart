@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:lottie/lottie.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:streak_calendar/streak_calendar.dart';
@@ -98,9 +99,25 @@ class _ProgressPageState extends State<ProgressPage> {
           automaticallyImplyLeading: false,
         ),
         body: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
+             ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    //loading
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 170,
+                        height: 170,
+                      ),
+                      const SizedBox(height: 0),
+                      Lottie.asset(
+                        'assets/animations/loading.json',
+                        width: 150,
+                        height: 150,
+                      ),
+                    ],
+                  ),
+                )
             : Stack(
                 children: [
                   SingleChildScrollView(
