@@ -766,22 +766,30 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   /// Builds the legend widget for a category and its color
-  Widget _buildLegend(String category, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-          ),
+Widget _buildLegend(String category, Color color) {
+  return Row(
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
         ),
-        const SizedBox(width: 8),
-        Text(category, style: const TextStyle(fontSize: 14)),
-      ],
-    );
-  }
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          category,
+          style: const TextStyle(fontSize: 14),
+          overflow: TextOverflow.ellipsis, // Prevent overflow with ellipsis
+          maxLines: 1, // Restrict to one line
+        ),
+      ),
+    ],
+  );
+}
+
 
 // Method to build stacked series for the chart
   List<ChartSeries<TaskCompletionData, String>> _buildStackedSeries(
@@ -1482,8 +1490,7 @@ class _ProgressPageState extends State<ProgressPage> {
             Duration(days: currentDate.weekday)); // Start of the week (Sunday)
         startOfPeriod = DateTime(startOfWeek.year, startOfWeek.month,
             startOfWeek.day); // Ensure it starts at midnight (00:00:00)
-        endOfPeriod = startOfPeriod
-            .add(Duration(days: 6)); // End of the selected week (Saturday)
+        endOfPeriod = startOfPeriod.add(Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
         break;
 
       case "Weekly":
@@ -1692,8 +1699,8 @@ class _ProgressPageState extends State<ProgressPage> {
 
 
         // Check if the task falls within the selected period
-        if (scheduledDate.isAfter(startOfPeriod) &&
-            scheduledDate.isBefore(endOfPeriod)) {
+        if ((scheduledDate.isAfter(startOfPeriod) || scheduledDate.isAtSameMomentAs(startOfPeriod)) &&
+    (scheduledDate.isBefore(endOfPeriod) || scheduledDate.isAtSameMomentAs(endOfPeriod))) {
           final categoryName = taskIDToCategoryMap[taskID] ?? 'Uncategorized';
           taskCounts[categoryName] = (taskCounts[categoryName] ?? 0) + 1;
         }

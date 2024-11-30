@@ -6,7 +6,7 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
-//Nav bar for registered user.
+// Nav bar for registered user.
 class CustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTabChange;
@@ -48,33 +48,30 @@ class CustomNavigationBar extends StatelessWidget {
                 case 4:
                   return ProfilePage();
                 default:
-                  return TaskPage(); 
+                  return TaskPage();
               }
             }),
           );
         },
-        tabs: const [
-          GButton(
-            icon: Icons.home,
-            text: 'Home',
-          ),
-          GButton(
-            icon: Icons.task,
-            text: 'Tasks',
-          ),
-          GButton(
-            icon: Icons.sms,
-            text: 'Chatbot',
-          ),
-          GButton(
-            icon: Icons.poll,
-            text: 'Progress',
-          ),
-          GButton(
-            icon: Icons.person,
-            text: 'Profile',
-          ),
+        tabs: [
+          _buildGButton(Icons.home, 'Home'),
+          _buildGButton(Icons.task, 'Tasks'),
+          _buildGButton(Icons.sms, 'Chatbot'),
+          _buildGButton(Icons.poll, 'Progress'),
+          _buildGButton(Icons.person, 'Profile'),
         ],
+      ),
+    );
+  }
+
+  /// Builds a GButton with responsive text.
+  GButton _buildGButton(IconData icon, String text) {
+    return GButton(
+      icon: icon,
+      text: text,
+      textStyle: const TextStyle(
+        fontSize: 12,
+        overflow: TextOverflow.ellipsis, // Prevent text overflow
       ),
     );
   }
