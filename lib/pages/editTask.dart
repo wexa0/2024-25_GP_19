@@ -946,6 +946,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              
               title: Text(
                 'Unsaved Changes',
                 style: TextStyle(
@@ -972,16 +973,18 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   onPressed: () {
                     Navigator.of(context).pop(false);
                   },
-                  style: TextButton.styleFrom(
-                    foregroundColor: mediumBlue,
-                  ),
+                  style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
                   child: Text(
                     'Cancel',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: mediumBlue,
+                      color: Color(0xFF79A3B7),
                     ),
                   ),
                 ),
@@ -989,16 +992,17 @@ class _EditTaskPageState extends State<EditTaskPage> {
                   onPressed: () {
                     Navigator.of(context).pop(true);
                   },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.red,
-                  ),
+                  style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
                   child: Text(
                     'Leave',
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: const Color.fromARGB(255, 255, 255, 255),
                     ),
                   ),
                 ),
@@ -1645,14 +1649,17 @@ class _EditTaskPageState extends State<EditTaskPage> {
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog without deleting
               },
-              style: TextButton.styleFrom(
-                foregroundColor:
-                    mediumBlue, // Use mediumBlue for the Cancel button
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
+             style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF79A3B7)),
+              ),
             ),
             ElevatedButton(
               onPressed: () {

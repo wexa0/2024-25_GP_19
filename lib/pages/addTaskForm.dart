@@ -342,6 +342,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
           }
 
           Navigator.pop(context, true);
+          _showTopNotification("Task Added successfully.");
+
         }
       } catch (e) {
         _showTopNotification('Failed to save task: $e');

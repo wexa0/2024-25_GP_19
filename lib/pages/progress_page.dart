@@ -11,7 +11,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:streak_calendar/streak_calendar.dart';
-import 'package:liquid_progress_indicator_v2/liquid_progress_indicator.dart';
 import 'dart:math' as math;
 
 class ProgressPage extends StatefulWidget {
@@ -36,7 +35,10 @@ class _ProgressPageState extends State<ProgressPage> {
   // Store the mapping of taskID to its categoryName
   Map<String, String> taskIDToCategoryMap = {};
 
-  final colorList = <Color>[
+  // A map to store fixed colors for each category
+  static Map<String, Color> categoryColorMap = {};
+
+  static final colorList = <Color>[
     const Color(0xFF0072B2), // Strong Blue
     const Color(0xFFE69F00), // Orange
     const Color(0xFF56B4E9), // Sky Blue
@@ -120,7 +122,7 @@ class _ProgressPageState extends State<ProgressPage> {
                         _buildTaskSummaryCards(),
                         const SizedBox(height: 20),
                         if (selectedSegment == "Task") ...[
-                          _buildCategoryChart(colorList),
+                          _buildCategoryChart(),
                           const SizedBox(height: 40),
                           _buildTaskCompletionSection(),
                         ],
@@ -174,8 +176,7 @@ class _ProgressPageState extends State<ProgressPage> {
             snapshot.data ?? {'uncompleted': 0, 'pending': 0, 'completed': 0};
 
         // Calculate total tasks and completion percentage
-        int totalTasks =
-            counts['uncompleted']! + counts['pending']! + counts['completed']!;
+        int totalTasks = counts['pending']! + counts['completed']!;
         double completionPercentage =
             totalTasks == 0 ? 0.0 : counts['completed']! / totalTasks;
 
@@ -183,7 +184,7 @@ class _ProgressPageState extends State<ProgressPage> {
         String formattedPercentage =
             (completionPercentage * 100).toStringAsFixed(0);
 
-        // Updated progress message
+        // Progress message
         String getProgressMessage(double percentage, int totalTasks) {
           if (totalTasks == 0) {
             return "It looks like you haven’t started planning yet! Let’s set some goals and begin your journey—Ateena is here to help!";
@@ -222,30 +223,28 @@ class _ProgressPageState extends State<ProgressPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Trophy Liquid Fill
-         SizedBox(
-  height: 200,
-  width: 200,
-  child: LiquidCustomProgressIndicator(
-    value: completionPercentage, // Percentage for fill
-    valueColor: AlwaysStoppedAnimation<Color>(
-      const Color.fromARGB(255, 255, 209, 59), // Static yellow color
-    ),
-    backgroundColor: const Color(0xFFF8F4F4), // Unfilled part color
-    direction: Axis.vertical, // Fill direction
-    shapePath: _buildStarPath(), // Star shape
-    center: Text(
-      "$formattedPercentage%",
-      style: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.black,
-      ),
-    ),
-  ),
-),
-
-
+              // Star progress indicator
+              SizedBox(
+                height: 200,
+                width: 200,
+                child: CustomPaint(
+                  painter: StarPainter(
+                    completionPercentage: completionPercentage,
+                    fillColor: Colors.yellow,
+                    backgroundColor: const Color(0xFFF8F4F4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "$formattedPercentage%",
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 getProgressMessage(completionPercentage, totalTasks),
@@ -260,35 +259,6 @@ class _ProgressPageState extends State<ProgressPage> {
         );
       },
     );
-  }
-
-  Path _buildStarPath() {
-    const double outerRadius = 100; // Outer radius of the star
-    const double innerRadius = 50; // Inner radius of the star
-    const int numPoints = 5; // Number of points for the star
-
-    final Path path = Path();
-    final double angle = (2 * math.pi) / numPoints;
-
-    for (int i = 0; i < numPoints * 2; i++) {
-      // Alternate between outer and inner radius
-      final double radius = (i % 2 == 0) ? outerRadius : innerRadius;
-
-      // Calculate the x and y coordinates
-      final double x = outerRadius +
-          radius * math.cos(i * angle - math.pi / 2); // Offset by -90 degrees
-      final double y = outerRadius +
-          radius * math.sin(i * angle - math.pi / 2); // Offset by -90 degrees
-
-      if (i == 0) {
-        path.moveTo(x, y); // Move to the first point
-      } else {
-        path.lineTo(x, y); // Draw lines to subsequent points
-      }
-    }
-
-    path.close(); // Close the path to complete the star
-    return path;
   }
 
   Widget _buildSegment(String label, {required bool isSelected}) {
@@ -694,12 +664,11 @@ class _ProgressPageState extends State<ProgressPage> {
       // Parse using the expected format of "HH:mm dd/MM/yyyy"
       return DateFormat('H:mm dd/MM/yyyy').parse(dateTimeString);
     } catch (e) {
-      print("Error parsing dateTime string: $dateTimeString, error: $e");
       return null;
     }
   }
 
-  Widget _buildCategoryChart(List<Color> colorList) {
+  Widget _buildCategoryChart() {
     // Adjust currentDate based on the periodOffset and selectedTime
     DateTime adjustedDate;
     final now = DateTime.now();
@@ -772,20 +741,45 @@ class _ProgressPageState extends State<ProgressPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: dataMap.keys.map((key) {
-                          final colorIndex =
-                              dataMap.keys.toList().indexOf(key) %
-                                  colorList.length;
-                          return _buildLegend(key, colorList[colorIndex]);
+                          return _buildLegend(key, getCategoryColor(key));
                         }).toList(),
                       ),
                     ),
-                    CategoryChart(dataMap: dataMap, colorList: colorList),
+                    CategoryChart(dataMap: dataMap),
                   ],
                 ),
             ],
           ),
         );
       },
+    );
+  }
+
+// Function to get or assign a color for a category
+  static Color getCategoryColor(String category) {
+    if (!categoryColorMap.containsKey(category)) {
+      // Assign the next available color in the list
+      final newColor = colorList[categoryColorMap.length % colorList.length];
+      categoryColorMap[category] = newColor;
+    }
+    return categoryColorMap[category]!;
+  }
+
+  /// Builds the legend widget for a category and its color
+  Widget _buildLegend(String category, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(category, style: const TextStyle(fontSize: 14)),
+      ],
     );
   }
 
@@ -800,7 +794,6 @@ class _ProgressPageState extends State<ProgressPage> {
     });
 
     List<ChartSeries<TaskCompletionData, String>> series = [];
-    int colorIndex = 0;
 
     // Loop through categories and create stacked series for each
     for (var category in categories) {
@@ -813,13 +806,12 @@ class _ProgressPageState extends State<ProgressPage> {
               data.categoryCounts[category] ??
               0, // Task count for each category
           name: category, // Name of the category (e.g., "Work", "Personal")
-          color: colorList[colorIndex %
-              colorList.length], // Assign color from the pre-defined color list
+          color: getCategoryColor(
+              category), // Use getCategoryColor to fetch the color
           markerSettings:
               MarkerSettings(isVisible: false), // Hide the circular markers
         ),
       );
-      colorIndex++; // Move to the next color in the list
     }
 
     return series;
@@ -827,6 +819,69 @@ class _ProgressPageState extends State<ProgressPage> {
 
 // Helper function to get all periods (even those without tasks)
   Widget _buildTaskCompletionSection() {
+    // Check if no user is logged in
+    if (FirebaseAuth.instance.currentUser == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Color(0xFFF9F9F9), // Background color
+          borderRadius: BorderRadius.circular(16), // Rounded corners
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5), // Shadow color
+              blurRadius: 6, // Blur radius
+              offset: const Offset(0, 3), // Shadow offset
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Task Completion",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Sign in to track your task completion and view progress!",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SfCartesianChart(
+              legend: Legend(isVisible: false),
+              primaryXAxis: CategoryAxis(
+                majorGridLines: MajorGridLines(width: 0),
+                labelStyle: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              primaryYAxis: NumericAxis(
+                minimum: 0,
+                majorGridLines:
+                    MajorGridLines(width: 1, color: Colors.grey.shade400),
+                interval: 1,
+                labelFormat: '{value}',
+                isInversed: false,
+              ),
+              series: [
+                StackedColumnSeries<TaskCompletionData, String>(
+                  dataSource: [], // Empty data source for guest users
+                  xValueMapper: (data, _) => data.period,
+                  yValueMapper: (data, _) => 0, // Zero values
+                  color: Colors.grey.shade300,
+                  name: "No Data",
+                )
+              ],
+              tooltipBehavior: TooltipBehavior(enable: true),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // If user is logged in, proceed with fetching and displaying data
     return FutureBuilder<List<Task>>(
       future: Task.fetchTasksForUser(FirebaseAuth.instance.currentUser!.uid),
       builder: (context, snapshot) {
@@ -839,17 +894,10 @@ class _ProgressPageState extends State<ProgressPage> {
         }
 
         final tasks = snapshot.data ?? [];
-
-        // Get current DateTime instead of a string
-        final currentDate =
-            getCurrentDate(selectedTime, periodOffset); // Get DateTime directly
+        final currentDate = getCurrentDate(selectedTime, periodOffset);
 
         return FutureBuilder<List<Task>>(
-          future: filterTasksBySelectedPeriod(
-            selectedTime,
-            currentDate, // Now passing DateTime here
-            tasks,
-          ),
+          future: filterTasksBySelectedPeriod(selectedTime, currentDate, tasks),
           builder: (context, filterSnapshot) {
             if (filterSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -860,73 +908,51 @@ class _ProgressPageState extends State<ProgressPage> {
             }
 
             final filteredTasks = filterSnapshot.data ?? [];
-
-            // Initialize a map to hold task counts by period and category
             Map<String, Map<String, int>> tasksByPeriodAndCategory = {};
 
-            // Group tasks by period (day, week, month, year) and category
+            // Group and process data as usual
             for (var task in filteredTasks) {
-              // Check for completed tasks (completionStatus == 2)
               if (task.completionStatus == 2) {
-                //check id the task is completed
                 String period = getPeriodLabel(task.scheduledDate);
                 String category =
                     taskIDToCategoryMap[task.taskID] ?? 'Uncategorized';
-
-                // Skip tasks that don't match the selected category
                 if (selectedCategory != "All" && category != selectedCategory) {
                   continue;
                 }
 
-                // Initialize category count for the period if it doesn't exist
                 if (!tasksByPeriodAndCategory.containsKey(period)) {
                   tasksByPeriodAndCategory[period] = {};
                 }
 
-                if (!tasksByPeriodAndCategory[period]!.containsKey(category)) {
-                  tasksByPeriodAndCategory[period]![category] = 0;
-                }
-
                 tasksByPeriodAndCategory[period]![category] =
-                    tasksByPeriodAndCategory[period]![category]! + 1;
+                    (tasksByPeriodAndCategory[period]![category] ?? 0) + 1;
               }
             }
 
-            // Ensure that all periods (day, week, month, year) have an entry, even if it's zero
+            // Create chart data
             List<TaskCompletionData> chartData = [];
-            Set<String> allPeriods = _getAllPeriods(
-                currentDate); // Get all periods that should be represented
+            Set<String> allPeriods = _getAllPeriods(currentDate);
 
-            // Create chart data for all periods, even those with no tasks
             allPeriods.forEach((period) {
               Map<String, int> categoryCounts =
                   tasksByPeriodAndCategory[period] ?? {};
-
-              // Ensure that periods without tasks show a zero count
               if (!categoryCounts.containsKey('Uncategorized')) {
-                categoryCounts['Uncategorized'] =
-                    0; // Add 'Uncategorized' with count 0 if no tasks
+                categoryCounts['Uncategorized'] = 0;
               }
-
-              // Add the period data to the chartData list
               chartData.add(TaskCompletionData(period, categoryCounts));
             });
 
-            // Sort the chart data by period (ascending order)
-            chartData.sort((a, b) {
-              return a.period
-                  .compareTo(b.period); // Sort alphabetically or by date
-            });
+            chartData.sort((a, b) => a.period.compareTo(b.period));
 
             return Container(
               decoration: BoxDecoration(
-                color: Color(0xFFF9F9F9), // Background color
-                borderRadius: BorderRadius.circular(16), // Rounded corners
+                color: Color(0xFFF9F9F9),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5), // Shadow color
-                    blurRadius: 6, // Blur radius
-                    offset: const Offset(0, 3), // Shadow offset
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -935,15 +961,13 @@ class _ProgressPageState extends State<ProgressPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    "Task Completion", // Title for the chart section
+                    "Task Completion",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16), // Space between title and chart
-
-                  // Dropdown to select category
+                  const SizedBox(height: 16),
                   DropdownUnderWidget(
                     availableCategories: availableCategories,
                     selectedCategory: selectedCategory,
@@ -951,21 +975,14 @@ class _ProgressPageState extends State<ProgressPage> {
                       handleCategoryChange(category);
                     },
                   ),
-
-                  const SizedBox(
-                      height: 20), // Space between dropdown and chart
+                  const SizedBox(height: 20),
                   SfCartesianChart(
-                    legend: Legend(isVisible: false), // Hide the legend
+                    legend: Legend(isVisible: false),
                     primaryXAxis: CategoryAxis(
-                      majorGridLines:
-                          MajorGridLines(width: 0), // Hide vertical grid lines
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        color: Colors.black, // Default label color
-                      ),
-                      axisLabelFormatter: (AxisLabelRenderDetails details) {
+                      majorGridLines: MajorGridLines(width: 0),
+                      labelStyle: TextStyle(fontSize: 12, color: Colors.black),
+                      axisLabelFormatter: (details) {
                         final String periodLabel = details.text;
-                        // Check if the label matches the current period
                         final bool isCurrentPeriod =
                             periodLabel == getPeriodLabel(currentDate);
 
@@ -984,16 +1001,11 @@ class _ProgressPageState extends State<ProgressPage> {
                     primaryYAxis: NumericAxis(
                       minimum: 0,
                       majorGridLines: MajorGridLines(
-                        width: 1, // Show horizontal grid lines
-                        color:
-                            Colors.grey.shade400, // Horizontal grid line color
+                        width: 1,
+                        color: Colors.grey.shade400,
                       ),
-                      interval:
-                          1, // Set the interval to 1 to show only integer values
-                      labelFormat:
-                          '{value}', // Ensure that only integer values are shown
-                      isInversed:
-                          false, // To keep the values increasing from bottom to top
+                      interval: 1,
+                      labelFormat: '{value}',
                     ),
                     series: _buildStackedSeries(chartData),
                     tooltipBehavior: TooltipBehavior(enable: true),
@@ -1007,8 +1019,8 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  Future<List<TaskTimerData>> _fetchTimeSpentData() async {
-    // Fetch the current user
+  Future<List<TaskTimerData>> _fetchTimeSpentData(
+      String? selectedCategory) async {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -1016,7 +1028,25 @@ class _ProgressPageState extends State<ProgressPage> {
     }
 
     try {
-      // Query Firestore for tasks
+      // Fetch the task-to-category mapping from the Category table
+      final categorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('userID', isEqualTo: user.uid)
+          .get();
+
+      // Create a map of task IDs to categories
+      final Map<String, String> taskIDToCategory = {};
+      for (var doc in categorySnapshot.docs) {
+        final data = doc.data();
+        final categoryName = data['categoryName'] ?? 'Uncategorized';
+        final taskIDs = List<String>.from(data['taskIDs'] ?? []);
+
+        for (var taskID in taskIDs) {
+          taskIDToCategory[taskID] = categoryName;
+        }
+      }
+
+      // Fetch tasks
       final tasksSnapshot = await FirebaseFirestore.instance
           .collection('Task')
           .where('userID', isEqualTo: user.uid)
@@ -1036,85 +1066,99 @@ class _ProgressPageState extends State<ProgressPage> {
 
       for (var doc in tasksSnapshot.docs) {
         final data = doc.data();
+        final taskID = doc.id;
         final timerList = data['timer'];
-        final category = data['category'] ?? 'Uncategorized';
+        final category = taskIDToCategory[taskID] ?? 'Uncategorized';
+
+        // Apply the category filter, if one is selected
+        if (selectedCategory != null &&
+            selectedCategory != "All" &&
+            category != selectedCategory) {
+          continue;
+        }
 
         if (timerList is List) {
           for (var timerEntry in timerList) {
             if (timerEntry is Map) {
-              // Extract startTime and endTime directly
-              final startTimeField =
+              // Handle firstDayStartDatetime
+              final firstDayStartDateTime =
+                  parseDateTime(timerEntry['firstDayStartDatetime']);
+              final firstDayTimeSpent =
                   timerEntry['firstDayActualTimeSpent']?.toString().trim();
-              final endTimeField =
-                  timerEntry['secondDayActualTimeSpent']?.toString().trim();
-              final periodDateTime =
-                  parseDateTime(timerEntry['firstDayStartDatetime'])?.toUtc() ??
-                      parseDateTime(timerEntry['secondDayEndDatetime'])
-                          ?.toUtc();
+              if (firstDayStartDateTime != null &&
+                  firstDayTimeSpent != null &&
+                  firstDayTimeSpent.isNotEmpty) {
+                final period = getPeriodLabel(firstDayStartDateTime);
+                final firstDaySeconds =
+                    double.tryParse(firstDayTimeSpent) ?? 0.0;
 
-              // Calculate time in hours from startTime and endTime
-              double totalSeconds = 0.0;
-              if (startTimeField != null &&
-                  endTimeField != null &&
-                  startTimeField.isNotEmpty &&
-                  endTimeField.isNotEmpty) {
-                final startSeconds = double.tryParse(startTimeField) ?? 0.0;
-                final endSeconds = double.tryParse(endTimeField) ?? 0.0;
-                totalSeconds +=
-                    (endSeconds + startSeconds); // Use values directly
-              }
-
-              // Ensure the calculated time is valid and periodDateTime is in range
-              if (totalSeconds > 0 && periodDateTime != null) {
-                if ((periodDateTime.isAfter(startOfPeriod) ||
-                        periodDateTime.isAtSameMomentAs(startOfPeriod)) &&
-                    (periodDateTime.isBefore(endOfPeriod) ||
-                        periodDateTime.isAtSameMomentAs(endOfPeriod))) {
-                  final period = getPeriodLabel(periodDateTime);
+                if (firstDaySeconds > 0) {
                   hoursByPeriodAndCategory[period] ??= {};
                   hoursByPeriodAndCategory[period]![category] =
                       (hoursByPeriodAndCategory[period]![category] ?? 0.0) +
-                          (totalSeconds / 3600.0); // Convert to hours
-                }
+                          (firstDaySeconds / 3600.0); // Convert to hours
+                  }
+              }
+
+              // Handle secondDayEndDatetime
+              final secondDayEndDateTime =
+                  parseDateTime(timerEntry['secondDayEndDatetime']);
+              final secondDayTimeSpent =
+                  timerEntry['secondDayActualTimeSpent']?.toString().trim();
+              if (secondDayEndDateTime != null &&
+                  secondDayTimeSpent != null &&
+                  secondDayTimeSpent.isNotEmpty) {
+                final period = getPeriodLabel(secondDayEndDateTime);
+                final secondDaySeconds =
+                    double.tryParse(secondDayTimeSpent) ?? 0.0;
+
+                if (secondDaySeconds > 0) {
+                  hoursByPeriodAndCategory[period] ??= {};
+                  hoursByPeriodAndCategory[period]![category] =
+                      (hoursByPeriodAndCategory[period]![category] ?? 0.0) +
+                          (secondDaySeconds / 3600.0); // Convert to hours
+}
               }
             }
           }
         }
       }
 
-      // Create chart data for all periods
+      // Ensure all periods have all categories (with 0 hours if missing)
       List<TaskTimerData> chartData = [];
-      allPeriods.forEach((period) {
+      for (var period in allPeriods) {
         final categoryData = hoursByPeriodAndCategory[period] ?? {};
-        final allCategories = {
-          'Uncategorized'
-        }; // Add more categories as needed
+        final allCategories = taskIDToCategory.values.toSet();
 
         // Add all missing categories with 0.0 hours
-        allCategories.forEach((category) {
-          categoryData[category] = categoryData[category] ?? 0.0;
-        });
+        for (var category in allCategories) {
+          if (selectedCategory == null ||
+              selectedCategory == "All" ||
+              category == selectedCategory) {
+            categoryData[category] = categoryData[category] ?? 0.0;
+          }
+        }
 
         // Add the period data to the chartData list
         categoryData.forEach((category, hours) {
           chartData.add(
               TaskTimerData(period: period, category: category, hours: hours));
         });
-      });
+      }
 
       // Sort the chart data by period
       chartData.sort((a, b) => a.period.compareTo(b.period));
 
       return chartData;
     } catch (e) {
-      print("Error fetching time spent data: $e");
       return []; // Return an empty list in case of an error
     }
   }
 
   Widget _buildTimeSpentSection() {
     return FutureBuilder<List<TaskTimerData>>(
-      future: _fetchTimeSpentData(),
+      future:
+          _fetchTimeSpentData(selectedCategory), // Pass the selected category
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -1213,12 +1257,16 @@ class _ProgressPageState extends State<ProgressPage> {
     }
 
     return groupedByCategory.entries.map((entry) {
+      final categoryColor =
+          getCategoryColor(entry.key); // Use getCategoryColor here
+
       return StackedBarSeries<TaskTimerData, String>(
         dataSource: entry.value,
         xValueMapper: (data, _) => data.period,
         yValueMapper: (data, _) => data.hours,
         name: entry.key,
-        dataLabelSettings: DataLabelSettings(isVisible: true),
+        color: categoryColor, // Assign color for each category
+        dataLabelSettings: const DataLabelSettings(isVisible: true),
       );
     }).toList();
   }
@@ -1340,25 +1388,11 @@ class _ProgressPageState extends State<ProgressPage> {
     return (dayDifference ~/ 7) + 1; // Using integer division
   }
 
-  Widget _buildLegend(String key, Color color) {
-    return Row(
-      children: [
-        Icon(Icons.circle, color: color, size: 14),
-        const SizedBox(width: 5),
-        Text(
-          key,
-          style: const TextStyle(fontSize: 15),
-        ),
-      ],
-    );
-  }
-
   //fetching and filtring task and categories
 
   Future<void> fetchCategories(String userID) async {
     // fetch all tasks with any status with its category
     try {
-      print("Fetching categories for userID: $userID");
 
       // Use the Category class to fetch categories and task-category mapping
       final result = await Category.fetchCategoriesForUser(userID);
@@ -1368,10 +1402,7 @@ class _ProgressPageState extends State<ProgressPage> {
       final taskCategoryMap =
           result['taskCategoryMap'] as Map<String, List<String>>;
 
-      if (categories.isEmpty) {
-        print("No categories found for userID: $userID");
-      } else {
-        print("Fetched categories: $categories");
+      if (! categories.isEmpty) {
 
         // Populate the taskIDToCategoryMap with task-category mapping
         taskCategoryMap.forEach((taskID, categories) {
@@ -1386,7 +1417,6 @@ class _ProgressPageState extends State<ProgressPage> {
         isLoading = false;
       });
     } catch (e) {
-      print("Error fetching categories: $e");
       setState(() {
         isLoading = false;
       });
@@ -1399,9 +1429,6 @@ class _ProgressPageState extends State<ProgressPage> {
     setState(() {
       selectedCategory = category;
     });
-
-    // Add logic here to filter or refresh the progress data based on the category
-    print("Selected Category: $selectedCategory");
   }
 
   String formattedCurrentDate(String selectedTime, int offset) {
@@ -1441,7 +1468,6 @@ class _ProgressPageState extends State<ProgressPage> {
       DateTime currentDate, List<Task> additionalFilterArray) async {
     // Check if there are tasks to filter
     if (additionalFilterArray.isEmpty) {
-      print("No tasks to filter.");
       return [];
     }
 
@@ -1499,10 +1525,6 @@ class _ProgressPageState extends State<ProgressPage> {
     startOfPeriod = startOfPeriod.toUtc();
     endOfPeriod = endOfPeriod.toUtc();
 
-// Debugging: Print start and end of period
-    print("Start of period: $startOfPeriod");
-    print("End of period: $endOfPeriod");
-
     // Initialize the list of filtered tasks
     List<Task> filteredTasks = [];
 
@@ -1518,14 +1540,8 @@ class _ProgressPageState extends State<ProgressPage> {
       if (isWithinPeriod) {
         filteredTasks
             .add(task); // Add task to the filtered list if within range
-        print("Task ${task.taskID} added to filtered tasks.");
-      } else {
-        print(
-            "Task ${task.taskID} is out of the selected period or has invalid date.");
       }
     }
-
-    print("Filtered tasks count: ${filteredTasks.length}");
     return filteredTasks; // Return the filtered list of tasks
   }
 
@@ -1545,10 +1561,6 @@ class _ProgressPageState extends State<ProgressPage> {
     // Convert dates to UTC for consistent comparison
     startOfPeriod = startOfPeriod.toUtc();
     endOfPeriod = endOfPeriod.toUtc();
-
-    // Debugging: Print the date range to ensure it's correct
-    print("Start of period: $startOfPeriod");
-    print("End of period: $endOfPeriod");
 
     double totalSpentMin = 0.0;
 
@@ -1612,8 +1624,6 @@ class _ProgressPageState extends State<ProgressPage> {
       }
     }
 
-    print("Total spent hours in the period: $totalSpentMin");
-
     return totalSpentMin;
   }
 
@@ -1622,7 +1632,6 @@ class _ProgressPageState extends State<ProgressPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      print("No user logged in.");
       return {};
     }
 
@@ -1636,9 +1645,6 @@ class _ProgressPageState extends State<ProgressPage> {
     startOfPeriod = startOfPeriod.toUtc();
     endOfPeriod = endOfPeriod.toUtc();
 
-    // Debugging: Print the date range to ensure it's correct
-    print("Start of period: $startOfPeriod");
-    print("End of period: $endOfPeriod");
 
     try {
       // Fetch categories for the specific user
@@ -1648,7 +1654,6 @@ class _ProgressPageState extends State<ProgressPage> {
           .get();
 
       if (categoriesSnapshot.docs.isEmpty) {
-        print("No categories found for user: ${user.uid}");
         return {};
       }
 
@@ -1665,9 +1670,6 @@ class _ProgressPageState extends State<ProgressPage> {
         }
       }
 
-      // Debugging: Check the task-to-category mapping
-      print("Task-to-category mapping: $taskIDToCategoryMap");
-
       // Fetch tasks for the specific user within the date range
       final tasksSnapshot = await FirebaseFirestore.instance
           .collection('Task')
@@ -1675,13 +1677,8 @@ class _ProgressPageState extends State<ProgressPage> {
           .get();
 
       if (tasksSnapshot.docs.isEmpty) {
-        print("No tasks found for user: ${user.uid}");
         return {};
       }
-
-      // Debugging: Check fetched tasks
-      print(
-          "Tasks fetched for user: ${tasksSnapshot.docs.map((doc) => doc.id).toList()}");
 
       // Initialize task counts by category
       final taskCounts = <String, int>{};
@@ -1693,31 +1690,25 @@ class _ProgressPageState extends State<ProgressPage> {
         final scheduledDate = (data['scheduledDate'] as Timestamp)
             .toDate(); // Ensure date is parsed
 
-        // Debugging: Log task scheduled date
-        print("Task ID: $taskID, Scheduled Date: $scheduledDate");
 
         // Check if the task falls within the selected period
         if (scheduledDate.isAfter(startOfPeriod) &&
             scheduledDate.isBefore(endOfPeriod)) {
           final categoryName = taskIDToCategoryMap[taskID] ?? 'Uncategorized';
           taskCounts[categoryName] = (taskCounts[categoryName] ?? 0) + 1;
-
-          // Debugging: Log task ID and its mapped category
-          print(
-              "Task ${taskID} belongs to category '${categoryName}'. Updated count: ${taskCounts[categoryName]}");
         }
       }
-
-      print("Final task counts by category: $taskCounts");
       return taskCounts;
     } catch (e) {
-      print("Error fetching tasks in countTasksByCategory: $e");
       return {};
     }
   }
 
   Future<Map<String, int>> countTasksByStatus(
       String selectedTime, DateTime currentDate) async {
+    if (userID == null) {
+      return {'uncompleted': 0, 'pending': 0, 'completed': 0};
+    }
     // Fetch tasks using the Task class
     final tasks =
         await Task.fetchTasksForUser(FirebaseAuth.instance.currentUser!.uid);
@@ -1819,6 +1810,79 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 }
 
+// Concrete CustomPainter subclass
+class StarPainter extends CustomPainter {
+  final double completionPercentage;
+  final Color fillColor;
+  final Color backgroundColor;
+
+  StarPainter({
+    required this.completionPercentage,
+    required this.fillColor,
+    required this.backgroundColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint backgroundPaint = Paint()..color = backgroundColor;
+    final Paint fillPaint = Paint()..color = fillColor;
+
+    // Build the star path
+    final Path starPath = _buildStarPath(size);
+
+    // Draw the background star
+    canvas.drawPath(starPath, backgroundPaint);
+
+    // Clip the star shape
+    canvas.save();
+    canvas.clipPath(starPath);
+
+    // Calculate the filled height
+    final double fillHeight = size.height * completionPercentage;
+
+    // Draw the filled portion
+    canvas.drawRect(
+      Rect.fromLTRB(0, size.height - fillHeight, size.width, size.height),
+      fillPaint,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+
+  // Helper function to create the star path
+  Path _buildStarPath(Size size) {
+    const double outerRadiusFactor = 0.5;
+    const double innerRadiusFactor = 0.25;
+    const int numPoints = 5;
+
+    final double outerRadius = size.width * outerRadiusFactor;
+    final double innerRadius = size.width * innerRadiusFactor;
+
+    final Path path = Path();
+    final double angle = (2 * math.pi) / numPoints;
+    final center = Offset(size.width / 2, size.height / 2);
+
+    for (int i = 0; i < numPoints * 2; i++) {
+      final double radius = (i % 2 == 0) ? outerRadius : innerRadius;
+
+      final double x = center.dx + radius * math.cos(i * angle - math.pi / 2);
+      final double y = center.dy + radius * math.sin(i * angle - math.pi / 2);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    path.close();
+    return path;
+  }
+}
+
 /// Chart data class
 class TaskTimerData {
   final String period;
@@ -1839,12 +1903,10 @@ class TaskCompletionData {
 
 class CategoryChart extends StatefulWidget {
   final Map<String, int> dataMap;
-  final List<Color> colorList;
 
   const CategoryChart({
     Key? key,
     required this.dataMap,
-    required this.colorList,
   }) : super(key: key);
 
   @override
@@ -1892,8 +1954,13 @@ class _CategoryChartState extends State<CategoryChart> {
         final isTouched = i == touchedIndex;
         final value = widget.dataMap[categories[i]]!.toDouble();
 
+        // Fetch the color for the category
+        final color = _ProgressPageState.getCategoryColor(categories[i]);
+
+        //final color = getCategoryColor(categories[i]);
+
         return PieChartSectionData(
-          color: widget.colorList[i % widget.colorList.length],
+          color: color,
           value: value,
           radius: isTouched ? 45 : 40,
           showTitle: false,

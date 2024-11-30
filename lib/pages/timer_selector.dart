@@ -9,7 +9,12 @@ class TimerSelectionPage extends StatefulWidget {
   final String subTaskID; // The task name
   final String subTaskName;
   final String page;
-  TimerSelectionPage({required this.taskId, required this.subTaskID, required this.subTaskName, required this.taskName,  required this.page});
+  TimerSelectionPage(
+      {required this.taskId,
+      required this.subTaskID,
+      required this.subTaskName,
+      required this.taskName,
+      required this.page});
 
   @override
   _TimerSelectionPageState createState() => _TimerSelectionPageState();
@@ -21,57 +26,63 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
   int _longBreakMinutes = 30; // Default long break time in minutes
   int _rounds = 4; // Default rounds (Pomodoro sessions)
   bool _loading = true; // Flag to indicate whether preferences are being loaded
-  bool _isSaved = false; // this to toggle the color of text after pressing on it 
+  bool _isSaved =
+      false; // this to toggle the color of text after pressing on it
 
-  final FixedExtentScrollController _focusController = FixedExtentScrollController();
-  final FixedExtentScrollController _shortBreakController = FixedExtentScrollController();
-  final FixedExtentScrollController _longBreakController = FixedExtentScrollController();
+  final FixedExtentScrollController _focusController =
+      FixedExtentScrollController();
+  final FixedExtentScrollController _shortBreakController =
+      FixedExtentScrollController();
+  final FixedExtentScrollController _longBreakController =
+      FixedExtentScrollController();
 
   // Load preferences from Firestore
- Future<bool?> _loadPreferences() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
+  Future<bool?> _loadPreferences() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      DocumentReference userRef = FirebaseFirestore.instance.collection('User').doc(user.uid);
-      DocumentSnapshot userDoc = await userRef.get();
+      if (user != null) {
+        DocumentReference userRef =
+            FirebaseFirestore.instance.collection('User').doc(user.uid);
+        DocumentSnapshot userDoc = await userRef.get();
 
-      if (userDoc.exists && userDoc.data() != null) {
-        var data = userDoc.data() as Map<String, dynamic>;
-        if (data.containsKey('preferences')) {
-          var preferences = data['preferences'];
+        if (userDoc.exists && userDoc.data() != null) {
+          var data = userDoc.data() as Map<String, dynamic>;
+          if (data.containsKey('preferences')) {
+            var preferences = data['preferences'];
+            setState(() {
+              _focusMinutes = preferences['focusMinutes'];
+              _shortBreakMinutes = preferences['shortBreakMinutes'];
+              _longBreakMinutes = preferences['longBreakMinutes'];
+              _rounds = preferences['rounds'];
+              _loading = false; // Data is loaded, so hide loading indicator
+            });
+            return true; // Return true if data loading is successful
+          }
+        } else {
+          // Default values if no preferences are found
           setState(() {
-            _focusMinutes = preferences['focusMinutes'];
-            _shortBreakMinutes = preferences['shortBreakMinutes'];
-            _longBreakMinutes = preferences['longBreakMinutes'];
-            _rounds = preferences['rounds'];
+            _focusMinutes = 25;
+            _shortBreakMinutes = 5;
+            _longBreakMinutes = 30;
+            _rounds = 4;
             _loading = false; // Data is loaded, so hide loading indicator
           });
-          return true; // Return true if data loading is successful
+          return true; // Return true even if no preferences were found (successful loading with default values)
         }
       } else {
-        // Default values if no preferences are found
-        setState(() {
-          _focusMinutes = 25;
-          _shortBreakMinutes = 5;
-          _longBreakMinutes = 30;
-          _rounds = 4;
-          _loading = false; // Data is loaded, so hide loading indicator
-        });
-        return true; // Return true even if no preferences were found (successful loading with default values)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("User not logged in.")));
+        return false; // Return false if user is not logged in
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("User not logged in.")));
-      return false; // Return false if user is not logged in
+    } catch (e) {
+      setState(() {
+        _loading = false; // Hide loading on error
+      });
+      print("Error loading preferences: $e");
+      return false; // Return false if there was an error
     }
-  } catch (e) {
-    setState(() {
-      _loading = false; // Hide loading on error
-    });
-    print("Error loading preferences: $e");
-    return false; // Return false if there was an error
   }
-}
 
   // Save preferences to Firestore
   Future<void> _savePreferences() async {
@@ -79,7 +90,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        DocumentReference userRef = FirebaseFirestore.instance.collection('User').doc(user.uid);
+        DocumentReference userRef =
+            FirebaseFirestore.instance.collection('User').doc(user.uid);
 
         Map<String, dynamic> preferencesEntry = {
           'focusMinutes': _focusMinutes,
@@ -93,17 +105,19 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
         });
 
         // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Times set as default.")));
-         _showTopNotification("Timer settings updated succefully!");
-       setState(() {
-        _isSaved = true; // Mark as saved and trigger UI update
-        print("Preferences saved. _isSaved = $_isSaved"); // Debug statement
-      });
+        _showTopNotification("Timer settings updated succefully!");
+        setState(() {
+          _isSaved = true; // Mark as saved and trigger UI update
+          print("Preferences saved. _isSaved = $_isSaved"); // Debug statement
+        });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("User not logged in.")));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("User not logged in.")));
         _showTopNotification("user not logged in error!");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
       _showTopNotification("Error saving preferences: $e");
     }
   }
@@ -221,22 +235,24 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                   SizedBox(height: 15),
                   // "Set Times as Default" option
                   GestureDetector(
-                            onTap: () async {
-                    await _savePreferences();
-                    setState(() {
-                      // reload the page
-                    });
-                  },
-                  child: Text(
-                    "Set Times as Default",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _isSaved ? Colors.grey : Colors.blue, // Change color based on _isSaved
-                      decoration: TextDecoration.underline,
-                    decorationColor: _isSaved ? Colors.grey : Colors.blue,
+                    onTap: () async {
+                      await _savePreferences();
+                      setState(() {
+                        // reload the page
+                      });
+                    },
+                    child: Text(
+                      "Set Times as Default",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _isSaved
+                            ? Colors.grey
+                            : Colors.blue, // Change color based on _isSaved
+                        decoration: TextDecoration.underline,
+                        decorationColor: _isSaved ? Colors.grey : Colors.blue,
+                      ),
                     ),
                   ),
-                ),
                   SizedBox(height: 10),
                   // Start Timer Button
                   ElevatedButton(
@@ -253,29 +269,30 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                             shortBreakMinutes: _shortBreakMinutes,
                             longBreakMinutes: _longBreakMinutes,
                             rounds: _rounds,
-                            page:widget.page,
+                            page: widget.page,
                           ),
                         ),
                       );
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 30.0),
-                      child: Text(
-                        "Start Timer",
-                        style: TextStyle(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(
+                          0xFF3B7292), // Use the same color as in the second button
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            12), // Match the border radius
+                      ),
+                      minimumSize: Size(160,
+                          50), // Set width and height same as in second button
+                      elevation: 5,
+                    ),
+                    child: Text(
+                      "          Start Timer          ",
+                      style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                      )
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF79A3B7),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 5,
                     ),
                   ),
                 ],
@@ -300,7 +317,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black),
         ),
         _buildDigitalPicker(
           controller: controller,
@@ -325,7 +343,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
     required int maxTime,
     required Function(int) onTimeChanged,
   }) {
-    List<int> minutesList = List.generate(maxTime - minTime + 1, (index) => minTime + index);
+    List<int> minutesList =
+        List.generate(maxTime - minTime + 1, (index) => minTime + index);
     int initialIndex = minutesList.indexOf(initialMinutes);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -358,7 +377,6 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
     );
   }
 
-  
   void _showTopNotification(String message) {
     OverlayState? overlayState = Overlay.of(context);
     OverlayEntry overlayEntry = OverlayEntry(
@@ -393,149 +411,168 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
 
   @override
   void initState() {
-  super.initState();
-  _initializeSettings();  // Call the async function to initialize
-}
+    super.initState();
+    _initializeSettings(); // Call the async function to initialize
+  }
 
-Future<void> _initializeSettings() async {
-  bool? loaded = await _loadPreferences();   // Await the result of _loadPreferences
-  while (loaded == null) {
-    print("Waiting for preferences to load...");
-    await Future.delayed(Duration(milliseconds:10)); // Wait 1 second before checking again
-    loaded = await _loadPreferences(); // Recheck the preferences
+  Future<void> _initializeSettings() async {
+    bool? loaded =
+        await _loadPreferences(); // Await the result of _loadPreferences
+    while (loaded == null) {
+      print("Waiting for preferences to load...");
+      await Future.delayed(
+          Duration(milliseconds: 10)); // Wait 1 second before checking again
+      loaded = await _loadPreferences(); // Recheck the preferences
+    }
+    if (loaded) {
+      _openTimeSelector();
+    } else {
+      print("Failed to load preferences.");
+      // Handle the failure case (e.g., show an error message)
+    }
   }
-  if (loaded) {
-    _openTimeSelector();
- 
-  } else {
-    print("Failed to load preferences.");
-    // Handle the failure case (e.g., show an error message)
-  }
-}
+
   @override
   Widget build(BuildContext context) {
-     print("Building TimerSelectionPage. _isSaved: $_isSaved");
-   
-  // Construct the string to display the current times
-  String timeDisplay = "Focus: $_focusMinutes min, Break: $_shortBreakMinutes min, Long Break: $_longBreakMinutes min, Rounds: $_rounds";
+    print("Building TimerSelectionPage. _isSaved: $_isSaved");
 
-  return Scaffold(
-  backgroundColor:  Color(0xFFEAEFF0), 
-  appBar: AppBar(
-    backgroundColor: const Color.fromARGB(255, 226, 231, 234),// Light grayish background
-    elevation: 0, // No shadow, flat AppBar
-    centerTitle: true, // Center the title in the AppBar
-    title: Text(
-      'Pomodoro', // Title text
-      style: TextStyle(
-        color: Colors.black,
-        fontSize: 20,
-        fontWeight: FontWeight.bold, 
+    // Construct the string to display the current times
+    String timeDisplay =
+        "Focus: $_focusMinutes min, Break: $_shortBreakMinutes min, Long Break: $_longBreakMinutes min, Rounds: $_rounds";
+
+    return Scaffold(
+      backgroundColor: Color(0xFFEAEFF0),
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(
+            255, 226, 231, 234), // Light grayish background
+        elevation: 0, // No shadow, flat AppBar
+        centerTitle: true, // Center the title in the AppBar
+        title: Text(
+          'Pomodoro', // Title text
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        automaticallyImplyLeading: false,
       ),
-    ),
-    automaticallyImplyLeading: false,
-  ),
-  body: Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0), // Adjusted padding to reduce the space
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.start, // Align content at the top
-      crossAxisAlignment: CrossAxisAlignment.start, // Align content to the left
-      children: [
-        SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: Row(
-            children: [
-              Icon(Icons.category, color: Color(0xFF3B7292)),
-              SizedBox(width: 8),
-              Text(
-                'Current timer defaults',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  color: Color(0xFF545454),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+            vertical: 15.0), // Adjusted padding to reduce the space
+        child: Column(
+          mainAxisAlignment:
+              MainAxisAlignment.start, // Align content at the top
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align content to the left
+          children: [
+            SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Row(
+                children: [
+                  Icon(Icons.category, color: Color(0xFF3B7292)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Current timer defaults',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      color: Color(0xFF545454),
+                    ),
+                  ),
+                  Spacer(), // Pushes the edit icon to the far right
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+                    onPressed: () {
+                      _openTimeSelector();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            // Display the current selected times in blocks
+            Padding(
+              padding: const EdgeInsets.only(
+                  bottom: 15.0), // Adjusted bottom padding
+              child: Column(
+                children: [
+                  _buildTopTimeBlock("Focus", _focusMinutes),
+                  Divider(
+                    color: Color.fromRGBO(
+                        16, 74, 115, 1), // Set the color of the divider
+                    thickness: 0.5, // Set the thickness of the divider
+                    indent: 20, // Set the indent on the left
+                    endIndent: 20, // Set the indent on the right
+                    height: 0,
+                  ),
+                  _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
+                  Divider(
+                    color: Color.fromRGBO(
+                        16, 74, 115, 0.405), // Set the color of the divider
+                    thickness: 0.5, // Set the thickness of the divider
+                    indent: 20, // Set the indent on the left
+                    endIndent: 20, // Set the indent on the right
+                    height: 0,
+                  ),
+                  _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
+                  Divider(
+                    color: Color.fromRGBO(
+                        16, 74, 115, 1), // Set the color of the divider
+                    thickness: 0.5, // Set the thickness of the divider
+                    indent: 20, // Set the indent on the left
+                    endIndent: 20, // Set the indent on the right
+                    height: 0,
+                  ),
+                  _buildBottomTimeBlock("Rounds", _rounds),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 12,
+            ),
+            Center(
+              child: ElevatedButton(
+                onPressed: _openTimeSelector, // Button to open bottom sheet
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(
+                      0xFF3B7292), // Use the same color as in the second button
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12), // Match the border radius
+                  ),
+                  minimumSize: Size(
+                      160, 50), // Set width and height same as in second button
+                  elevation: 5,
+                ),
+                child: Text(
+                  "          Start Timer          ",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              Spacer(), // Pushes the edit icon to the far right
-              IconButton(
-                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
-                onPressed: () {
-                  _openTimeSelector();
-                },
-              ),
-            ],
-          ),
-        ),
-        // Display the current selected times in blocks
-        Padding(
-          padding: const EdgeInsets.only(bottom: 15.0), // Adjusted bottom padding
-          child: Column(
-            children: [
-              _buildTopTimeBlock("Focus", _focusMinutes),
-                Divider(
-                        color:Color.fromRGBO(16, 74, 115, 1),          // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 20,                  // Set the indent on the left
-                        endIndent: 20,               // Set the indent on the right
-                         height: 0,   
-                      ),
-              _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
-               Divider(
-                        color:Color.fromRGBO(16, 74, 115, 0.405),          // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 20,                  // Set the indent on the left
-                        endIndent: 20,               // Set the indent on the right
-                         height: 0,   
-                      ), 
-              _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
-                Divider(
-                        color:Color.fromRGBO(16, 74, 115, 1),          // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 20,                  // Set the indent on the left
-                        endIndent: 20,               // Set the indent on the right
-                         height: 0,   
-                      ),
-              _buildBottomTimeBlock("Rounds", _rounds),
-            ],
-          ),
-        ),
-          SizedBox(height: 12,),
-        Center(
-          child: ElevatedButton(
-            onPressed: _openTimeSelector, // Button to open bottom sheet
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 30.0),
-              child: Text(
-                "Start Timer",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF79A3B7),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              elevation: 5,
-            ),
-          ),
+          ],
         ),
-      ],
-    ),
-  ),
-);
-
+      ),
+    );
   }
+
   Widget _buildTopTimeBlock(String label, int value) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(16),  
-                              topRight: Radius.circular(16), 
-                            ),
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -549,20 +586,21 @@ Future<void> _initializeSettings() async {
         children: [
           Text(
             label,
-           style: TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 16,
-              color: Color(0xFF545454),),
+              color: Color(0xFF545454),
+            ),
           ),
           Text(
             "$value min",
-           style: TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 12,
-              color: Color(0xFF545454),),
-          
+              color: Color(0xFF545454),
+            ),
           ),
         ],
       ),
@@ -592,8 +630,8 @@ Future<void> _initializeSettings() async {
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 16,
-              color: Color(0xFF545454),),
-          
+              color: Color(0xFF545454),
+            ),
           ),
           Text(
             "$value min",
@@ -601,24 +639,23 @@ Future<void> _initializeSettings() async {
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 12,
-              color: Color(0xFF545454),),
-          
+              color: Color(0xFF545454),
+            ),
           ),
         ],
       ),
     );
   }
 
-  
   Widget _buildBottomTimeBlock(String label, int value) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(16),  
-                              bottomRight: Radius.circular(16), 
-                            ),
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -632,11 +669,12 @@ Future<void> _initializeSettings() async {
         children: [
           Text(
             label,
-                    style: TextStyle(
+            style: TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 16,
-              color: Color(0xFF545454),),
+              color: Color(0xFF545454),
+            ),
           ),
           Text(
             "$value min",
@@ -644,12 +682,11 @@ Future<void> _initializeSettings() async {
               fontFamily: 'Poppins',
               fontWeight: FontWeight.w600,
               fontSize: 12,
-              color: Color(0xFF545454),),
+              color: Color(0xFF545454),
+            ),
           ),
         ],
       ),
     );
   }
-
-
 }
