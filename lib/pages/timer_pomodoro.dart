@@ -550,10 +550,7 @@ class _TimerPageState extends State<TimerPomodoro> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   if (taskId == subTaskID) {
-    await firestore
-        .collection('Task')
-        .doc(taskId)
-        .update({'completionStatus': 2});
+    await firestore.collection('Task').doc(taskId).update({'completionStatus': 2});
 
     QuerySnapshot subtasksSnapshot = await firestore
         .collection('SubTask')
@@ -574,15 +571,23 @@ class _TimerPageState extends State<TimerPomodoro> {
         .where('taskID', isEqualTo: taskId)
         .get();
 
-    // Ensure allSubtasksComplete and anySubtaskComplete handle null or missing data
+    // Safely handle null or missing data
     bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
-      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
-      return data != null && data['completionStatus'] == 1;
+      var data = doc.data() as Map<String, dynamic>?;
+      if (data == null || !data.containsKey('completionStatus')) {
+        print('Invalid data in subtask: ${doc.id}');
+        return false;
+      }
+      return data['completionStatus'] == 1;
     });
 
     bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
-      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
-      return data != null && data['completionStatus'] == 1;
+      var data = doc.data() as Map<String, dynamic>?;
+      if (data == null || !data.containsKey('completionStatus')) {
+        print('Invalid data in subtask: ${doc.id}');
+        return false;
+      }
+      return data['completionStatus'] == 1;
     });
 
     int newTaskStatus;
@@ -600,6 +605,7 @@ class _TimerPageState extends State<TimerPomodoro> {
         .update({'completionStatus': newTaskStatus});
   }
 }
+
 
 
 
