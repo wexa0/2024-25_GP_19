@@ -606,6 +606,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     onPressed: (_) {
                       setState(() {
                         subtasks.remove(subtask);
+                         _showTopNotification("Subtask deleted successfully.");
+
                         subtaskReminders.remove(subtask);
                       });
                     },

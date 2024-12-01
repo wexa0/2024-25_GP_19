@@ -14,14 +14,12 @@ class Category {
   });
 
 
-  // Link a task to an existing category
   static Future<void> linkTaskToCategory(String categoryID, String taskID) async {
     await FirebaseFirestore.instance.collection('Category').doc(categoryID).update({
       'taskIDs': FieldValue.arrayUnion([taskID]),
     });
   }
 
-  // Delete a category
   static Future<Map<String, dynamic>> fetchCategoriesForUser(String userID) async {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   QuerySnapshot categorySnapshot = await firestore
