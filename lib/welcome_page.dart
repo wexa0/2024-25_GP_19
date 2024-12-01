@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/authentication/signup__page.dart';
-import 'package:flutter_application/authentication/login_page.dart';
+import 'package:flutter_application/authentication/signup_page.dart';
+import 'package:flutter_application/authentication/Signin_page.dart';
 import 'package:flutter_application/pages/guest_home.dart';
 
 class WelcomePage extends StatelessWidget {
@@ -73,7 +73,7 @@ class WelcomePage extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    const LoginPage()), // Navigate to LoginPage
+                                    const SigninPage()), // Navigate to LoginPage
                           );
                         },
                         style: OutlinedButton.styleFrom(

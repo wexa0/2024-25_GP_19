@@ -108,7 +108,7 @@ class HomePageState extends State<HomePage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) {
-              // قم بإرجاع الصفحة بناءً على الـindex
+
               switch (index) {
                 case 0:
                   return HomePage();

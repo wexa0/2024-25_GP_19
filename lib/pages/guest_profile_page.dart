@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/authentication/login_page.dart';
-import 'package:flutter_application/authentication/signup__page.dart';
+import 'package:flutter_application/authentication/Signin_page.dart';
+import 'package:flutter_application/authentication/signup_page.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -161,7 +161,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => LoginPage()),
+                                    builder: (context) => SigninPage()),
                               );
                             },
                             style: TextButton.styleFrom(

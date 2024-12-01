@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/authentication/login_page.dart';
+import 'package:flutter_application/authentication/Signin_page.dart';
 import 'package:flutter_application/pages/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -88,7 +88,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   // Function to handle form submission and Firebase registration
-  void _submitForm() async {
+  void signUp() async {
     if (_formKey.currentState!.validate()) {
       try {
         // Create a new user in Firebase Authentication
@@ -97,7 +97,7 @@ class _SignUpPageState extends State<SignUpPage> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
- 
+
         // Add user details to Firestore 'User' collection
         await FirebaseFirestore.instance
             .collection('User')
@@ -107,12 +107,12 @@ class _SignUpPageState extends State<SignUpPage> {
           'lastName': _lastNameController.text.trim(),
           'email': _emailController.text.trim(),
           'dateOfBirth': _dobController.text.trim(),
-           'preferences': {
-              'focusMinutes': 25,
-              'shortBreakMinutes': 5,
-              'longBreakMinutes': 30,
-              'rounds': 4,
-            },
+          'preferences': {
+            'focusMinutes': 25,
+            'shortBreakMinutes': 5,
+            'longBreakMinutes': 30,
+            'rounds': 4,
+          },
         });
 
         // Notify success
@@ -361,7 +361,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _submitForm,
+                              onPressed: signUp,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF3B7292),
                                 shape: RoundedRectangleBorder(
@@ -397,7 +397,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => LoginPage()),
+                                        builder: (context) => SigninPage()),
                                   );
                                 },
                                 child: const Text(

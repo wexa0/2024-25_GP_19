@@ -6,8 +6,8 @@ import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
 
 class TimerPomodoro extends StatefulWidget {
-  final String taskId; 
-  final String taskName; 
+  final String taskId;
+  final String taskName;
   final String subTaskID;
   final String subTaskName;
   final int focusMinutes;
@@ -546,68 +546,74 @@ class _TimerPageState extends State<TimerPomodoro> {
   }
 
   // Function to update Firestore when task is completed
- Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  Future<void> _updateTaskCompletionStatus(
+      String taskId, String subTaskID) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  if (taskId == subTaskID) {
-    await firestore.collection('Task').doc(taskId).update({'completionStatus': 2});
+    try {
+      if (taskId == subTaskID) {
+        await firestore
+            .collection('Task')
+            .doc(taskId)
+            .update({'completionStatus': 2});
 
-    QuerySnapshot subtasksSnapshot = await firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: taskId)
-        .get();
+        QuerySnapshot subtasksSnapshot = await firestore
+            .collection('SubTask')
+            .where('taskID', isEqualTo: taskId)
+            .get();
 
-    for (var subtaskDoc in subtasksSnapshot.docs) {
-      await subtaskDoc.reference.update({'completionStatus': 1});
-    }
-  } else {
-    await firestore
-        .collection('SubTask')
-        .doc(subTaskID)
-        .update({'completionStatus': 1});
+        for (var subtaskDoc in subtasksSnapshot.docs) {
+          await subtaskDoc.reference.update({'completionStatus': 1});
+        }
+      } else {
+        await firestore
+            .collection('SubTask')
+            .doc(subTaskID)
+            .update({'completionStatus': 1});
 
-    QuerySnapshot subtasksSnapshot = await firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: taskId)
-        .get();
+        QuerySnapshot subtasksSnapshot = await firestore
+            .collection('SubTask')
+            .where('taskID', isEqualTo: taskId)
+            .get();
 
-    // Safely handle null or missing data
-    bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
-      var data = doc.data() as Map<String, dynamic>?;
-      if (data == null || !data.containsKey('completionStatus')) {
-        print('Invalid data in subtask: ${doc.id}');
-        return false;
+        bool allSubtasksComplete = true;
+        bool anySubtaskComplete = false;
+
+        for (var doc in subtasksSnapshot.docs) {
+          var data = doc.data() as Map<String, dynamic>?;
+
+          if (data == null || !data.containsKey('completionStatus')) {
+            print('Invalid data in subtask: ${doc.id}');
+            allSubtasksComplete = false;
+            continue;
+          }
+
+          int status = data['completionStatus'] as int;
+          if (status != 1) {
+            allSubtasksComplete = false;
+          } else {
+            anySubtaskComplete = true;
+          }
+        }
+
+        int newTaskStatus;
+        if (allSubtasksComplete) {
+          newTaskStatus = 2;
+        } else if (anySubtaskComplete) {
+          newTaskStatus = 1;
+        } else {
+          newTaskStatus = 0;
+        }
+
+        await firestore
+            .collection('Task')
+            .doc(taskId)
+            .update({'completionStatus': newTaskStatus});
       }
-      return data['completionStatus'] == 1;
-    });
-
-    bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
-      var data = doc.data() as Map<String, dynamic>?;
-      if (data == null || !data.containsKey('completionStatus')) {
-        print('Invalid data in subtask: ${doc.id}');
-        return false;
-      }
-      return data['completionStatus'] == 1;
-    });
-
-    int newTaskStatus;
-    if (allSubtasksComplete) {
-      newTaskStatus = 2;
-    } else if (anySubtaskComplete) {
-      newTaskStatus = 1;
-    } else {
-      newTaskStatus = 0;
+    } catch (e) {
+      print('Error in _updateTaskCompletionStatus: $e');
     }
-
-    await firestore
-        .collection('Task')
-        .doc(taskId)
-        .update({'completionStatus': newTaskStatus});
   }
-}
-
-
-
 
   Future<void> _updateTasktimerStatus(String taskId) async {
     try {

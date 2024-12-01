@@ -525,7 +525,7 @@ Future<void> logout(BuildContext context) async {
 }
 
 
-  Future<void> delete(BuildContext context) async {
+  Future<void> deleteUser(BuildContext context) async {
   bool? confirm = await showDialog<bool>(
     context: context,
     builder: (context) {

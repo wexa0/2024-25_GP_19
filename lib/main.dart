@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,7 +11,7 @@ import 'package:flutter_application/pages/home.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-    final GlobalKey<TaskPageState> taskPageKey = GlobalKey<TaskPageState>();
+final GlobalKey<TaskPageState> taskPageKey = GlobalKey<TaskPageState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -54,7 +53,7 @@ Future<void> _initializeNotifications() async {
   final InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
 
-await flutterLocalNotificationsPlugin.initialize(
+  await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (response) {
       NotificationHandler.handleNotificationResponse(response, () {
@@ -62,7 +61,6 @@ await flutterLocalNotificationsPlugin.initialize(
       });
     },
   );
-
 }
 
 class MyApp extends StatelessWidget {
@@ -73,7 +71,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AttentionLens',
       debugShowCheckedModeBanner: false,
-      home: const AuthWrapper(), 
+      home: const AuthWrapper(),
     );
   }
 }

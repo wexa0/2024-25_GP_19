@@ -1,23 +1,23 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/main.dart';
 
 class NotificationHandler {
-   static final FlutterLocalNotificationsPlugin
+  static final FlutterLocalNotificationsPlugin
       _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> handleNotificationResponse(
       NotificationResponse response, Function refreshTasksCallback) async {
     final String? itemId = response.payload;
-print('Action ID: ${response.actionId}, Payload: ${response.payload}');
+    print('Action ID: ${response.actionId}, Payload: ${response.payload}');
 
     if (itemId != null) {
       switch (response.actionId) {
         case 'mark_done':
           await _markItemAsComplete(itemId);
-          taskPageKey.currentState?.fetchTasksFromFirestore();      break;
+          taskPageKey.currentState?.fetchTasksFromFirestore();
+          break;
         case 'snooze_5':
           await _scheduleSnoozedNotification(itemId, 5);
           break;
@@ -28,7 +28,6 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
       print("Item ID is missing from the notification payload.");
     }
   }
-
 
   static Future<void> _markItemAsComplete(String itemId) async {
     try {
@@ -74,8 +73,6 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
     }
   }
 
-
-
   static Future<void> _scheduleSnoozedNotification(
       String itemId, int minutes) async {
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -115,7 +112,7 @@ print('Action ID: ${response.actionId}, Payload: ${response.payload}');
     }
   }
 
-static Future<void> cancelNotification(String taskId) async {
+  static Future<void> cancelNotification(String taskId) async {
     final int notificationId = taskId.hashCode;
 
     try {
@@ -129,8 +126,6 @@ static Future<void> cancelNotification(String taskId) async {
     await debugPendingNotifications();
   }
 
-
-
   /// Cancel all notifications
   static Future<void> cancelAllNotifications() async {
     try {
@@ -140,5 +135,4 @@ static Future<void> cancelNotification(String taskId) async {
       print("Failed to cancel all notifications: $e");
     }
   }
-  
 }

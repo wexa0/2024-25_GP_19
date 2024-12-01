@@ -1,26 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/authentication/signup__page.dart';
-import 'package:flutter_application/welcome_page.dart';
-import 'package:flutter_application/pages/addTaskForm.dart';
+import 'package:flutter_application/authentication/signup_page.dart';
 import 'package:flutter_application/pages/home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SigninPage extends StatefulWidget {
+  const SigninPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _SigninPageState createState() => _SigninPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SigninPageState extends State<SigninPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
- final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
-  bool _obscurePassword = true; 
-void _showTopNotification(String message) {
+  bool _obscurePassword = true;
+  void _showTopNotification(String message) {
     final overlayState =
         Navigator.of(context).overlay; // Access the root navigator's overlay
     OverlayEntry overlayEntry = OverlayEntry(
@@ -56,8 +54,9 @@ void _showTopNotification(String message) {
       overlayEntry.remove();
     });
   }
-  // Function to handle the login process
-  void _handleLogin() async {
+
+  // Function to handle the Signin process
+  void signIn() async {
     if (_formKey.currentState!.validate()) {
       try {
         UserCredential userCredential =
@@ -66,9 +65,9 @@ void _showTopNotification(String message) {
           password: _passwordController.text.trim(),
         );
 
-        print('User login successful, UID: ${userCredential.user!.uid}');
+        print('User Signin successful, UID: ${userCredential.user!.uid}');
 
-        // Navigate to the next screen after login
+        // Navigate to the next screen after Signin
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
@@ -79,139 +78,140 @@ void _showTopNotification(String message) {
 
         if (e.code == 'invalid-credential') {
           // Provide a generic message to prevent email enumeration attacks
-        
-            _showTopNotification('Invalid email or password. Please try again.');
-          
+
+          _showTopNotification('Invalid email or password. Please try again.');
         } else {
-         
-            _showTopNotification('Failed to sign in: ${e.message}');
+          _showTopNotification('Failed to sign in: ${e.message}');
           print('Failed to sign in: ${e.message}');
         }
       }
     }
   }
-  void showResetPasswordPopup(BuildContext context) {
-  final TextEditingController emailController = TextEditingController();
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFFF5F5F5), // نفس خلفية الحقول في البروفايل
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Text(
-          'Reset Password',
-          style: TextStyle(
-            color: Color.fromARGB(255, 0, 0, 0), // نفس لون النصوص الرئيسية
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+  void showResetPasswordPopup(BuildContext context) {
+    final TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor:
+              const Color(0xFFF5F5F5), 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Enter your email to reset your password:',
-              style: TextStyle(
-                color: Color(0xFF737373), // لون النصوص الثانوية
-                fontSize: 15,
+          title: const Text(
+            'Reset Password',
+            style: TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0), 
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter your email to reset your password:',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  hintText: 'Your email',
+                  filled: true,
+                  fillColor: Colors.white, 
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE6EBEF), 
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF3B7292), 
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF5F7F8),
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF79A3B7)),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                hintText: 'Your email',
-                filled: true,
-                fillColor: Colors.white, // خلفية الحقل
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE6EBEF), // حدود الحقل
-                  ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
+                  // Invalid email format
+                  _showTopNotification(
+                      'Invalid email address. Please try again.');
+                  return;
+                }
+
+                try {
+                  // Check if the email exists in Firestore
+                  final querySnapshot = await FirebaseFirestore.instance
+                      .collection('User')
+                      .where('email', isEqualTo: email)
+                      .get();
+
+                  if (querySnapshot.docs.isEmpty) {
+                    // Email not found in database
+                    _showTopNotification(
+                        'This email is not registered. Please try again.');
+                    return;
+                  }
+
+                  // Send password reset email
+                  await FirebaseAuth.instance
+                      .sendPasswordResetEmail(email: email);
+
+                  // Show success message
+                  Navigator.of(context).pop(); // Close the popup
+                  _showTopNotification(
+                      'A password reset link has been sent to your email.');
+                } catch (e) {
+                  // Handle errors
+                  _showTopNotification('Failed to send email: ${e.toString()}');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF79A3B7),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF3B7292), // حدود عند التركيز
-                  ),
-                ),
+              ),
+              child: const Text(
+                'Send',
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF5F7F8),
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF79A3B7)),
-            ),
-          ),
-        ElevatedButton(
-  onPressed: () async {
-    final email = emailController.text.trim();
-
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
-      // Invalid email format
-      _showTopNotification('Invalid email address. Please try again.');
-      return;
-    }
-
-     try {
-      // Check if the email exists in Firestore
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('User')
-          .where('email', isEqualTo: email)
-          .get();
-
-      if (querySnapshot.docs.isEmpty) {
-        // Email not found in database
-        _showTopNotification('This email is not registered. Please try again.');
-        return;
-      }
-
-      // Send password reset email
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-
-      // Show success message
-      Navigator.of(context).pop(); // Close the popup
-      _showTopNotification('A password reset link has been sent to your email.');
-    } catch (e) {
-      // Handle errors
-      _showTopNotification('Failed to send email: ${e.toString()}');
-    }
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF79A3B7),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0),
-    ),
-  ),
-  child: const Text(
-    'Send',
-    style: TextStyle(color: Colors.white),
-  ),
-),
-
-
-        ],
-      );
-    },
-  );
-}
-
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +225,7 @@ void _showTopNotification(String message) {
             width: double.infinity,
             height: double.infinity,
           ),
-         
+
           // Main content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -276,7 +276,6 @@ void _showTopNotification(String message) {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                   
                     decoration: InputDecoration(
                       labelText: 'Password *',
                       filled: true,
@@ -286,7 +285,7 @@ void _showTopNotification(String message) {
                         borderRadius: BorderRadius.circular(10.0),
                         borderSide: const BorderSide(
                           color: Color(0xFFE6EBEF),
-                         ),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
@@ -297,15 +296,18 @@ void _showTopNotification(String message) {
                       floatingLabelStyle: const TextStyle(
                         color: Color(0xFF3b7292),
                       ),
-                    
+
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: const Color.fromARGB(255, 122, 137, 146),
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscurePassword = !_obscurePassword; // Toggle password visibility
+                            _obscurePassword =
+                                !_obscurePassword; // Toggle password visibility
                           });
                         },
                       ),
@@ -317,27 +319,27 @@ void _showTopNotification(String message) {
                       return null;
                     },
                   ),
-  Align(
-  alignment: Alignment.centerLeft, 
-  child: TextButton(
-    onPressed: () => showResetPasswordPopup(context), // Call the popup function directly
-    child: const Text(
-      'Forgot Password?',
-      style: TextStyle(
-        color: Color(0xFF737373),
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  ),
-),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => showResetPasswordPopup(
+                          context), // Call the popup function directly
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Color(0xFF737373),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
 
-       
                   const SizedBox(height: 4),
                   // Log In Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _handleLogin,
+                      onPressed: signIn,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B7292),
                         shape: RoundedRectangleBorder(

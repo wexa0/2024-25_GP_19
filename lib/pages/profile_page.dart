@@ -155,21 +155,19 @@ class _ProfilePageState extends State<ProfilePage> {
                                       Icon(Icons.arrow_forward_ios),
                                     ],
                                   ),
-                                  
                                 ),
-                                
                               ),
                             ),
-                            
                           ),
                         ),
                         Divider(
-                        color:Color.fromRGBO(16, 74, 115, 0.377),            // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 30,                  // Set the indent on the left
-                        endIndent: 30,               // Set the indent on the right
-                         height: 1,   
-                      ),
+                          color: Color.fromRGBO(16, 74, 115,
+                              0.377), // Set the color of the divider
+                          thickness: 0.5, // Set the thickness of the divider
+                          indent: 30, // Set the indent on the left
+                          endIndent: 30, // Set the indent on the right
+                          height: 1,
+                        ),
                         Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: Material(
@@ -196,12 +194,13 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             )),
                         Divider(
-                        color:Color.fromRGBO(16, 74, 115, 0.377),         // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 30,                  // Set the indent on the left
-                        endIndent: 30,               // Set the indent on the right
-                         height: 0,   
-                      ),
+                          color: Color.fromRGBO(16, 74, 115,
+                              0.377), // Set the color of the divider
+                          thickness: 0.5, // Set the thickness of the divider
+                          indent: 30, // Set the indent on the left
+                          endIndent: 30, // Set the indent on the right
+                          height: 0,
+                        ),
                         Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: Material(
@@ -228,12 +227,13 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             )),
                         Divider(
-                        color:Color.fromRGBO(16, 74, 115, 0.377),         // Set the color of the divider
-                        thickness: 0.5,                // Set the thickness of the divider
-                        indent: 30,                  // Set the indent on the left
-                        endIndent: 30,               // Set the indent on the right
-                         height: 0,   
-                      ),
+                          color: Color.fromRGBO(16, 74, 115,
+                              0.377), // Set the color of the divider
+                          thickness: 0.5, // Set the thickness of the divider
+                          indent: 30, // Set the indent on the left
+                          endIndent: 30, // Set the indent on the right
+                          height: 0,
+                        ),
                         Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: ClipRRect(
@@ -359,7 +359,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: TextButton(
-                            onPressed: () => user.delete(context),
+                            onPressed: () => user.deleteUser(context),
                             style: TextButton.styleFrom(
                               backgroundColor: Color.fromRGBO(121, 163, 183, 1),
                               shape: RoundedRectangleBorder(

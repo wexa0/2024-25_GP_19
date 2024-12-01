@@ -99,25 +99,25 @@ class _ProgressPageState extends State<ProgressPage> {
           automaticallyImplyLeading: false,
         ),
         body: isLoading
-             ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    //loading
-                    children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 170,
-                        height: 170,
-                      ),
-                      const SizedBox(height: 0),
-                      Lottie.asset(
-                        'assets/animations/loading.json',
-                        width: 150,
-                        height: 150,
-                      ),
-                    ],
-                  ),
-                )
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  //loading
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 170,
+                      height: 170,
+                    ),
+                    const SizedBox(height: 0),
+                    Lottie.asset(
+                      'assets/animations/loading.json',
+                      width: 150,
+                      height: 150,
+                    ),
+                  ],
+                ),
+              )
             : Stack(
                 children: [
                   SingleChildScrollView(
@@ -783,30 +783,29 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   /// Builds the legend widget for a category and its color
-Widget _buildLegend(String category, Color color) {
-  return Row(
-    children: [
-      Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
+  Widget _buildLegend(String category, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+          ),
         ),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          category,
-          style: const TextStyle(fontSize: 14),
-          overflow: TextOverflow.ellipsis, // Prevent overflow with ellipsis
-          maxLines: 1, // Restrict to one line
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            category,
+            style: const TextStyle(fontSize: 14),
+            overflow: TextOverflow.ellipsis, // Prevent overflow with ellipsis
+            maxLines: 1, // Restrict to one line
+          ),
         ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 
 // Method to build stacked series for the chart
   List<ChartSeries<TaskCompletionData, String>> _buildStackedSeries(
@@ -1122,7 +1121,7 @@ Widget _buildLegend(String category, Color color) {
                   hoursByPeriodAndCategory[period]![category] =
                       (hoursByPeriodAndCategory[period]![category] ?? 0.0) +
                           (firstDaySeconds / 3600.0); // Convert to hours
-                  }
+                }
               }
 
               // Handle secondDayEndDatetime
@@ -1142,7 +1141,7 @@ Widget _buildLegend(String category, Color color) {
                   hoursByPeriodAndCategory[period]![category] =
                       (hoursByPeriodAndCategory[period]![category] ?? 0.0) +
                           (secondDaySeconds / 3600.0); // Convert to hours
-}
+                }
               }
             }
           }
@@ -1418,7 +1417,6 @@ Widget _buildLegend(String category, Color color) {
   Future<void> fetchCategories(String userID) async {
     // fetch all tasks with any status with its category
     try {
-
       // Use the Category class to fetch categories and task-category mapping
       final result = await Category.fetchCategoriesForUser(userID);
 
@@ -1427,8 +1425,7 @@ Widget _buildLegend(String category, Color color) {
       final taskCategoryMap =
           result['taskCategoryMap'] as Map<String, List<String>>;
 
-      if (! categories.isEmpty) {
-
+      if (!categories.isEmpty) {
         // Populate the taskIDToCategoryMap with task-category mapping
         taskCategoryMap.forEach((taskID, categories) {
           taskIDToCategoryMap[taskID] =
@@ -1503,11 +1500,12 @@ Widget _buildLegend(String category, Color color) {
     switch (selectedTime) {
       case "Daily":
         // Get the most recent Sunday (start of the week)
-        final startOfWeek = currentDate.subtract(
-            Duration(days: currentDate.weekday)); // Start of the week (Sunday)
-        startOfPeriod = DateTime(startOfWeek.year, startOfWeek.month,
-            startOfWeek.day); // Ensure it starts at midnight (00:00:00)
-        endOfPeriod = startOfPeriod.add(Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        final startOfWeek =
+            currentDate.subtract(Duration(days: currentDate.weekday % 7));
+        startOfPeriod =
+            DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+        endOfPeriod = startOfPeriod
+            .add(Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
         break;
 
       case "Weekly":
@@ -1669,7 +1667,6 @@ Widget _buildLegend(String category, Color color) {
     startOfPeriod = startOfPeriod.toUtc();
     endOfPeriod = endOfPeriod.toUtc();
 
-
     try {
       // Fetch categories for the specific user
       final categoriesSnapshot = await FirebaseFirestore.instance
@@ -1714,10 +1711,11 @@ Widget _buildLegend(String category, Color color) {
         final scheduledDate = (data['scheduledDate'] as Timestamp)
             .toDate(); // Ensure date is parsed
 
-
         // Check if the task falls within the selected period
-        if ((scheduledDate.isAfter(startOfPeriod) || scheduledDate.isAtSameMomentAs(startOfPeriod)) &&
-    (scheduledDate.isBefore(endOfPeriod) || scheduledDate.isAtSameMomentAs(endOfPeriod))) {
+        if ((scheduledDate.isAfter(startOfPeriod) ||
+                scheduledDate.isAtSameMomentAs(startOfPeriod)) &&
+            (scheduledDate.isBefore(endOfPeriod) ||
+                scheduledDate.isAtSameMomentAs(endOfPeriod))) {
           final categoryName = taskIDToCategoryMap[taskID] ?? 'Uncategorized';
           taskCounts[categoryName] = (taskCounts[categoryName] ?? 0) + 1;
         }

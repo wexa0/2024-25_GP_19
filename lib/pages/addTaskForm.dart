@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_application/Classes/Category';
-import 'package:flutter_application/Classes/SubTask';
-import 'package:flutter_application/Classes/Task';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -1002,34 +999,54 @@ class _AddTaskPageState extends State<AddTaskPage> {
     if (currentUser == null) return;
 
     for (String category in addedCategories) {
-      await _saveCategoryToDatabase(category);
+      await addCategory(category);
     }
 
     for (var renameMap in renamedCategories) {
       String oldName = renameMap['oldName']!;
       String newName = renameMap['newName']!;
-      await _renameCategoryInDatabase(oldName, newName);
+      await updateCategory(oldName, newName);
     }
 
     for (String deletedCategory in deletedCategories) {
-      await _deleteCategoryFromDatabase(deletedCategory);
+      await deleteCategory(deletedCategory);
     }
 
     await _getCategories();
   }
 
-  Future<void> _saveCategoryToDatabase(String categoryName) async {
+  Future<void> addCategory(String categoryName) async {
     User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
 
-    await FirebaseFirestore.instance.collection('Category').add({
-      'categoryName': categoryName,
-      'userID': currentUser.uid,
-    });
+    try {
+      // Check if the category already exists for the current user
+      QuerySnapshot existingCategorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('categoryName', isEqualTo: categoryName)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      if (existingCategorySnapshot.docs.isNotEmpty) {
+        // Display a message if the category already exists
+        _showTopNotification('Category "$categoryName" already exists.');
+        return;
+      }
+
+      // If it doesn't exist, add the new category
+      await FirebaseFirestore.instance.collection('Category').add({
+        'categoryName': categoryName,
+        'userID': currentUser.uid,
+        'taskIDs': [],
+      });
+
+      _showTopNotification('Category "$categoryName" added successfully.');
+    } catch (e) {
+      _showTopNotification('Failed to add category: $e');
+    }
   }
 
-  Future<void> _renameCategoryInDatabase(
-      String oldCategory, String newCategory) async {
+  Future<void> updateCategory(String oldCategory, String newCategory) async {
     User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
 
@@ -1045,7 +1062,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-  Future<void> _deleteCategoryFromDatabase(String categoryName) async {
+  Future<void> deleteCategory(String categoryName) async {
     User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
 

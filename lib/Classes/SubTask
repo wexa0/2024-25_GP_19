@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class SubTask {
-  final String subTaskID;  // Make sure this is 'subTaskID' with an uppercase 'T'
+  final String subTaskID; 
   final String taskID;
   String title;
   int completionStatus;
 
   SubTask({
-    required this.subTaskID,  // Use 'subTaskID' here, matching the property name
+    required this.subTaskID,  
     required this.taskID,
     required this.title,
     required this.completionStatus,
