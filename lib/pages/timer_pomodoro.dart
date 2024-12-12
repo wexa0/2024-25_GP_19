@@ -6,8 +6,8 @@ import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
 
 class TimerPomodoro extends StatefulWidget {
-  final String taskId;
-  final String taskName;
+  final String taskId; 
+  final String taskName; 
   final String subTaskID;
   final String subTaskName;
   final int focusMinutes;
@@ -154,7 +154,7 @@ class _TimerPageState extends State<TimerPomodoro> {
         }
         _completedRounds++; // Increment completed rounds after short break
       } else {
-        // *Before transitioning to long break, show dialog*
+        // Before transitioning to long break, show dialog
         // Show the completion dialog before the long break
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showCompletionDialog(); // Show dialog after the widget is built
@@ -546,74 +546,62 @@ class _TimerPageState extends State<TimerPomodoro> {
   }
 
   // Function to update Firestore when task is completed
-  Future<void> _updateTaskCompletionStatus(
-      String taskId, String subTaskID) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
+ Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    try {
-      if (taskId == subTaskID) {
-        await firestore
-            .collection('Task')
-            .doc(taskId)
-            .update({'completionStatus': 2});
+  if (taskId == subTaskID) {
+    await firestore
+        .collection('Task')
+        .doc(taskId)
+        .update({'completionStatus': 2});
 
-        QuerySnapshot subtasksSnapshot = await firestore
-            .collection('SubTask')
-            .where('taskID', isEqualTo: taskId)
-            .get();
+    QuerySnapshot subtasksSnapshot = await firestore
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskId)
+        .get();
 
-        for (var subtaskDoc in subtasksSnapshot.docs) {
-          await subtaskDoc.reference.update({'completionStatus': 1});
-        }
-      } else {
-        await firestore
-            .collection('SubTask')
-            .doc(subTaskID)
-            .update({'completionStatus': 1});
-
-        QuerySnapshot subtasksSnapshot = await firestore
-            .collection('SubTask')
-            .where('taskID', isEqualTo: taskId)
-            .get();
-
-        bool allSubtasksComplete = true;
-        bool anySubtaskComplete = false;
-
-        for (var doc in subtasksSnapshot.docs) {
-          var data = doc.data() as Map<String, dynamic>?;
-
-          if (data == null || !data.containsKey('completionStatus')) {
-            print('Invalid data in subtask: ${doc.id}');
-            allSubtasksComplete = false;
-            continue;
-          }
-
-          int status = data['completionStatus'] as int;
-          if (status != 1) {
-            allSubtasksComplete = false;
-          } else {
-            anySubtaskComplete = true;
-          }
-        }
-
-        int newTaskStatus;
-        if (allSubtasksComplete) {
-          newTaskStatus = 2;
-        } else if (anySubtaskComplete) {
-          newTaskStatus = 1;
-        } else {
-          newTaskStatus = 0;
-        }
-
-        await firestore
-            .collection('Task')
-            .doc(taskId)
-            .update({'completionStatus': newTaskStatus});
-      }
-    } catch (e) {
-      print('Error in _updateTaskCompletionStatus: $e');
+    for (var subtaskDoc in subtasksSnapshot.docs) {
+      await subtaskDoc.reference.update({'completionStatus': 1});
     }
+  } else {
+    await firestore
+        .collection('SubTask')
+        .doc(subTaskID)
+        .update({'completionStatus': 1});
+
+    QuerySnapshot subtasksSnapshot = await firestore
+        .collection('SubTask')
+        .where('taskID', isEqualTo: taskId)
+        .get();
+
+    // Ensure allSubtasksComplete and anySubtaskComplete handle null or missing data
+    bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
+      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
+      return data != null && data['completionStatus'] == 1;
+    });
+
+    bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
+      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
+      return data != null && data['completionStatus'] == 1;
+    });
+
+    int newTaskStatus;
+    if (allSubtasksComplete) {
+      newTaskStatus = 2;
+    } else if (anySubtaskComplete) {
+      newTaskStatus = 1;
+    } else {
+      newTaskStatus = 0;
+    }
+
+    await firestore
+        .collection('Task')
+        .doc(taskId)
+        .update({'completionStatus': newTaskStatus});
   }
+}
+
+
 
   Future<void> _updateTasktimerStatus(String taskId) async {
     try {
@@ -826,12 +814,12 @@ class _TimerPageState extends State<TimerPomodoro> {
               children: [
                 // Quit button with icon and rounded corners
                 ElevatedButton.icon(
-                  onPressed: _isRunning
-                      ? () async {
+                  onPressed:
+                       () async {
                           await _updateTasktimerStatus(widget.taskId);
                           _showEncouragementDialog(); // Show encouragement message before quitting
                         }
-                      : null, // Disable if timer is not running
+                      , // Disable if timer is not running
                   icon: Icon(
                     Icons.cancel_outlined, // Cancel icon for "Quit"
                     size: 18,
@@ -843,7 +831,7 @@ class _TimerPageState extends State<TimerPomodoro> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(30), // Rounded corners
+                          BorderRadius.circular(15), // Rounded corners
                     ),
                     elevation:
                         5, // Shadow for better separation from the background
@@ -853,8 +841,8 @@ class _TimerPageState extends State<TimerPomodoro> {
 
                 // Done button with icon and rounded corners
                 ElevatedButton.icon(
-                  onPressed: _isRunning
-                      ? () async {
+                  onPressed:
+                       () async {
                           // Mark the task as done when "Done" button is pressed
                           await _updateTaskCompletionStatus(widget.taskId,
                               widget.subTaskID); // Update Firestore
@@ -882,7 +870,7 @@ class _TimerPageState extends State<TimerPomodoro> {
                             }
                           });
                         }
-                      : null, // Disable if the timer is not running
+                      , // Disable if the timer is not running
                   icon: Icon(
                     Icons.check_circle_outline, // Checkmark icon for "Done"
                     size: 18,
@@ -894,7 +882,7 @@ class _TimerPageState extends State<TimerPomodoro> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(30), // Rounded corners
+                          BorderRadius.circular(15), // Rounded corners
                     ),
                     elevation:
                         5, // Shadow for better separation from the background

@@ -379,7 +379,7 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                 borderRadius: BorderRadius.circular(16.0),
                               ),
                               title: const Text(
-                                'Login & Explor!',
+                                'SignIn & Explor!',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               content: const Text(

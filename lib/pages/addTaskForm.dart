@@ -401,6 +401,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
     final int notificationId = _generateNotificationId(taskId); // Unique ID
 
+    // Define notification actions
+  const AndroidNotificationAction snoozeAction = AndroidNotificationAction(
+    'snooze_5', // Action ID for 5-minute snooze
+    'Snooze 5 Minutes',
+    showsUserInterface: true,
+  );
+
     const AndroidNotificationAction markDoneAction = AndroidNotificationAction(
       'mark_done',
       'Mark Task as Done',
@@ -411,7 +418,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       'task_channel',
       'Task Reminders',
       channelDescription: 'Task reminders with customizable intervals',
-      actions: [markDoneAction],
+      actions: [markDoneAction,snoozeAction],
     );
 
     final platformDetails = NotificationDetails(android: androidDetails);

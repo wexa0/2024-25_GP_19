@@ -2115,6 +2115,10 @@ class _EditTaskPageState extends State<EditTaskPage> {
               suffixIcon: IconButton(
                 icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
                 onPressed: () async {
+                  if (subtasks.length >= 10) {
+                    _showTopNotification('You can only add up to 10 subtasks.');
+                    return;
+                  }
                   if (subtaskController.text.isNotEmpty) {
                     setState(() {
                       subtasks.add(subtaskController.text);

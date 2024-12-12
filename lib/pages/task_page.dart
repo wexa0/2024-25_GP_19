@@ -1482,7 +1482,7 @@ class TaskPageState extends State<TaskPage> {
                                   borderRadius: BorderRadius.circular(16.0),
                                 ),
                                 title: const Text(
-                                  'Login & Explor!',
+                                  'SignIn & Explor!',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 content: const Text(

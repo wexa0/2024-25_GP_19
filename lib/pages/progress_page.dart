@@ -443,10 +443,9 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-//this will be modified
   Widget _buildTotalTimeCard() {
     return FutureBuilder<double>(
-      future: _fetchSpentMinByPeriod(selectedTime), // Fetch spent hours
+      future: _fetchSpentTimeByPeriod(selectedTime), // Fetch spent hours
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -463,12 +462,12 @@ class _ProgressPageState extends State<ProgressPage> {
         }
 
         // Get the total spent hours
-        final spentMin = snapshot.data ?? 0.0;
+        final secondsSpent = snapshot.data ?? 0.0;
 
         return Center(
           child: _buildTaskCard(
             "Time Spent",
-            _formatTimeSpent(spentMin), // Dynamically format the time
+            _formatTimeSpent(secondsSpent), // Dynamically format the time
             widthFactor: 0.85, // Wider card for Time view
           ),
         );
@@ -476,14 +475,15 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  String _formatTimeSpent(double spentMin) {
-    if (spentMin < 60) {
-      return "${spentMin.toStringAsFixed(2)} Minutes"; // Less than 60 minutes
-    } else {
-      int hours = spentMin ~/ 60; // Calculate hours
-      int minutes = (spentMin % 60).toInt(); // Calculate remaining minutes
-      return "$hours Hours ${minutes.toString()} Minutes"; // Display hours and minutes
-    }
+  String _formatTimeSpent(double secondsSpent) {
+    // Convert to a whole number of seconds
+    int totalSeconds = secondsSpent.floor();
+
+    int hours = totalSeconds ~/ 3600;
+    int minutes = (totalSeconds % 3600) ~/ 60;
+    int seconds = totalSeconds % 60;
+
+    return "$hours Hours $minutes Minutes $seconds Seconds";
   }
 
   Widget _buildTaskCard(String title, String count,
@@ -1567,7 +1567,7 @@ class _ProgressPageState extends State<ProgressPage> {
     return filteredTasks; // Return the filtered list of tasks
   }
 
-  Future<double> _fetchSpentMinByPeriod(String selectedTime) async {
+  Future<double> _fetchSpentTimeByPeriod(String selectedTime) async {
     // Fetch the current user
     final user = FirebaseAuth.instance.currentUser;
 
@@ -1584,7 +1584,7 @@ class _ProgressPageState extends State<ProgressPage> {
     startOfPeriod = startOfPeriod.toUtc();
     endOfPeriod = endOfPeriod.toUtc();
 
-    double totalSpentMin = 0.0;
+    double totalSpentSec = 0.0;
 
     // Fetch tasks for the current user
     final tasksSnapshot = await FirebaseFirestore.instance
@@ -1608,7 +1608,7 @@ class _ProgressPageState extends State<ProgressPage> {
               if (dateTime.isAfter(startOfPeriod) &&
                   dateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentMin += (double.tryParse(timeField) ?? 0.0) / 60.0;
+                totalSpentSec += (double.tryParse(timeField) ?? 0.0);
               }
             }
             // Check for valid `startTime` and `endTime`
@@ -1627,8 +1627,7 @@ class _ProgressPageState extends State<ProgressPage> {
               if (startDateTime.isAfter(startOfPeriod) &&
                   startDateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentMin +=
-                    (double.tryParse(startTimeField) ?? 0.0) / 60.0;
+                totalSpentSec += (double.tryParse(startTimeField) ?? 0.0);
               }
             }
 
@@ -1638,7 +1637,7 @@ class _ProgressPageState extends State<ProgressPage> {
               if (endDateTime.isAfter(startOfPeriod) &&
                   endDateTime.isBefore(endOfPeriod)) {
                 // Convert seconds to hours
-                totalSpentMin += (double.tryParse(endTimeField) ?? 0.0) / 60.0;
+                totalSpentSec += (double.tryParse(endTimeField) ?? 0.0);
               }
             }
           }
@@ -1646,7 +1645,7 @@ class _ProgressPageState extends State<ProgressPage> {
       }
     }
 
-    return totalSpentMin;
+    return totalSpentSec;
   }
 
   Future<Map<String, int>> countTasksByCategory(

@@ -358,8 +358,8 @@ class _CalendarPageState extends State<CalendarPage> {
                     children: [
                       Image.asset(
                         'assets/images/logo.png',
-                        width: 160,
-                        height: 160,
+                        width: 140,
+                        height: 140,
                       ),
                       Lottie.asset(
                         'assets/animations/loading.json',
@@ -826,7 +826,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   borderRadius: BorderRadius.circular(16.0),
                                 ),
                                 title: const Text(
-                                  'Login & Explor!',
+                                  'SignIn & Explor!',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 content: const Text(
