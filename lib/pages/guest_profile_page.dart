@@ -63,7 +63,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
       ),
     );
 
-    overlayState?.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });

@@ -708,7 +708,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
       ),
     );
 
-    overlayState?.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });

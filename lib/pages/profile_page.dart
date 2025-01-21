@@ -149,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                          '${user.firstName ?? ''} ${user.lastName ?? ''}'
+                                          '${user.name ?? ''} '
                                               .trim()),
                                       SizedBox(width: 8),
                                       Icon(Icons.arrow_forward_ios),

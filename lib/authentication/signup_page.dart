@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/authentication/EmailVerificationPage';
 import 'package:flutter_application/authentication/Signin_page.dart';
-import 'package:flutter_application/pages/home.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -12,8 +11,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _nameController  = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,6 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _obscurePassword = true;
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>(); // Key for form validation
+
   void _showTopNotification(String message) {
     final overlayState =
         Navigator.of(context).overlay; // Access the root navigator's overlay
@@ -89,53 +88,141 @@ class _SignUpPageState extends State<SignUpPage> {
 
   // Function to handle form submission and Firebase registration
   void signUp() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        // Create a new user in Firebase Authentication
-        UserCredential userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+  if (_formKey.currentState!.validate()) {
+    final DateTime today = DateTime.now();
+    final int age = today.year - _selectedDate!.year;
+    print(age);
 
-        // Add user details to Firestore 'User' collection
-        await FirebaseFirestore.instance
-            .collection('User')
-            .doc(userCredential.user!.uid)
-            .set({
-          'firstName': _firstNameController.text.trim(),
-          'lastName': _lastNameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'dateOfBirth': _dobController.text.trim(),
-          'preferences': {
-            'focusMinutes': 25,
-            'shortBreakMinutes': 5,
-            'longBreakMinutes': 30,
-            'rounds': 4,
-          },
-        });
+    if (_selectedDate!.isAfter(today)) {
+      _showTopNotification('The date of birth is invalid.');
+      return;
+    } else if (age < 13) {
+      // الأطفال تحت 13 سنة ممنوعون تمامًا
+      _showTopNotification('You must be at least 13 years old to sign up.');
+      return;
+    } else if (age < 18) {
+      // المراهقون بين 13 و17 سنة
+      _showTeenagerDialog(); // عرض نافذة للمراهقين
+      return;
+    }
 
-        // Notify success
+    // متابعة التسجيل إذا كان العمر 18 أو أكبر
+    _registerUser();
+  }
+}
 
-        _showTopNotification('Account created successfully!');
-        // Navigate to the home page after successful registration
+
+
+// تسجيل المستخدم بعد التحقق من العمر
+void _registerUser() async {
+  try {
+    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
+    User? user = userCredential.user;
+    if (user != null) {
+      // إضافة بيانات المستخدم إلى Firestore
+    
+
+      // إرسال بريد التحقق
+      if (!user.emailVerified) {
+        await user.sendEmailVerification();
+
+        // الانتقال إلى صفحة التحقق
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'email-already-in-use') {
-          _showTopNotification('This email is already in use.');
-        } else {
-          _showTopNotification('Failed to sign up: ${e.message}');
-        }
-      } catch (e) {
-        print('Error: $e');
+  context,
+  MaterialPageRoute(
+    builder: (context) => EmailVerificationPage(
+      user: user,
+      userData: {
+        'name': _nameController.text.trim(),
+        'email': user.email,
+        'dateOfBirth': _dobController.text.trim(), 
+        'password': _passwordController.text.trim(), 
+      },
+    ),
+  ),
+);
 
-        _showTopNotification('An error occurred. Please try again.');
       }
     }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'email-already-in-use') {
+      _showTopNotification('This email is already registered.');
+    } else {
+      _showTopNotification('Registration failed: ${e.message}');
+    }
+  } catch (e) {
+    print('Error: $e');
+    _showTopNotification('Something went wrong. Please try again.');
   }
+}
+
+// نافذة تأكيد للمراهقين
+Future<void> _showTeenagerDialog() async {
+
+  
+  bool? confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: const Text(
+          'Age Restriction',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        content: const Text(
+          'This app is intended for users 18 years or older. Do you want to Continue?',
+          style: TextStyle(color: Color(0xFF545454)), // darkGray color
+        ),
+        backgroundColor: const Color(0xFFF5F7F8), // lightGray color
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // User doesn't want to proceed
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0xFF79A3B7)), // lightBlue
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF79A3B7)), // lightBlue
+            ),
+          ),
+          
+          ElevatedButton(
+            
+           onPressed: () {
+    _registerUser();
+  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF79A3B7), // lightBlue
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+}
 
   @override
   Widget build(BuildContext context) {
@@ -176,67 +263,38 @@ class _SignUpPageState extends State<SignUpPage> {
                           Row(
                             children: [
                               Expanded(
-                                child: TextFormField(
-                                  controller: _firstNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'First Name *',
-                                    filled: true,
-                                    fillColor: Colors.white70,
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFE6EBEF),
-                                      ),
+                                child:TextFormField(
+                                controller: _nameController,
+                                decoration: InputDecoration(
+                                  labelText: 'Name *',
+                                  filled: true,
+                                  fillColor: Colors.white70,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE6EBEF),
                                     ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF3b7292),
-                                      ),
-                                    ),
-                                    floatingLabelStyle: const TextStyle(
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    borderSide: const BorderSide(
                                       color: Color(0xFF3b7292),
                                     ),
                                   ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'First Name is required';
-                                    }
-                                    return null;
-                                  },
+                                  floatingLabelStyle: const TextStyle(
+                                    color: Color(0xFF3b7292),
+                                  ),
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Name is required'; // إذا كان الحقل فارغًا
+                                  } else if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
+                                    return 'Name must contain only letters and spaces'; // إذا كان الحقل يحتوي على أرقام أو رموز
+                                  }
+                                  return null; // إذا كان الإدخال صحيحًا
+                                },
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _lastNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Last Name *',
-                                    filled: true,
-                                    fillColor: Colors.white70,
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFFE6EBEF),
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10.0),
-                                      borderSide: const BorderSide(
-                                        color: Color(0xFF3b7292),
-                                      ),
-                                    ),
-                                    floatingLabelStyle: const TextStyle(
-                                      color: Color(0xFF3b7292),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Last Name is required';
-                                    }
-                                    return null;
-                                  },
-                                ),
+
                               ),
                             ],
                           ),
@@ -426,11 +484,11 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _dobController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
+
 }

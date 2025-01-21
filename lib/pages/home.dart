@@ -28,8 +28,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   String? imageUrl; //image url
   User? _user = FirebaseAuth.instance.currentUser; // get current user
-  String? fName; // first name to print
-  String? lName; // last name to print
+  String? Name; // last name to print
   int _currentIndex = 0; // Current index for bottom navigation bar
   var now = DateTime.now(); //current date
   var formatter = DateFormat.yMMMMd('en_US'); //format date as specified
@@ -80,8 +79,8 @@ class HomePageState extends State<HomePage> {
               ds.data(); // No need for casting anymore with the correct type
           if (data != null) {
             setState(() {
-              fName = data['firstName'] ?? ''; // Ensure fName is never null
-              lName = data['lastName'] ?? ''; // Ensure lName is never null
+              Name = data['name'] ?? ''; // Ensure fName is never null
+
             });
           }
         } else {
@@ -160,12 +159,11 @@ class HomePageState extends State<HomePage> {
         if (ds.exists) {
           var data = ds.data() as Map<String, dynamic>?; // Cast to Map
           if (data != null &&
-              data.containsKey('firstName') &&
-              data.containsKey('lastName')) {
-            fName = data['firstName'];
-            lName = data['lastName'];
+              data.containsKey('name') 
+              ) {
+         
           } else {
-            print('firstName and lastName field does not exist');
+            print('name does not exist');
           }
         } else {
           print('Document does not exist');
@@ -240,12 +238,11 @@ class HomePageContentState extends State<HomePageContent> {
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data != null) {
                 // Access the DocumentSnapshot properly
-                var userData = snapshot.data!.data()
-                    as Map<String, dynamic>?; // Use '!' to ensure non-null
+                var userData = snapshot.data!.data(); // Use '!' to ensure non-null
 
                 if (userData != null) {
                   return Text(
-                    "${userData['firstName'] ?? ''} ${userData['lastName'] ?? ''}", // Safely access firstName and lastName
+                    "${userData['name'] ?? ''}", // Safely access name
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 29,

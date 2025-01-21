@@ -5,13 +5,11 @@ import 'package:flutter_application/welcome_page.dart';
 import 'package:intl/intl.dart';
 
 class AppUser {
-  String? firstName;
-  String? lastName;
+  String? name;
   String? email;
   String? dateOfBirth;
   String? password;
   String? userID;
-  String? profilePicture;
 
   Color darkBlue = Color(0xFF104A73);
   Color mediumBlue = Color(0xFF3B7292);
@@ -24,24 +22,20 @@ class AppUser {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   AppUser() {
-    firstName = '';
-    lastName = '';
+    name = '';
     email = '';
     dateOfBirth = '';
     password = '';
     userID = '';
-    profilePicture = '';
   }
 
   // Parameterized constructor
   AppUser.named({
-    this.firstName,
-    this.lastName,
+    this.name,
     this.email,
     this.dateOfBirth,
     this.password,
     this.userID,
-    this.profilePicture,
   });
 
   Future<void> loadUserData() async {
@@ -50,19 +44,16 @@ class AppUser {
       DocumentSnapshot userDoc =
           await _firestore.collection('User').doc(currentUser.uid).get();
       if (userDoc.exists) {
-        firstName = userDoc['firstName'];
-        lastName = userDoc['lastName'];
+        name = userDoc['name'];
         email = userDoc['email'];
         dateOfBirth = userDoc['dateOfBirth'];
-        profilePicture = null;
         userID = currentUser.uid;
       }
     }
   }
 
   Future<void> showEditDialog(BuildContext context, String field, VoidCallback onUpdate) async {
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController NameController = TextEditingController();
   final TextEditingController fieldController = TextEditingController();
   
   DateTime selectedDate = DateTime.now();
@@ -72,8 +63,7 @@ class AppUser {
   ValueNotifier<bool> isAnyFieldChanged = ValueNotifier<bool>(false);
 
   if (field == 'name') {
-    firstNameController.text = '';
-    lastNameController.text = '';
+    NameController.text = '';
   } else if (field == 'dateOfBirth') {
     formattedDate = dateOfBirth ?? 'Select your birth date';
   } else {
@@ -126,25 +116,16 @@ class AppUser {
           children: field == 'name'
               ? [
                   TextField(
-                    controller: firstNameController,
+                    controller: NameController,
                     decoration: InputDecoration(
-                      labelText: 'First Name',
-                      hintText: firstName ?? 'Enter your first name',
+                      labelText: 'Name',
+                      hintText: name ?? 'Enter your name',
                     ),
                     onChanged: (value) {
                       isAnyFieldChanged.value = true; // Mark as changed
                     },
                   ),
-                  TextField(
-                    controller: lastNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Last Name',
-                      hintText: lastName ?? 'Enter your last name',
-                    ),
-                    onChanged: (value) {
-                      isAnyFieldChanged.value = true; // Mark as changed
-                    },
-                  ),
+                 
                 ]
               : field == 'dateOfBirth'
                   ? [
@@ -201,12 +182,10 @@ class AppUser {
                         Map<String, dynamic> updateData = {};
 
                         if (field == 'name') {
-                          if (firstNameController.text.isNotEmpty) {
-                            updateData['firstName'] = firstNameController.text;
+                          if (NameController.text.isNotEmpty) {
+                            updateData['name'] = NameController.text;
                           }
-                          if (lastNameController.text.isNotEmpty) {
-                            updateData['lastName'] = lastNameController.text;
-                          }
+                        
                         } else if (field == 'dateOfBirth') {
                           updateData['dateOfBirth'] = DateFormat('MMM dd, yyyy').format(selectedDate);
                         } else {
@@ -508,13 +487,11 @@ Future<void> logout(BuildContext context) async {
     await _auth.signOut();
 
     // Clear user attributes
-    firstName = null;
-    lastName = null;
+    name = null;
     email = null;
     dateOfBirth = null;
     password = null;
     userID = null;
-    profilePicture = null;
 
     await loadUserData(); // Reload to ensure all data is reset
 
@@ -580,29 +557,53 @@ Future<void> logout(BuildContext context) async {
   );
 
   if (confirm == true) {
-    User? currentUser = _auth.currentUser;
-    if (currentUser != null) {
-      await _firestore.collection('User').doc(currentUser.uid).delete();
-      await currentUser.delete();
+    try {
+      User? currentUser = _auth.currentUser;
 
-      // Clear user attributes
-      firstName = null;
-      lastName = null;
-      email = null;
-      dateOfBirth = null;
-      password = null;
-      userID = null;
-      profilePicture = null;
+      if (currentUser != null && currentUser.email != null) {
+        // إعادة التحقق باستخدام بيانات الاعتماد الحالية
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: currentUser.email!,
+          password: password!, // استبدل `password` بكلمة المرور المحفوظة
+        );
 
-      await loadUserData(); // Reload to confirm data reset
+        await currentUser.reauthenticateWithCredential(credential);
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => WelcomePage()),
-      );
+        // حذف بيانات المستخدم من Firestore
+        await _firestore.collection('User').doc(currentUser.uid).delete();
+
+        // حذف الحساب من Firebase Authentication
+        await currentUser.delete();
+
+        // إعادة تعيين بيانات المستخدم
+        name = null;
+        email = null;
+        dateOfBirth = null;
+        password = null;
+        userID = null;
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => WelcomePage()),
+        );
+      } else {
+        _showTopNotification(
+            context, 'Failed to delete account. User not found.');
+      }
+    } catch (e) {
+      String errorMessage = 'Failed to delete account.';
+
+      if (e is FirebaseAuthException) {
+        if (e.code == 'wrong-password') {
+          errorMessage = 'Incorrect password provided.';
+        } else if (e.code == 'requires-recent-login') {
+          errorMessage = 'Please log in again to delete your account.';
+        }
+      }
+
+      _showTopNotification(context, errorMessage);
     }
   }
 }
-
 
   void _showTopNotification(BuildContext context, String message) {
     OverlayState? overlayState = Overlay.of(context);

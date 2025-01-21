@@ -82,6 +82,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       print("Error loading preferences: $e");
       return false; // Return false if there was an error
     }
+    return null;
   }
 
   // Save preferences to Firestore
@@ -403,7 +404,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       ),
     );
 
-    overlayState?.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });

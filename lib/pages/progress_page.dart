@@ -1734,7 +1734,7 @@ class _ProgressPageState extends State<ProgressPage> {
     final tasks =
         await Task.fetchTasksForUser(FirebaseAuth.instance.currentUser!.uid);
 
-    if (tasks == null || tasks.isEmpty) {
+    if (tasks.isEmpty) {
       return {'uncompleted': 0, 'pending': 0, 'completed': 0};
     }
 

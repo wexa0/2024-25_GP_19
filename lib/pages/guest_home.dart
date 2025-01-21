@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
+import 'package:flutter_application/pages/home.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/guest_profile_page.dart';
@@ -29,6 +30,7 @@ class GuestHomePageState extends State<GuestHomePage> {
   @override
   void initState() {
     super.initState();
+     _checkUserStatus(); 
     _pages.addAll([
       GuestHomePageContent(onTabChange: onTabChange), // Pass the callback here
       TaskPage(),
@@ -36,6 +38,18 @@ class GuestHomePageState extends State<GuestHomePage> {
       ProgressPage(),
       GuestHomePage(),
     ]);
+  }
+ Future<void> _checkUserStatus() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null && user.emailVerified) {
+      // إذا كان المستخدم مسجلاً ومُوثقًا، يتم توجيهه إلى الصفحة الرئيسية
+      Future.microtask(() {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      });
+    }
   }
 
   void onTabChange(int index) {
@@ -379,7 +393,7 @@ class GuestHomePageContentState extends State<GuestHomePageContent> {
                                 borderRadius: BorderRadius.circular(16.0),
                               ),
                               title: const Text(
-                                'SignIn & Explor!',
+                                'SignIn & Explore!',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               content: const Text(

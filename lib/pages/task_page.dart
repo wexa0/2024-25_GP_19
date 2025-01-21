@@ -835,7 +835,7 @@ class TaskPageState extends State<TaskPage> {
       ),
     );
 
-    overlayState?.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });
@@ -876,7 +876,7 @@ class TaskPageState extends State<TaskPage> {
                   showCategoryDialog();
                 }
               },
-              icon: const Icon(Icons.more_vert, color: Color(0xFF104A73)),
+              icon: const Icon(Icons.menu, color: Color(0xFF104A73)),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -895,6 +895,7 @@ class TaskPageState extends State<TaskPage> {
                       ],
                     ),
                   ),
+                   const PopupMenuDivider(), 
                   PopupMenuItem<String>(
                     value: 'sort',
                     child: Row(
@@ -902,7 +903,7 @@ class TaskPageState extends State<TaskPage> {
                         Icon(Icons.sort, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
-                          'Sort',
+                          'Sort          ',
                           style: TextStyle(
                             fontSize: 18,
                             color: Color(0xFF545454),
@@ -911,6 +912,7 @@ class TaskPageState extends State<TaskPage> {
                       ],
                     ),
                   ),
+                   const PopupMenuDivider(), 
                   PopupMenuItem<String>(
                     value: 'categorize',
                     child: Row(
@@ -918,7 +920,7 @@ class TaskPageState extends State<TaskPage> {
                         Icon(Icons.label, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
-                          'Categorize',
+                          'filter',
                           style: TextStyle(
                             fontSize: 18,
                             color: Color(0xFF545454),
@@ -1482,7 +1484,7 @@ class TaskPageState extends State<TaskPage> {
                                   borderRadius: BorderRadius.circular(16.0),
                                 ),
                                 title: const Text(
-                                  'SignIn & Explor!',
+                                  'SignIn & Explore!',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 content: const Text(

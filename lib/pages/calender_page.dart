@@ -257,7 +257,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       children: const [
                         Icon(Icons.label, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
-                        Text('Categorize',
+                        Text('filter',
                             style: TextStyle(
                                 fontSize: 18, color: Color(0xFF545454))),
                       ],
@@ -1582,7 +1582,7 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
 
-    overlayState?.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
     Future.delayed(Duration(seconds: 2), () {
       overlayEntry.remove();
     });

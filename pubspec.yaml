@@ -57,6 +57,8 @@ dependencies:
   timezone: ^0.9.4
   shared_preferences: ^2.0.15
   audioplayers: ^6.1.0
+  firebase_dynamic_links: ^6.0.9
+  flutter_secure_storage: ^8.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -143,8 +145,8 @@ flutter:
     - assets/sounds/simple-notification.mp3
     - assets/images/check.png
     - assets/images/arrow.png
-
-   
+    - assets/images/emailSend.png
+    - assets/images/initialPage.png
     
 
 

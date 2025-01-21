@@ -1,0 +1,395 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_application/pages/home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'package:flutter_application/welcome_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_application/authentication/signup_page.dart';
+import 'package:flutter_application/FirstTime_page.dart';
+class EmailVerificationPage extends StatefulWidget {
+  final User user;
+  final Map<String, dynamic> userData;
+
+ const EmailVerificationPage({
+    Key? key,
+    required this.user,
+    required this.userData,
+  }) : super(key: key);
+
+  @override
+  _EmailVerificationPageState createState() => _EmailVerificationPageState();
+}
+
+class _EmailVerificationPageState extends State<EmailVerificationPage> {
+  bool isEmailVerified = false;
+  bool isLoading = false; 
+ bool isChecking = true;
+ bool _isEmailVerified = false;
+Timer? _emailCheckTimer;
+int _remainingTime = 300; 
+ Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+   _startEmailVerificationCheck();
+       _startCountdownTimer();
+
+
+  }
+
+   void _startEmailVerificationCheck() {
+    _emailCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      try {
+        await widget.user.reload();
+        final User? updatedUser = FirebaseAuth.instance.currentUser;
+
+        if (updatedUser != null && updatedUser.emailVerified) {
+          timer.cancel();
+            _countdownTimer?.cancel(); 
+          _onEmailVerified(updatedUser);
+        }
+      } catch (e) {
+        print('Error checking email verification: $e');
+      }
+    });
+  }
+
+   void _handleTimeout() async {
+  try {
+    await widget.user.delete(); // حذف الحساب من Firebase Authentication
+    showDialog(
+      context: context,
+      barrierDismissible: false, // يمنع إغلاق المربع بالضغط خارج المربع
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5F7F8), // لون الخلفية
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0), // شكل الحواف
+          ),
+          title: const Text(
+            'Timeout',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black, // لون النص
+            ),
+          ),
+          content: const Text(
+            'Verification timeout. Registration failed.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFF545454), // لون النص
+              fontWeight: FontWeight.w500, // وزن النص
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // إغلاق مربع الحوار
+             
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF79A3B7), // لون الزر
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0), // شكل الحواف
+                ),
+              ),
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                  color: Colors.white, // لون النص داخل الزر
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  } catch (e) {
+    print('Error deleting user: $e');
+  }
+}
+
+  
+   Future<void> _onEmailVerified(User user) async {
+    await _saveUserData(user); // حفظ بيانات المستخدم
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => FirstTimePage()),
+      );
+    }
+  }
+Future<void> _reauthenticateAndDelete(User user) async {
+  try {
+    final AuthCredential credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: widget.userData['password'],     );
+
+    // إعادة تسجيل الدخول
+    await user.reauthenticateWithCredential(credential);
+
+    // حذف الحساب بعد إعادة تسجيل الدخول
+    await user.delete();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => SignUpPage()), 
+      (route) => false,
+    );
+  } catch (e) {
+    print('Error during reauthentication and deletion: $e');
+    _showTopNotification('Failed to delete account. Please try again.');
+  }
+}
+
+ @override
+  void dispose() {
+    _emailCheckTimer?.cancel(); 
+     _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingTime > 0) {
+          _remainingTime--;
+        } else {
+          timer.cancel();
+          _handleTimeout();
+        }
+      });
+    });
+  }
+
+  
+
+Future<void> _saveUserData(User user) async {
+  try {
+    final docRef =
+        FirebaseFirestore.instance.collection('User').doc(user.uid);
+
+    // تحقق مما إذا كان المستند موجودًا
+    final docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) {
+      await docRef.set({
+        'name': widget.userData['name'],
+        'email': widget.userData['email'],
+        'dateOfBirth': widget.userData['dateOfBirth'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'preferences': {
+          'focusMinutes': 25,
+          'longBreakMinutes': 30,
+          'shortBreakMinutes': 5,
+          'rounds': 4,
+        },
+      });
+      print('User data saved successfully.');
+    } else {
+      print('User data already exists.');
+    }
+  } catch (e) {
+    print('Error saving user data: $e');
+  }
+}
+
+void _resendVerificationEmail() async {
+  if (mounted) {
+    setState(() {
+      isLoading = true;
+    });
+  }
+
+  try {
+    if (widget.user == null) {
+      _showTopNotification('No user found. Please try again.');
+      return;
+    }
+
+    await widget.user.sendEmailVerification();
+    if (mounted) {
+      _showTopNotification('Verification email has been resent.');
+    }
+  } catch (e) {
+    print('Error resending verification email: $e');
+    if (mounted) {
+      _showTopNotification('Failed to resend the verification email. Please try again later.');
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+}
+
+
+
+
+  void _showTopNotification(String message) {
+    final overlayState =
+        Navigator.of(context).overlay; // Access the root navigator's overlay
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).size.height * 0.1, // Top position
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlayState?.insert(overlayEntry);
+
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+
+
+  @override
+  Widget build(BuildContext context) {
+     final minutes = (_remainingTime ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_remainingTime % 60).toString().padLeft(2, '0');
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Email Verification',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+         elevation: 0,
+        centerTitle: true, // Center the title
+        automaticallyImplyLeading: false, // Remove the back arrow
+      ),
+            backgroundColor: const Color(0xFFF5F5F5),
+
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+          child: Column(
+        children: [
+          // Main content
+          Expanded(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+             Image.asset(
+              'assets/images/emailSend.png',
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 24),
+            const Text(
+          'Verify Your email',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 25
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 5),
+      RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: const TextStyle(fontSize: 15, color: Colors.black), // النمط الافتراضي
+          children: [
+            const TextSpan(
+              text: "A verification link has been sent to ",
+              style: TextStyle(fontWeight: FontWeight.normal), // خط عادي
+            ),
+            TextSpan(
+              text: widget.user.email, // الإيميل
+              style: const TextStyle(fontWeight: FontWeight.bold), // خط عريض
+            ),
+            const TextSpan(
+              text: ".Please click on the link to activate your account.",
+              style: TextStyle(fontWeight: FontWeight.normal), // خط عادي
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+            Text(
+              "$minutes:$seconds",
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                ),
+                ),
+              ],
+            ),
+          ),
+               Column(
+            children: [
+              isLoading
+                  ? const Text(
+                      'Sending...',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15.5,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Didn't receive an email? ",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.normal,
+                            fontSize: 15.5,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _resendVerificationEmail,
+                          child: const Text(
+                            'Resend the email',
+                            style: TextStyle(
+                              color: const Color(0xFF3B7292),
+
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15.5,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+}

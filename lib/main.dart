@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_application/pages/guest_home.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -88,10 +89,16 @@ class AuthWrapper extends StatelessWidget {
           // Show loading spinner while waiting for auth state
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasData) {
+          final user = FirebaseAuth.instance.currentUser;
+
           // User is logged in, navigate to HomePage
-          return HomePage();
+  if (user != null && user.emailVerified) {
+            return HomePage(); // إذا كان البريد الإلكتروني مُفعّل، الانتقال إلى الصفحة الرئيسية
+          } else {
+            return GuestHomePage(); // الانتقال إلى صفحة التحقق
+          }
         } else {
-          // User is not logged in, navigate to WelcomePage
+          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
           return const WelcomePage();
         }
       },
