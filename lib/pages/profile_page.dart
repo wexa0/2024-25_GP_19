@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
+import 'package:flutter_application/pages/appBlocker_page';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -264,6 +265,61 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 ))),
+                                Container(
+                          width: double.infinity,
+                          color: Color(0xFFF5F7F8),
+                          padding: EdgeInsets.all(16),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              'Settings',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF545454)),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                            padding: EdgeInsets.only(right: 16, left: 16),
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                                child: Material(
+                                  color: Colors.white,
+                                  child: InkWell(
+                                    onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => AppBlockerPage()),
+                                    );
+                                  },
+
+                                    child: ListTile(
+                                      title: Text(
+                                        'App Blocker',
+                                        style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: Color(0xFF545454)),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(''),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward_ios),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ))),
+
                         Container(
                           width: double.infinity,
                           color: Color(0xFFF5F7F8),
@@ -334,6 +390,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               minimumSize: Size(
                                   MediaQuery.of(context).size.width * 0.9, 52),
                             ),
+                            
                             child: Row(
                               children: [
                                 Icon(Icons.logout,

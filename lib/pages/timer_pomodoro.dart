@@ -1,9 +1,25 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
+import 'package:device_apps/device_apps.dart';
+
+
+class AppBlocker {
+  static const platform = MethodChannel('app_blocker_channel');
+}
+
+Future<void> requestAccessibilityPermission() async {
+  try {
+    await AppBlocker.platform.invokeMethod('requestAccessibilityPermission');
+    print("Opened Accessibility Settings successfully.");
+  } catch (e) {
+    print("Error requesting accessibility permission: $e");
+  }
+}
 
 class TimerPomodoro extends StatefulWidget {
   final String taskId; 
@@ -33,6 +49,8 @@ class TimerPomodoro extends StatefulWidget {
 }
 
 class _TimerPageState extends State<TimerPomodoro> {
+  Map<String, bool> blockedApps = {};
+
   Timer? _timer;
   bool _isTimerInitialized = false; // Track if the timer is initialized
 
@@ -66,8 +84,43 @@ class _TimerPageState extends State<TimerPomodoro> {
   // Helper function to add leading zeros
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
 
+static const platform = MethodChannel('app_blocker_channel');
+
+void _blockApps() async {
+  List<String> blockedPackages = blockedApps.entries
+      .where((entry) => entry.value == true)
+      .map((entry) => entry.key)
+      .toList();
+  await platform.invokeMethod('startBlocking', {"blockedApps": blockedPackages});
+}
+
+Future<bool> checkAccessibilityPermission() async {
+  try {
+    final bool hasPermission = await AppBlocker.platform.invokeMethod('checkPermission');
+    return hasPermission;
+  } catch (e) {
+    print("Error checking accessibility permission: $e");
+    return false;
+  }
+}
+
+
+
+
   // Start the timer
-  void _startTimer() {
+  Future<void> _startTimer() async {
+      final hasPermission = await checkAccessibilityPermission();
+
+  if (!hasPermission) {
+  await requestAccessibilityPermission();
+  final newPermission = await checkAccessibilityPermission();
+  if (newPermission) {
+    _blockApps(); // أعد استدعاء دالة الحظر
+  }
+}
+   print("Blocked Apps: $blockedApps");
+
+    
     if (mounted) {
       setState(() {
         _isRunning = true;
@@ -120,7 +173,7 @@ class _TimerPageState extends State<TimerPomodoro> {
         _stopTimer(); // Stop the timer when it reaches zero
       }
     });
-  }
+    }
 
   // Stop the timer
   void _stopTimer() {
@@ -162,6 +215,7 @@ class _TimerPageState extends State<TimerPomodoro> {
       }
     }
   }
+  
 
   @override
   void dispose() {
@@ -222,6 +276,12 @@ class _TimerPageState extends State<TimerPomodoro> {
         );
       },
     );
+ElevatedButton(
+  onPressed: () async {
+    await requestAccessibilityPermission();
+  },
+  child: Text("Enable Accessibility Permission"),
+);
 
     // Wait for 2 seconds, close the dialog, and navigate to the task page
     Future.delayed(Duration(seconds: 2), () {

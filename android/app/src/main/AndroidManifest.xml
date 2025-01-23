@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-package="com.example.flutter_application">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.flutter_application">
+
     <application
         android:label="AttentionLens"
         android:name="${applicationName}"
@@ -46,6 +48,21 @@ package="com.example.flutter_application">
         <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
     </intent-filter>
 </receiver>
+
+<service
+    android:name=".AppBlockerService"
+    android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+    android:exported="true"> 
+    <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService" />
+    </intent-filter>
+    <meta-data
+        android:name="android.accessibilityservice"
+        android:resource="@xml/accessibility_service_config" />
+</service>
+
+
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -63,5 +80,9 @@ package="com.example.flutter_application">
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+<uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
+
+
 
 </manifest>

@@ -14,7 +14,8 @@ class TimerSelectionPage extends StatefulWidget {
       required this.subTaskID,
       required this.subTaskName,
       required this.taskName,
-      required this.page});
+      required this.page
+      });
 
   @override
   _TimerSelectionPageState createState() => _TimerSelectionPageState();
@@ -26,8 +27,9 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
   int _longBreakMinutes = 30; // Default long break time in minutes
   int _rounds = 4; // Default rounds (Pomodoro sessions)
   bool _loading = true; // Flag to indicate whether preferences are being loaded
-  bool _isSaved =
-      false; // this to toggle the color of text after pressing on it
+  bool _isSaved = false; // this to toggle the color of text after pressing on it
+  Map<String, bool> blockedApps = {};
+
 
   final FixedExtentScrollController _focusController =
       FixedExtentScrollController();

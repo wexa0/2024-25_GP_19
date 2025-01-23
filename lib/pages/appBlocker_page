@@ -1,0 +1,254 @@
+import 'package:flutter/material.dart';
+import 'package:device_apps/device_apps.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
+
+class AppBlockerPage extends StatefulWidget {
+  @override
+  _AppBlockerPageState createState() => _AppBlockerPageState();
+}
+
+class _AppBlockerPageState extends State<AppBlockerPage> {
+  List<Application> installedApps = [];
+  Map<String, bool> blockedApps = {};
+  bool blockAllApps = false;
+  String searchQuery = ''; // لتخزين كلمات البحث
+
+  static const platform = MethodChannel('app_blocker_channel');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBlockedApps();
+    _loadApps();
+    checkAndRequestPermission();
+  }
+
+  Future<void> checkAndRequestPermission() async {
+    final bool hasPermission = await platform.invokeMethod('checkPermission');
+    if (!hasPermission) {
+      await platform.invokeMethod('requestPermission');
+    }
+  }
+
+ Future<void> _loadApps() async {
+  List<Application> apps = await DeviceApps.getInstalledApplications(
+    includeSystemApps: false,
+    onlyAppsWithLaunchIntent: true,
+  );
+
+  setState(() {
+    // Filter out the specific app "attensLens"
+    installedApps = apps.where((app) => app.packageName != "com.example.flutter_application").toList();
+  });
+}
+
+  Future<void> _saveBlockedApps() async {
+    final prefs = await SharedPreferences.getInstance();
+    String jsonString = json.encode(blockedApps);
+    await prefs.setString('blockedApps', jsonString);
+  }
+
+  Future<void> _loadBlockedApps() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('blockedApps');
+    if (jsonString != null) {
+      Map<String, dynamic> jsonMap = json.decode(jsonString);
+      setState(() {
+        blockedApps = jsonMap.map((key, value) => MapEntry(key, value as bool));
+      });
+    }
+  }
+
+  void _toggleAppBlocking(String packageName) {
+    setState(() {
+      blockedApps[packageName] = !(blockedApps[packageName] ?? false);
+    });
+    _saveBlockedApps();
+  }
+
+  void _toggleBlockAllApps(bool value) {
+    setState(() {
+      blockAllApps = value;
+      for (var app in installedApps) {
+        blockedApps[app.packageName] = value;
+      }
+    });
+    _saveBlockedApps();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredApps = installedApps
+        .where((app) =>
+            app.appName.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('App Blocker Settings',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            ),
+        ),
+        backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+           elevation: 0.0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+      ),
+      backgroundColor: Color(0xFFF5F7F8),
+      body: Column(
+        children: [
+          // مربع البحث
+        
+           SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                              
+                            ),
+                            
+                            child: Material(
+                  color: Colors.white,
+            child: Row(
+              
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                
+                Text(
+                  "  Block All Apps",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+  padding: const EdgeInsets.only(right: 20.0), // Adjust the right padding as needed
+  child: Switch(
+    value: blockAllApps,
+    onChanged: _toggleBlockAllApps,
+    activeColor: const Color(0xFF3B7292),
+  ),
+),
+              ],
+            ),
+          ),
+            ),
+          ),
+         
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, bottom: 16.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "  Toggling on will disable all apps.",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ),
+          ),
+           Divider(
+                          color: Color.fromRGBO(16, 74, 115,
+                              0.377), // Set the color of the divider
+                          thickness: 0.5, // Set the thickness of the divider
+                          height: 1,
+                        ),
+             Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[200],
+                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                hintText: 'Search apps...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ), 
+
+          // العنوان "Block Specific App"
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Block Specific App",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+
+          // قائمة التطبيقات
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: Material(
+                  color: Colors.white,
+                  child: filteredApps.isEmpty
+                      ? Center(
+                          child: Text(
+                            searchQuery.isEmpty
+                                ? "No apps installed."
+                                : "No results found.",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredApps.length,
+                          itemBuilder: (context, index) {
+                            final app = filteredApps[index];
+                            final isBlocked =
+                                blockedApps[app.packageName] ?? false;
+
+                            return ListTile(
+                              leading: FutureBuilder(
+                                future:
+                                    DeviceApps.getApp(app.packageName, true),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                          ConnectionState.done &&
+                                      snapshot.hasData) {
+                                    ApplicationWithIcon appWithIcon =
+                                        snapshot.data as ApplicationWithIcon;
+                                    return Image.memory(appWithIcon.icon,
+                                        height: 40, width: 40);
+                                  }
+                                  return Icon(Icons.apps);
+                                },
+                              ),
+                              title: Text(app.appName),
+                              trailing: Switch(
+                                value: isBlocked,
+                                onChanged: blockAllApps
+                                    ? null
+                                    : (value) {
+                                        _toggleAppBlocking(app.packageName);
+                                      },
+                                activeColor: const Color(0xFF3B7292),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

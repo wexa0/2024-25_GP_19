@@ -94,9 +94,11 @@ class AuthWrapper extends StatelessWidget {
           // User is logged in, navigate to HomePage
   if (user != null && user.emailVerified) {
             return HomePage(); // إذا كان البريد الإلكتروني مُفعّل، الانتقال إلى الصفحة الرئيسية
-          } else {
-            return GuestHomePage(); // الانتقال إلى صفحة التحقق
           }
+          else {
+          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
+          return const WelcomePage();
+        } 
         } else {
           // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
           return const WelcomePage();
