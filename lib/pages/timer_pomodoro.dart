@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_application/pages/calender_page.dart';
 import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
 import 'package:device_apps/device_apps.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class AppBlocker {
@@ -87,12 +89,43 @@ class _TimerPageState extends State<TimerPomodoro> {
 static const platform = MethodChannel('app_blocker_channel');
 
 void _blockApps() async {
+  if (blockedApps.isEmpty) {
+    print("Blocked Apps list is empty.");
+    return;
+  }
+
   List<String> blockedPackages = blockedApps.entries
       .where((entry) => entry.value == true)
       .map((entry) => entry.key)
       .toList();
-  await platform.invokeMethod('startBlocking', {"blockedApps": blockedPackages});
+
+  print("Blocked Apps being sent to native layer: $blockedPackages");
+
+  try {
+    await platform.invokeMethod('startBlocking', {"blockedApps": blockedPackages});
+    print("Blocking initiated successfully.");
+  } catch (e) {
+    print("Error while blocking apps: $e");
+  }
 }
+
+Future<void> _unblockApps() async {
+  try {
+    await platform.invokeMethod('stopBlocking'); // إلغاء الحظر باستخدام MethodChannel
+    print("Apps unblocked successfully.");
+  } catch (e) {
+    print("Error while unblocking apps: $e");
+  }
+}
+
+
+Future<void> _saveBlockedApps() async {
+  final prefs = await SharedPreferences.getInstance();
+  String jsonString = json.encode(blockedApps);
+  await prefs.setString('blockedApps', jsonString);
+  print("Blocked Apps saved successfully: $blockedApps");
+}
+
 
 Future<bool> checkAccessibilityPermission() async {
   try {
@@ -107,18 +140,31 @@ Future<bool> checkAccessibilityPermission() async {
 
 
 
+
+
   // Start the timer
   Future<void> _startTimer() async {
+
+     if (blockedApps.isEmpty) {
+    await _loadBlockedApps(); // تحميل التطبيقات المحظورة إذا كانت فارغة
+  }
+
       final hasPermission = await checkAccessibilityPermission();
 
   if (!hasPermission) {
-  await requestAccessibilityPermission();
-  final newPermission = await checkAccessibilityPermission();
-  if (newPermission) {
-    _blockApps(); // أعد استدعاء دالة الحظر
+    await requestAccessibilityPermission();
+    final newPermission = await checkAccessibilityPermission();
+    if (newPermission) {
+      _blockApps(); // استدعاء دالة الحظر بعد منح الصلاحيات
+    } else {
+      print("Accessibility permission denied.");
+    }
+  } else {
+    _blockApps(); // إذا كانت الأذونات موجودة، استدعِ دالة الحظر مباشرةً
   }
-}
-   print("Blocked Apps: $blockedApps");
+
+
+  print("Blocked Apps before starting timer: $blockedApps");
 
     
     if (mounted) {
@@ -178,6 +224,7 @@ Future<bool> checkAccessibilityPermission() async {
   // Stop the timer
   void _stopTimer() {
     _timer?.cancel();
+     _unblockApps(); 
 
     if (mounted) {
       setState(() {
@@ -449,6 +496,8 @@ ElevatedButton(
                   ),
                 ),
                 onPressed: () async {
+                    await _unblockApps();
+
                   // Update task completion status in Firestore
                   await _updateTaskCompletionStatus(
                       widget.taskId, widget.subTaskID);
@@ -457,7 +506,7 @@ ElevatedButton(
 
                   // Reset rounds and timer if needed
                   _completedRounds = 0;
-                  _resetTimer();
+                  
 
                   // After showing the congrats dialog, navigate back to the TaskPage
                   Future.delayed(Duration(seconds: 2), () {
@@ -546,7 +595,7 @@ ElevatedButton(
   }
 
   // Reset the timer
-  void _resetTimer() {
+  Future<void>  _resetTimer() async {
     setState(() {
       _elapsedTime = widget.focusMinutes * 60;
       _timerText = _formatTime(_elapsedTime);
@@ -726,11 +775,32 @@ ElevatedButton(
   @override
   void initState() {
     super.initState();
+     _loadBlockedApps(); // تحميل قائمة التطبيقات المحظورة
     // Initialize the timer with the selected focus time
     _elapsedTime = widget.focusMinutes * 60;
     _timerText = _formatTime(_elapsedTime);
     _audioPlayer = AudioPlayer();
   }
+
+  Future<void> _loadBlockedApps() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? jsonString = prefs.getString('blockedApps');
+  if (jsonString != null) {
+    try {
+      Map<String, dynamic> jsonMap = json.decode(jsonString);
+      setState(() {
+        blockedApps = jsonMap.map((key, value) => MapEntry(key, value as bool));
+      });
+      print("Loaded Blocked Apps: $blockedApps");
+    } catch (e) {
+      print("Error decoding blocked apps: $e");
+    }
+  } else {
+    print("No blocked apps found in preferences.");
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -877,6 +947,7 @@ ElevatedButton(
                   onPressed:
                        () async {
                           await _updateTasktimerStatus(widget.taskId);
+                           _unblockApps(); 
                           _showEncouragementDialog(); // Show encouragement message before quitting
                         }
                       , // Disable if timer is not running
@@ -903,12 +974,13 @@ ElevatedButton(
                 ElevatedButton.icon(
                   onPressed:
                        () async {
+                          await _unblockApps(); 
+
                           // Mark the task as done when "Done" button is pressed
                           await _updateTaskCompletionStatus(widget.taskId,
                               widget.subTaskID); // Update Firestore
                           await _updateTasktimerStatus(widget.taskId);
                           _resetTimer();
-
                           // Dismiss any open dialogs (e.g., completion dialog or other dialogs)
                           // Navigator.of(context).pop(); // Close the current dialog (such as completion dialog)
                           _showCongratsDialog();

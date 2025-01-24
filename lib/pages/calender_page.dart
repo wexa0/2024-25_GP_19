@@ -163,24 +163,35 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   /// Function to group tasks by date and update task indicators.
-  void generateTaskIndicators() async {
-    _taskIndicators.clear();
-    List<Map<String, dynamic>> allTasks = await fetchAllTasks();
+Future<void> generateTaskIndicators() async {
+  // بناء البيانات الجديدة في متغير مؤقت
+  Map<DateTime, List<Map<String, dynamic>>> tempTaskIndicators = {};
 
-    for (var task in allTasks) {
-      DateTime taskDate = DateTime(
-        task['time'].year,
-        task['time'].month,
-        task['time'].day,
-      );
+  // جلب جميع المهام
+  List<Map<String, dynamic>> allTasks = await fetchAllTasks();
 
-      if (!_taskIndicators.containsKey(taskDate)) {
-        _taskIndicators[taskDate] = [];
-      }
-      _taskIndicators[taskDate]!.add(task);
+  // تنظيم المهام حسب اليوم
+  for (var task in allTasks) {
+    DateTime taskDate = DateTime(
+      task['time'].year,
+      task['time'].month,
+      task['time'].day,
+    );
+
+    if (!tempTaskIndicators.containsKey(taskDate)) {
+      tempTaskIndicators[taskDate] = [];
     }
-    setState(() {});
+    tempTaskIndicators[taskDate]!.add(task);
   }
+
+  // تحديث البيانات دفعة واحدة في setState
+  if (mounted) {
+    setState(() {
+      _taskIndicators = tempTaskIndicators; // استبدل البيانات القديمة بالجديدة
+    });
+  }
+}
+
 
   void addNewTask(Map<String, dynamic> newTask) {
     tasks.add(newTask);
@@ -224,7 +235,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   showCategoryDialog();
                 }
               },
-              icon: const Icon(Icons.more_vert, color: Color(0xFF104A73)),
+              icon: const Icon(Icons.menu, color: Color(0xFF104A73)),
               itemBuilder: (BuildContext context) {
                 return [
                   PopupMenuItem<String>(
@@ -245,7 +256,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       children: const [
                         Icon(Icons.sort, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
-                        Text('Sort',
+                        Text('Sort          ',
+
                             style: TextStyle(
                                 fontSize: 18, color: Color(0xFF545454))),
                       ],
@@ -274,6 +286,7 @@ class _CalendarPageState extends State<CalendarPage> {
           child: Column(
             children: [
               TableCalendar(
+                
                 // for calender view.
                 firstDay: DateTime.utc(2010, 10, 16),
                 lastDay: DateTime.utc(2030, 3, 14),
@@ -293,15 +306,34 @@ class _CalendarPageState extends State<CalendarPage> {
                 onPageChanged: (focusedDay) {
                   _focusedDay = focusedDay;
                 },
-                eventLoader: (day) {
-                  DateTime adjustedDay = DateTime(day.year, day.month, day.day);
-                  if (isSameDay(day, _selectedDay)) {
-                    return [];
-                  }
-                  return _taskIndicators.containsKey(adjustedDay)
-                      ? ['Task Indicator']
-                      : [];
-                },
+                
+  eventLoader: (day) {
+  DateTime adjustedDay = DateTime(day.year, day.month, day.day);
+
+  // التحقق من وجود المهام
+  if (_taskIndicators.containsKey(adjustedDay)) {
+    // المهام لليوم المحدد
+    List<Map<String, dynamic>> tasksForDay = _taskIndicators[adjustedDay]!;
+
+    // التحقق من حالة المهام
+    bool allTasksComplete =
+        tasksForDay.isNotEmpty && tasksForDay.every((task) => task['completed']);
+    bool hasPendingTasks = tasksForDay.any((task) => !task['completed']);
+
+    // إرجاع الحالة بناءً على المهام
+    if (allTasksComplete) {
+      return ['green']; // جميع المهام مكتملة
+    } else if (hasPendingTasks) {
+      return ['orange']; // بعض المهام مكتملة
+    }
+  }
+
+  // إذا لم يكن هناك مهام لهذا اليوم
+  return ['grey'];
+},
+
+
+
                 calendarStyle: CalendarStyle(
                   markersMaxCount: 1,
                   markerSizeScale: 0.2,
@@ -323,10 +355,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   selectedTextStyle: const TextStyle(
                     color: Colors.white,
                   ),
-                  markerDecoration: BoxDecoration(
-                    color: Color.fromARGB(255, 150, 168, 178),
-                    shape: BoxShape.circle,
-                  ),
+                  
                   defaultTextStyle: const TextStyle(
                     color: Colors.black,
                   ),
@@ -346,11 +375,50 @@ class _CalendarPageState extends State<CalendarPage> {
                     color: Color(0xFF3B7292),
                   ),
                   rightChevronIcon: const Icon(
-                    Icons.chevron_right,
-                    color: Color(0xFF3B7292),
-                  ),
-                ),
-              ),
+                          Icons.chevron_right,
+      color: Color(0xFF3B7292),
+    ),
+  ),
+  calendarBuilders: CalendarBuilders(
+    markerBuilder: (context, date, events) {
+      if (events.isEmpty) {
+         return Positioned(
+          bottom: 1,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Colors.grey, // لون رمادي للتواريخ بدون مهام
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      }
+
+      // تحديد اللون بناءً على الحدث
+      Color color;
+      if (events.contains('green')) {
+        color = Colors.green; // جميع المهام مكتملة
+      } else if (events.contains('orange')) {
+        color = Colors.orange; // بعض المهام مكتملة
+      } else {
+        color = Colors.grey; // لا توجد مهام
+      }
+
+      return Positioned(
+        bottom: 1, // وضع النقطة أسفل التاريخ
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+      );
+    },
+  ),
+),
               if (isLoading) ...[
                 Center(
                   child: Column(
@@ -1418,6 +1486,8 @@ class _CalendarPageState extends State<CalendarPage> {
     setState(() {});
   }
 
+
+
   void toggleTaskCompletion(Map<String, dynamic> taskData) async {
     Task task = Task.fromMap(taskData);
     bool newTaskCompletionStatus = !taskData['completed'];
@@ -1439,8 +1509,8 @@ class _CalendarPageState extends State<CalendarPage> {
                 completionStatus: 1)
             .updateCompletionStatus(1);
       }
-      await task.updateCompletionStatus(
-          2); // Update the task's status as completed in the database.
+      await task.updateCompletionStatus(2); // Update the task's status as completed in the database.
+
     } else {
       for (var subtask in taskData['subtasks']) {
         setState(() {
@@ -1458,10 +1528,13 @@ class _CalendarPageState extends State<CalendarPage> {
       await task.updateCompletionStatus(
           0); // Update the task's status as not completed in the database.
     }
+    
 
     if (mounted) {
       setState(() {});
     }
+  await generateTaskIndicators();
+
   }
 
   void toggleSubtaskCompletion(

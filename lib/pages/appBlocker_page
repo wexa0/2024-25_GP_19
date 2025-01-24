@@ -17,13 +17,21 @@ class _AppBlockerPageState extends State<AppBlockerPage> {
 
   static const platform = MethodChannel('app_blocker_channel');
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBlockedApps();
-    _loadApps();
-    checkAndRequestPermission();
-  }
+ @override
+void initState() {
+  super.initState();
+  _initializeApp();
+}
+
+Future<void> _initializeApp() async {
+  await _loadBlockedApps(); // تحميل التطبيقات المحظورة
+  await _loadApps(); // تحميل التطبيقات المثبتة
+  await _loadBlockAllAppsState(); // تحميل حالة blockAllApps
+  checkAndRequestPermission(); // التحقق من الأذونات
+  print("Initialization completed.");
+}
+
+
 
   Future<void> checkAndRequestPermission() async {
     final bool hasPermission = await platform.invokeMethod('checkPermission');
@@ -32,6 +40,14 @@ class _AppBlockerPageState extends State<AppBlockerPage> {
     }
   }
 
+  Future<void> _loadBlockAllAppsState() async {
+  final prefs = await SharedPreferences.getInstance();
+  setState(() {
+    blockAllApps = prefs.getBool('blockAllApps') ?? false; // الحالة الافتراضية false
+  });
+}
+
+
  Future<void> _loadApps() async {
   List<Application> apps = await DeviceApps.getInstalledApplications(
     includeSystemApps: false,
@@ -39,43 +55,98 @@ class _AppBlockerPageState extends State<AppBlockerPage> {
   );
 
   setState(() {
-    // Filter out the specific app "attensLens"
+    // Filter out the specific app "attensionLens"
     installedApps = apps.where((app) => app.packageName != "com.example.flutter_application").toList();
   });
 }
 
-  Future<void> _saveBlockedApps() async {
-    final prefs = await SharedPreferences.getInstance();
-    String jsonString = json.encode(blockedApps);
-    await prefs.setString('blockedApps', jsonString);
-  }
+Future<void> _saveBlockedApps() async {
+  final prefs = await SharedPreferences.getInstance();
+  String jsonString = json.encode(blockedApps);
+  await prefs.setString('blockedApps', jsonString);
 
-  Future<void> _loadBlockedApps() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? jsonString = prefs.getString('blockedApps');
-    if (jsonString != null) {
+  print("Blocked Apps saved successfully: $blockedApps");
+}
+
+
+Future<void> _loadBlockedApps() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? jsonString = prefs.getString('blockedApps');
+
+  // تحقق إذا كانت البيانات موجودة
+  print("Loaded JSON String: $jsonString");
+
+  if (jsonString != null) {
+    try {
       Map<String, dynamic> jsonMap = json.decode(jsonString);
+      print("Decoded JSON Map: $jsonMap");
+
       setState(() {
         blockedApps = jsonMap.map((key, value) => MapEntry(key, value as bool));
       });
+
+      print("Blocked Apps after loading: $blockedApps");
+    } catch (e) {
+      print("Error decoding JSON: $e");
     }
+  } else {
+    print("No blocked apps found in SharedPreferences.");
   }
+}
+
+
+
+void _blockApps() async {
+  List<String> blockedPackages = blockedApps.entries
+      .where((entry) => entry.value == true)
+      .map((entry) => entry.key)
+      .toList();
+
+  print("Blocked Apps being sent to native layer: $blockedPackages");
+
+  if (blockedPackages.isEmpty) {
+    print("No apps to block.");
+    return;
+  }
+
+  try {
+    await platform.invokeMethod('startBlocking', {"blockedApps": blockedPackages});
+    print("Blocking initiated successfully.");
+  } catch (e) {
+    print("Error while blocking apps: $e");
+  }
+}
+
+
 
   void _toggleAppBlocking(String packageName) {
     setState(() {
       blockedApps[packageName] = !(blockedApps[packageName] ?? false);
     });
+
+    print("Blocked Apps Updated: $blockedApps");
+  
     _saveBlockedApps();
+
+      _blockApps();
+
   }
 
-  void _toggleBlockAllApps(bool value) {
+  void _toggleBlockAllApps(bool value) async {
     setState(() {
       blockAllApps = value;
       for (var app in installedApps) {
         blockedApps[app.packageName] = value;
       }
     });
+
+     final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('blockAllApps', blockAllApps);
+
     _saveBlockedApps();
+
+      _blockApps();
+
   }
 
   @override
