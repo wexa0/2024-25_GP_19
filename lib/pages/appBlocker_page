@@ -3,6 +3,7 @@ import 'package:device_apps/device_apps.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 class AppBlockerPage extends StatefulWidget {
   @override
@@ -13,7 +14,8 @@ class _AppBlockerPageState extends State<AppBlockerPage> {
   List<Application> installedApps = [];
   Map<String, bool> blockedApps = {};
   bool blockAllApps = false;
-  String searchQuery = ''; // لتخزين كلمات البحث
+  bool isLoading = true; 
+  String searchQuery = ''; 
 
   static const platform = MethodChannel('app_blocker_channel');
 
@@ -21,13 +23,20 @@ class _AppBlockerPageState extends State<AppBlockerPage> {
 void initState() {
   super.initState();
   _initializeApp();
+  
 }
 
 Future<void> _initializeApp() async {
+  setState(() {
+      isLoading = true; // عرض شاشة التحميل
+    });
   await _loadBlockedApps(); // تحميل التطبيقات المحظورة
   await _loadApps(); // تحميل التطبيقات المثبتة
   await _loadBlockAllAppsState(); // تحميل حالة blockAllApps
   checkAndRequestPermission(); // التحقق من الأذونات
+  setState(() {
+      isLoading = false; // إخفاء شاشة التحميل
+    });
   print("Initialization completed.");
 }
 
@@ -151,6 +160,32 @@ void _blockApps() async {
 
   @override
   Widget build(BuildContext context) {
+
+
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Color(0xFFF5F7F8),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/logo.png',
+                width: 170,
+                height: 170,
+              ),
+              const SizedBox(height: 20),
+              Lottie.asset(
+                'assets/animations/loading.json',
+                width: 150,
+                height: 150,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final filteredApps = installedApps
         .where((app) =>
             app.appName.toLowerCase().contains(searchQuery.toLowerCase()))

@@ -17,15 +17,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import android.content.Intent
+import android.content.pm.PackageManager
 
 class AppBlockerService : AccessibilityService() {
 
-    // SharedPreferences لتخزين قائمة التطبيقات المحظورة
+  
     private val sharedPreferences by lazy {
         getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
     }
 
-    // عند استقبال حدث من الـ AccessibilityService
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null || event.packageName == null) return
 
@@ -36,13 +36,16 @@ class AppBlockerService : AccessibilityService() {
         showBlockedAppDialog(packageName)
     }
         // الحصول على اسم التطبيق
+       // الحصول على اسم التطبيق
         val appName = try {
-            packageManager.getApplicationLabel(
-                packageManager.getApplicationInfo(packageName, 0)
+        packageManager.getApplicationLabel(
+                packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
             ).toString()
-        } catch (e: Exception) {
-            packageName // إذا لم يتمكن من الحصول على الاسم، استخدم packageName
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.e("AppBlockerService", "Application not found for package: $packageName")
+            packageName // Fallback to package name if the app name cannot be retrieved
         }
+
 
         // إذا كانت الحزمة موجودة ضمن التطبيقات المحظورة
         if (blockedApps.contains(packageName)) {
@@ -85,9 +88,9 @@ private var isDialogVisible = false
 
     // إعداد زر OK
     view.findViewById<Button>(R.id.dialog_button).setOnClickListener {
-        performGlobalAction(GLOBAL_ACTION_HOME) // العودة إلى الشاشة الرئيسية
-        windowManager.removeView(view) // إزالة النافذة
-        isDialogVisible = false // السماح بعرض النافذة مرة أخرى
+        performGlobalAction(GLOBAL_ACTION_HOME) 
+        windowManager.removeView(view) 
+        isDialogVisible = false 
     }
 
     // عرض النافذة

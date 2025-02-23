@@ -47,22 +47,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut(); // تسجيل الخروج من Firebase
+    await FirebaseAuth.instance.signOut(); 
     setState(() {
-      user = AppUser(); // إعادة تعيين بيانات المستخدم لتصبح فارغة
+      user = AppUser(); 
     });
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
           builder: (context) =>
-              const WelcomePage()), // توجيه المستخدم إلى صفحة الترحيب (بدلاً من ProfilePage)
+              const WelcomePage()), 
     );
   }
 
 // Callback to reload data and refresh the interface
   void _refreshUserData() {
     setState(() {}); // Trigger a rebuild with updated data
-  }
+  }          
+
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +71,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Profile',
+          'Settings',
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -114,8 +115,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: double.infinity,
                           color: Color(0xFFF5F7F8),
                           padding: EdgeInsets.all(16),
+                          
                           child: Padding(
+                            
                             padding: const EdgeInsets.symmetric(horizontal: 20),
+                            
                             child: Text(
                               'Profile Information',
                               style: TextStyle(
@@ -272,7 +276,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Text(
-                              'Settings',
+                              'App Preferences',
                               style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -280,6 +284,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
+                        
                         Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: ClipRRect(
@@ -302,6 +307,51 @@ class _ProfilePageState extends State<ProfilePage> {
                                     child: ListTile(
                                       title: Text(
                                         'App Blocker',
+                                        style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: Color(0xFF545454)),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(''),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward_ios),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ))),
+                                Divider(
+                          color: Color.fromRGBO(16, 74, 115,
+                              0.377), // Set the color of the divider
+                          thickness: 0.5, // Set the thickness of the divider
+                          indent: 30, // Set the indent on the left
+                          endIndent: 30, // Set the indent on the right
+                          height: 0,
+                        ),
+                            Padding(
+                            padding: EdgeInsets.only(right: 16, left: 16),
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                                child: Material(
+                                  color: Colors.white,
+                                  child: InkWell(
+                                    onTap: () {
+                                   
+                                  },
+                                  
+
+                                    child: ListTile(
+                                      title: Text(
+                                        'Notifications',
                                         style: TextStyle(
                                             fontFamily: 'Poppins',
                                             fontWeight: FontWeight.w600,
@@ -446,12 +496,40 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
+                        Padding(
+  padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    
+         Image.asset(
+          'assets/images/greyLogo.png', 
+          width: 120,
+          height: 80,
+        ),
+
+      Text(
+        "AttentionLens INC © 2025",
+        style: TextStyle(
+          color: const Color.fromARGB(255, 186, 186, 186),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Poppins',
+        ),
+      ),
+    ],
+  ),
+),
+
                       ],
+                      
                     ),
                   ],
+                  
                 ),
               ),
       ),
+      
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
         onTabChange: (index) {

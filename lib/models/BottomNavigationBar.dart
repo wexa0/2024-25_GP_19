@@ -58,7 +58,7 @@ class CustomNavigationBar extends StatelessWidget {
           _buildGButton(Icons.task, 'Tasks'),
           _buildGButton(Icons.sms, 'Chatbot'),
           _buildGButton(Icons.poll, 'Progress'),
-          _buildGButton(Icons.person, 'Profile'),
+          _buildGButton(Icons.settings, 'Settings'),
         ],
       ),
     );

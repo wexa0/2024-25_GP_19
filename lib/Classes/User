@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_application/pages/profile_page.dart';
+
 
 class AppUser {
   String? name;
@@ -52,127 +55,606 @@ class AppUser {
     }
   }
 
-  Future<void> showEditDialog(BuildContext context, String field, VoidCallback onUpdate) async {
-  final TextEditingController NameController = TextEditingController();
-  final TextEditingController fieldController = TextEditingController();
-  
-  DateTime selectedDate = DateTime.now();
-  String formattedDate = '';
+Future<void> _updateEmail(BuildContext context, String newEmail) async {
+  try {
+    User? user = _auth.currentUser;
+    if (user == null) return;
 
-  // This will track if any field has text changes
-  ValueNotifier<bool> isAnyFieldChanged = ValueNotifier<bool>(false);
-
-  if (field == 'name') {
-    NameController.text = '';
-  } else if (field == 'dateOfBirth') {
-    formattedDate = dateOfBirth ?? 'Select your birth date';
-  } else {
-    fieldController.text = '';
-  }
-
-  Future<void> _pickDate(BuildContext context) async {
-    final DateTime? pickedDate = await showDatePicker(
+  if (!_isValidEmail(newEmail)) {
+      _showTopNotification(context, 'Enter a valid email');
+      return;
+    }
+    
+    final TextEditingController passwordController = TextEditingController();
+bool _obscurePassword = true;
+String? passwordError; 
+final _formKey = GlobalKey<FormState>();
+    bool? confirm = await showDialog<bool>(
       context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(1990),
-      lastDate: DateTime(2101),
-      builder: (BuildContext context, Widget? child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: Color(0xFF104A73), // darkBlue
-            colorScheme: ColorScheme.light(
-              primary: Color(0xFF104A73), // darkBlue
-              onPrimary: Color(0xFFF5F7F8), // lightGray
-              surface: Color(0xFFF5F7F8), // lightGray
-              onSurface: Color(0xFF545454), // darkGray
-              secondary: Color(0xFF79A3B7), // lightBlue
-            ),
-            dialogBackgroundColor: Color(0xFFF5F7F8), // Background color
+      barrierDismissible: false, // منع إغلاق النافذة بالضغط خارجها
+      builder: (context) {
+         return StatefulBuilder( // يستخدم لتحديث الحالة داخل AlertDialog
+      builder: (context, setState) {
+        
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
           ),
-          child: child!,
+          title: const Text(
+            'Re-authentication Required',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+           content: Form(
+                key: _formKey, // ✅ إضافة `Form`
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Please enter your password to confirm email change',
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                    controller: passwordController, // ✅ أضف الكنترولر لحفظ الإدخال
+                    obscureText: _obscurePassword, // ✅ التغيير يحدث هنا بناءً على المتغير
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      labelStyle: TextStyle(
+                        color: Color(0xFF79A3B7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                        filled: true,
+                        fillColor: Colors.white, // الخلفية البيضاء
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8), // حواف ناعمة
+                          borderSide: BorderSide(color: Color(0xFF79A3B7), width: 2), // الحواف زرقاء
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFF79A3B7), width: 2),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Color(0xFF79A3B7), width: 1.5),
+                        ),
+                        suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: const Color.fromARGB(255, 122, 137, 146),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword =
+                                !_obscurePassword; // Toggle password visibility
+                         });
+                          },
+                        ),
+                        errorText: passwordError, 
+                      ),
+                      validator: (value) { 
+                        if (value == null || value.isEmpty) {
+                          return 'Password is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+          actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(color: Color(0xFF79A3B7)),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Color(0xFF79A3B7)),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      String password = passwordController.text.trim();
+                      AuthCredential credential = EmailAuthProvider.credential(
+                        email: user.email!,
+                        password: password,
+                      );
+
+                           try {
+                        // ✅ **إعادة المصادقة باستخدام كلمة المرور**
+                        await user.reauthenticateWithCredential(credential);
+                        _showTopNotification(context, 'Re-authentication successful');
+
+                       
+                        
+                        Navigator.of(context).pop(true);
+                        _showVerificationDialog(context, newEmail); // ✅ عرض نافذة التحقق
+                      } on FirebaseAuthException catch (e) {
+                        setState(() {
+                          passwordError = e.code == 'wrong-password' ? 'Incorrect password' : 'Authentication failed';
+                        });
+                        }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF79A3B7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text(
+                    'Confirm',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
-    if (pickedDate != null && pickedDate != selectedDate) {
-      selectedDate = pickedDate;
-      formattedDate = DateFormat('MMM dd, yyyy').format(selectedDate);
-      isAnyFieldChanged.value = true; // Mark as changed
+
+    if (confirm != true) {
+      return; // ✅ إذا لم ينجح التأكيد، لا تكمل التحديث
     }
+
+    _showTopNotification(context, 'Re-authentication successful!');
+
+    // ✅ **تحديث البريد الإلكتروني بعد إعادة المصادقة الناجحة**
+    await user.updateEmail(newEmail);
+
+    // ✅ **إرسال رابط التحقق بعد التحديث**
+    await user.sendEmailVerification();
+    _showTopNotification(context, 'Verification email sent to $newEmail');
+
+    // ✅ **إظهار نافذة التحقق**
+    await _showVerificationDialog(context, newEmail);
+
+  } catch (e) {
+    _showTopNotification(context, 'Something went wrong. Please try again.');
   }
+}
+
+Future<void> _showVerificationDialog(BuildContext context, String email) async {
+  int remainingTime = 300; // 5 دقائق
+  late Timer countdownTimer;
+  bool isVerified = false;
 
   showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+            if (!context.mounted) {
+              timer.cancel();
+              return;
+            }
+
+
+             User? user = FirebaseAuth.instance.currentUser;
+            if (user == null) {
+              timer.cancel();
+              _showTopNotification(context, 'Session expired. Please log in again.');
+              Navigator.of(context).pop();
+              return;
+            }
+
+            await user.reload(); // ✅ إعادة تحميل بيانات المستخدم
+            user = FirebaseAuth.instance.currentUser; // تأكيد التحديث
+            isVerified = user?.emailVerified ?? false; // التحقق الفعلي
+
+            if (isVerified) {
+              timer.cancel(); // إيقاف العداد
+              _showTopNotification(context, 'Email verified successfully!');
+
+              try {
+                // ✅ تحديث البريد في Firestore بعد التحقق فقط
+                await FirebaseFirestore.instance.collection('User').doc(user?.uid).update({
+                  'email': email,
+                });
+
+                _showTopNotification(context, 'Email updated in database!');
+              } catch (e) {
+                _showTopNotification(context, 'Failed to update email in database.');
+              }
+
+              Navigator.of(context).pop(); // إغلاق نافذة التحقق
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+            }  else if (remainingTime <= 0) {
+              timer.cancel();
+              _showTopNotification(context, 'Verification link expired. Please try again.');
+              Navigator.of(context).pop();
+            } else {
+              setState(() {
+                remainingTime--;
+              });
+            }
+          });
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: const Text(
+              'Verify Your Email',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            backgroundColor: Colors.white,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/emailSend.png',
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 10),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 15, color: Colors.black),
+                    children: [
+                      const TextSpan(
+                        text: "A verification link has been sent to ",
+                      ),
+                      TextSpan(
+                        text: email,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const TextSpan(
+                        text: ". Please click on the link to confirm your email update.",
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${(remainingTime ~/ 60).toString().padLeft(2, '0')}:${(remainingTime % 60).toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Didn't receive an email? ",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => _resendVerificationEmail(context, email),
+                      child: const Text(
+                        'Resend the email',
+                        style: TextStyle(
+                          color: Color(0xFF3B7292),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  ).then((_) {
+    countdownTimer.cancel();
+  });
+}
+
+
+
+Future<void> _resendVerificationEmail(BuildContext context, String email) async {
+  try {
+    await _auth.currentUser?.sendEmailVerification();
+    _showTopNotification(context, 'Verification email resent to $email');
+  } catch (e) {
+    _showTopNotification(context, 'Failed to resend email. Please try again.');
+  }
+}
+
+
+
+void _showExitWarningDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: const Text(
+          'Cancel Email Update?',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        content: const Text(
+          'If you go back now, your email will not be updated. Are you sure?',
+          style: TextStyle(fontSize: 16, color: Colors.black),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Stay',
+              style: TextStyle(color: Color(0xFF79A3B7)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // يغلق نافذة التحذير
+              Navigator.of(context).pop(); // يغلق نافذة التحقق
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Cancel Update'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+
+Future<void> _updateDateOfBirth(BuildContext context, String newDob) async {
+  DateTime birthDate = DateFormat('MMM dd, yyyy').parse(newDob);
+  int age = _calculateAge(birthDate);
+
+  if (age < 13) {
+    _showTopNotification(context, 'Users under 13 cannot update their birthdate.');
+    return;
+  } else if (age < 18) {
+    bool confirmed = await _showTeenagerDialog(context);
+    if (!confirmed) return;
+  }
+
+  User? user = _auth.currentUser;
+  if (user == null) return;
+
+  await _firestore.collection('User').doc(user.uid).update({
+    'dateOfBirth': newDob,
+  });
+
+  _showTopNotification(context, 'Date of Birth updated successfully.');
+}
+
+int _calculateAge(DateTime birthDate) {
+  DateTime today = DateTime.now();
+  int age = today.year - birthDate.year;
+  
+  if (today.month < birthDate.month || 
+      (today.month == birthDate.month && today.day < birthDate.day)) {
+    age--;
+  }
+
+  debugPrint('Birthdate: $birthDate, Calculated Age: $age');
+  return age;
+}
+
+
+Future<bool> _showTeenagerDialog(BuildContext context) async {
+  return await showDialog<bool>(
     context: context,
     builder: (context) {
       return AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
+        title: const Text(
+          'Age Restriction',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        content: const Text(
+          'This app is intended for users 18+. Do you want to continue?',
+          style: TextStyle(fontSize: 16, color: Colors.black),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Color(0xFF3B7292)), // Blue border
+                borderRadius: BorderRadius.circular(8.0), // Square button style
+              ),
+            ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF3B7292)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3B7292),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0), // Square button style
+              ),
+            ),
+            child: const Text(
+              'Continue',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      );
+    },
+  ) ?? false;
+}
+
+
+
+bool _isValidEmail(String email) {
+  return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email);
+}
+
+
+Future<void> showEditDialog(BuildContext context, String field, VoidCallback onUpdate) async {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController fieldController = TextEditingController();
+    ValueNotifier<DateTime> selectedDate = ValueNotifier<DateTime>(DateTime.now());
+  ValueNotifier<String> formattedDate = ValueNotifier<String>('Select your birth date');
+
+  ValueNotifier<bool> isAnyFieldChanged = ValueNotifier<bool>(false);
+ String? originalValue;
+
+
+   if (field == 'name') {
+    originalValue = name ?? '';
+    nameController.text = originalValue;
+  } else if (field == 'dateOfBirth') {
+    originalValue = dateOfBirth ?? 'Select your birth date';
+    formattedDate.value = originalValue;
+    if (dateOfBirth != null && dateOfBirth!.isNotEmpty) {
+      selectedDate.value = DateFormat('MMM dd, yyyy').parse(dateOfBirth!);
+    }
+  } else if (field == 'email') {
+    originalValue = email ?? '';
+    fieldController.text = originalValue;
+  }
+
+    void checkIfChanged() {
+    if (field == 'name') {
+      isAnyFieldChanged.value = nameController.text.trim() != originalValue;
+    } else if (field == 'email') {
+      isAnyFieldChanged.value = fieldController.text.trim() != originalValue;
+    } else if (field == 'dateOfBirth') {
+      isAnyFieldChanged.value = formattedDate != originalValue;
+    }
+  }
+  
+
+Future<void> _pickDate(BuildContext context, ValueNotifier<DateTime> selectedDate, ValueNotifier<String> formattedDate) async {
+  final DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: selectedDate.value, 
+    firstDate: DateTime(1900),
+    lastDate: DateTime.now(),
+    builder: (context, child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          primaryColor: const Color(0xFF3B7292),
+          hintColor: const Color(0xFF3B7292),
+          colorScheme: ColorScheme.light(primary: const Color(0xFF3B7292)), 
+          buttonTheme: ButtonThemeData(textTheme: ButtonTextTheme.primary),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (pickedDate != null) {
+      selectedDate.value = pickedDate; // تحديث التاريخ المختار
+      formattedDate.value = DateFormat('MMM dd, yyyy').format(pickedDate); // تحديث النص ليظهر في TextField
+      checkIfChanged(); // تحديث حالة التغيير
+    }
+}
+
+
+Future<void> _showAgeVerificationMessage(BuildContext context, String message) async {
+  _showTopNotification(context, message);
+}
+
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
         title: Text(
           'Edit $field',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: field == 'name'
               ? [
                   TextField(
-                    controller: NameController,
+                    controller: nameController,
                     decoration: InputDecoration(
                       labelText: 'Name',
                       hintText: name ?? 'Enter your name',
                     ),
                     onChanged: (value) {
-                      isAnyFieldChanged.value = true; // Mark as changed
+                      checkIfChanged();
                     },
                   ),
-                 
                 ]
               : field == 'dateOfBirth'
                   ? [
-                      GestureDetector(
-                        onTap: () => _pickDate(context),
+                        GestureDetector(
+                        onTap: () => _pickDate(context, selectedDate, formattedDate),
                         child: AbsorbPointer(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Date of Birth',
-                              hintText: formattedDate,
-                              hintStyle: TextStyle(color: Colors.grey),
-                            ),
+                          child: ValueListenableBuilder<String>(
+                            valueListenable: formattedDate,
+                            builder: (context, value, child) {
+                              return TextField(
+                                decoration: InputDecoration(
+                                  labelText: 'Date of Birth',
+                                  hintText: value, // ✅ **يعرض التاريخ المختار في TextField**
+                                  hintStyle: TextStyle(color: Colors.black),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
                     ]
                   : [
-                      TextField(
+                       TextField(
                         controller: fieldController,
                         decoration: InputDecoration(
                           labelText: field,
                           hintText: email ?? 'Enter your $field',
                         ),
                         onChanged: (value) {
-                          isAnyFieldChanged.value = true; // Mark as changed
+                          checkIfChanged();
                         },
                       ),
                     ],
         ),
         backgroundColor: Colors.white,
         actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Color(0xFF79A3B7)),
-            ),
-          ),
+           ElevatedButton(
+    onPressed: () {
+      Navigator.of(context).pop(false); // إغلاق النافذة بدون تأكيد
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white, // لون الخلفية الأبيض
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Color(0xFF79A3B7)), // تحديد الحدود بلون محدد
+        borderRadius: BorderRadius.circular(8.0), // تدوير الحواف
+      ),
+    ),
+    child: const Text(
+      'Cancel',
+      style: TextStyle(color: Color(0xFF79A3B7)), // لون النص
+    ),
+  ),
           ValueListenableBuilder<bool>(
             valueListenable: isAnyFieldChanged,
             builder: (context, isChanged, child) {
@@ -181,29 +663,35 @@ class AppUser {
                     ? () async {
                         Map<String, dynamic> updateData = {};
 
-                        if (field == 'name') {
-                          if (NameController.text.isNotEmpty) {
-                            updateData['name'] = NameController.text;
-                          }
-                        
+                        if (field == 'name' && nameController.text.isNotEmpty) {
+                          updateData['name'] = nameController.text;
                         } else if (field == 'dateOfBirth') {
-                          updateData['dateOfBirth'] = DateFormat('MMM dd, yyyy').format(selectedDate);
-                        } else {
-                          updateData[field] = fieldController.text;
+                          int age = _calculateAge(selectedDate.value);
+                          if (age < 13) {
+                            _showTopNotification(context, 'You must be at least 13 years old.');
+                            return;
+                          } else if (age < 18) {
+                            bool confirmed = await _showTeenagerDialog(context);
+                            if (!confirmed) return;
+                          }
+                          updateData['dateOfBirth'] = DateFormat('MMM dd, yyyy').format(selectedDate.value);
+                        } else if (field == 'email') {
+                          String newEmail = fieldController.text.trim();
+                          if (!_isValidEmail(newEmail)) {
+                            _showTopNotification(context, 'Enter a valid email');
+                            return;
+                          }
+                          await _updateEmail(context, newEmail);
+                          return;
                         }
 
                         if (updateData.isNotEmpty) {
-                          await _firestore
-                              .collection('User')
-                              .doc(_auth.currentUser!.uid)
-                              .update(updateData);
-                          await loadUserData(); // Reload user data after update
-                          onUpdate(); // Trigger UI refresh callback
+                          await _firestore.collection('User').doc(_auth.currentUser!.uid).update(updateData);
+                          await loadUserData();
+                          onUpdate();
+                          _showTopNotification(context, '$field updated successfully!');
+                          Navigator.pop(context);
                         }
-
-                        // Show notification and close dialog
-                        _showTopNotification(context, '$field updated successfully!');
-                        Navigator.of(context).pop(); // Close the dialog
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
@@ -224,6 +712,7 @@ class AppUser {
     },
   );
 }
+
 
 Future<void> showChangePasswordDialog(BuildContext context) async {
   final TextEditingController currentPasswordController = TextEditingController();
@@ -278,6 +767,7 @@ Future<void> showChangePasswordDialog(BuildContext context) async {
                         color: const Color.fromARGB(255, 122, 137, 146),
                       ),
                       onPressed: () {
+                        
                         setState(() {
                           _obscureCurrentPassword = !_obscureCurrentPassword;
                         });

@@ -89,7 +89,7 @@ class _SigninPageState extends State<SigninPage> {
   }
 
   void showResetPasswordPopup(BuildContext context) {
-    final TextEditingController emailController = TextEditingController();
+    final TextEditingController emailController = TextEditingController(text: _emailController.text);
 
     showDialog(
       context: context,

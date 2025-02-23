@@ -75,7 +75,7 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Profile',
+          'Settings',
          style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -222,15 +222,50 @@ class _GuestProfilePageState extends State<GuestProfilePage> {
                                   SizedBox(width: 8),
                                   Icon(Icons.arrow_forward_ios),
                                 ],
+
+                                
                               ),
+                              
                             ),
+                            
                           ),
+                          
                         ),
+                         Padding(
+  padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    
+         Image.asset(
+          'assets/images/greyLogo.png', 
+          width: 120,
+          height: 80,
+        ),
+
+      Text(
+        "AttentionLens INC © 2025",
+        style: TextStyle(
+          color: const Color.fromARGB(255, 186, 186, 186),
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Poppins',
+        ),
+      ),
+    ],
+  ),
+),
+
                       ],
+                      
                     ),
+                    
+                    
                   ),
+                  
                 ),
               ),
+              
               bottomNavigationBar:GuestCustomNavigationBar(
               selectedIndex: selectedIndex,
               onTabChange: (index) {

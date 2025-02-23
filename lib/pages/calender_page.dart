@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/Classes/SubTask';
 import 'package:flutter_application/Classes/Task';
@@ -7,6 +10,7 @@ import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:flutter_application/pages/editTask.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/pages/timer_selector.dart';
+import 'package:flutter_application/services/notification_handler.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:lottie/lottie.dart';
@@ -46,9 +50,165 @@ class _CalendarPageState extends State<CalendarPage> {
   Map<DateTime, List<Map<String, dynamic>>> _taskIndicators = {};
   Map<String, String> dailyMessages = {};
 
+
+  
+List<String> mainTaskMessages = [
+  "Great job, [User]! 👏",
+  "Awesome work, [User]! 🚀",
+  "You're making progress, [User]! ✅",
+  "[User], you're unstoppable! 💪",
+  "Wow, [User]! Keep it up! 🔥",
+  "Mission accomplished, [User]! 🎯",
+  "[User], you nailed it! 👊",
+  "Another win for you, [User]! 🏆",
+  "[User], proud of you! 🌟",
+  "One step closer, [User]! 🚶‍♂️",
+  "[User], you're on fire! 🔥",
+  "Success feels great, right, [User]? 😃",
+  "You did amazing, [User]! 🎉",
+  "Crushing it, [User]! 💥",
+  "Boom! Task done, [User]! 🎯",
+  "Keep shining, [User]! ✨",
+  "Big win today, [User]! 🎊",
+  "Nothing can stop you now, [User]! 💪",
+  "Winning mindset, [User]! 🧠",
+  "[User], keep building momentum! 🔄",
+  "You're on the right path, [User]! ➡️",
+  "Legendary effort, [User]! 🦸",
+  "Hard work pays off, [User]! 💰",
+  "[User], you’re proving your strength! 💪",
+  "Another step forward, [User]! 👣",
+  "Momentum is on your side, [User]! 🏎️",
+  "You're creating success, [User]! 🌱",
+  "One step at a time, [User]! 🚶",
+  "Small wins lead to big success, [User]! 🏆",
+  "Fantastic achievement, [User]! 🎯"
+];
+
+
+List<String> subTaskMessages = [
+  "Nice move, [User]! ✅",
+  "One step at a time, [User]! 👣",
+  "Good progress, [User]! 📈",
+  "That’s the way, [User]! 👍",
+  "Keep going, [User]! 🔥",
+  "Step by step, [User]! 🚶",
+  "Another piece done, [User]! 🧩",
+  "You're doing great, [User]! 💪",
+  "Bit by bit, you got this, [User]! 🔄",
+  "Chipping away at success, [User]! 🔨",
+  "Just keep pushing, [User]! ⏳",
+  "Small wins matter, [User]! 🏆",
+  "You’re on track, [User]! 🚆",
+  "Great effort, [User]! 💥",
+  "Task by task, you’re winning, [User]! 🎯",
+  "Building success, [User]! 🏗️",
+  "Your progress is visible, [User]! 👀",
+  "You're focused, [User]! 🎯",
+  "Moving forward, [User]! ➡️",
+  "You got this, [User]! 💪",
+  "Making it happen, [User]! 🌟",
+  "Another win added, [User]! ✅",
+  "Steady progress, [User]! 🚶‍♂️",
+  "Stay consistent, [User]! 🔄",
+  "Keep stacking wins, [User]! 🏆",
+  "You're in control, [User]! 🎮",
+  "Little by little, you win, [User]! 🏅",
+  "Break it down, crush it, [User]! 💥",
+  "Momentum is everything, [User]! 🔄",
+  "Your effort matters, [User]! 💯"
+];
+
+String getRandomMessage(List<String> messages, String userName) {
+  final random = Random();
+  String message = messages[random.nextInt(messages.length)];
+  return message.replaceAll("[User]", userName);
+}
+
+String userName = ""; 
+
+void fetchUserName() async {
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('User') // 
+        .doc(user.uid)
+        .get();
+
+    if (userDoc.exists && userDoc.data() != null) {
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      setState(() {
+     String fullName = userData['name'] ?? "Champion"; // استرجاع الاسم الكامل
+        userName = fullName.split(" ")[0]; // أخذ الاسم الأول فقط
+              });
+    } else {
+      setState(() {
+        userName = "Champion";
+      });
+    }
+  }
+}
+void showMotivationalMessage(String message) {
+  OverlayState? overlayState = Overlay.of(context);
+  OverlayEntry overlayEntry = OverlayEntry(
+    builder: (context) => Positioned(
+      top: 50, // ✅ أعلى الشاشة
+      left: 20,
+      right: 20,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF24AB79), // ✅ لون قوي ومشجع
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                spreadRadius: 2,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  overlayState.insert(overlayEntry);
+
+  // ✅ اهتزاز بسيط عند ظهور الرسالة
+  HapticFeedback.mediumImpact();
+
+  // ✅ إزالة الرسالة بعد 3 ثوانٍ
+  Future.delayed(Duration(seconds: 4), () {
+    overlayEntry.remove();
+  });
+}
+
+
   @override
   void initState() {
     super.initState();
+         fetchUserName();
     _fetchUserID();
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -307,29 +467,22 @@ Future<void> generateTaskIndicators() async {
                   _focusedDay = focusedDay;
                 },
                 
-  eventLoader: (day) {
+eventLoader: (day) {
   DateTime adjustedDay = DateTime(day.year, day.month, day.day);
 
-  // التحقق من وجود المهام
-  if (_taskIndicators.containsKey(adjustedDay)) {
-    // المهام لليوم المحدد
-    List<Map<String, dynamic>> tasksForDay = _taskIndicators[adjustedDay]!;
+  // Check if the day has tasks and return appropriate markers
+  if (_taskIndicators.containsKey(adjustedDay) && _taskIndicators[adjustedDay]!.isNotEmpty) {
+    bool allTasksComplete = _taskIndicators[adjustedDay]!.every((task) => task['completed']);
+    bool hasPendingTasks = _taskIndicators[adjustedDay]!.any((task) => !task['completed']);
 
-    // التحقق من حالة المهام
-    bool allTasksComplete =
-        tasksForDay.isNotEmpty && tasksForDay.every((task) => task['completed']);
-    bool hasPendingTasks = tasksForDay.any((task) => !task['completed']);
-
-    // إرجاع الحالة بناءً على المهام
     if (allTasksComplete) {
-      return ['green']; // جميع المهام مكتملة
+      return ['green'];  // All tasks are complete
     } else if (hasPendingTasks) {
-      return ['orange']; // بعض المهام مكتملة
+      return ['orange']; // There are pending tasks
     }
   }
 
-  // إذا لم يكن هناك مهام لهذا اليوم
-  return ['grey'];
+  return [];  // No tasks or markers for this day
 },
 
 
@@ -380,44 +533,39 @@ Future<void> generateTaskIndicators() async {
     ),
   ),
   calendarBuilders: CalendarBuilders(
-    markerBuilder: (context, date, events) {
-      if (events.isEmpty) {
-         return Positioned(
-          bottom: 1,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.grey, // لون رمادي للتواريخ بدون مهام
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      }
-
-      // تحديد اللون بناءً على الحدث
-      Color color;
-      if (events.contains('green')) {
-        color = Colors.green; // جميع المهام مكتملة
-      } else if (events.contains('orange')) {
-        color = Colors.orange; // بعض المهام مكتملة
-      } else {
-        color = Colors.grey; // لا توجد مهام
-      }
-
+  markerBuilder: (context, date, events) {
+    // تحقق من الأحداث وحدد اللون وفقا للشرط
+    if (events.contains('green')) {
       return Positioned(
-        bottom: 1, // وضع النقطة أسفل التاريخ
+        bottom: 1, // وضع النقطة في الأسفل
         child: Container(
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: color,
+            color: Colors.green, // مهام مكتملة
             shape: BoxShape.circle,
           ),
         ),
       );
-    },
-  ),
+    } else if (events.contains('orange')) {
+      return Positioned(
+        bottom: 1, // وضع النقطة في الأسفل
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.orange, // هناك مهام لم تكتمل بعد
+            shape: BoxShape.circle,
+          ),
+        ),
+      );
+    }
+
+    // لا ترجع أي شيء إذا لم تكن هناك مهام برتقالية أو خضراء
+    return null;
+  },
+),
+
 ),
               if (isLoading) ...[
                 Center(
@@ -1511,6 +1659,12 @@ Future<void> generateTaskIndicators() async {
       }
       await task.updateCompletionStatus(2); // Update the task's status as completed in the database.
 
+       await NotificationHandler.cancelNotification(task.taskID);
+
+        String message = getRandomMessage(mainTaskMessages, userName);
+
+    showMotivationalMessage(message);
+
     } else {
       for (var subtask in taskData['subtasks']) {
         setState(() {
@@ -1551,6 +1705,14 @@ Future<void> generateTaskIndicators() async {
         .collection('SubTask')
         .doc(subtask['id'])
         .update({'completionStatus': newSubtaskCompletionStatus ? 1 : 0});
+
+        if (newSubtaskCompletionStatus) {
+      await NotificationHandler.cancelNotification(subtask['id']);
+
+        String message = getRandomMessage(subTaskMessages, userName);
+
+    showMotivationalMessage(message);
+    }
 
     // Determine the new status of the parent task based on subtasks' statuses.
     bool allSubtasksComplete = task['subtasks'].every(
