@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/pages/timer_pomodoro.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class TimerSelectionPage extends StatefulWidget {
   final String taskId; // The task ID
@@ -29,7 +30,18 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
   bool _loading = true; // Flag to indicate whether preferences are being loaded
   bool _isSaved = false; // this to toggle the color of text after pressing on it
   Map<String, bool> blockedApps = {};
+  String selectedSound = 'None';
+  
 
+  List<String> soundOptions = [
+    'None',
+    'Nature Morning',
+    'Calming Rain',
+    'White Noise',
+    'Midnight',
+    'Sea Wave',
+    'Flowing Water',
+  ];
 
   final FixedExtentScrollController _focusController =
       FixedExtentScrollController();
@@ -131,7 +143,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
     if (_loading) {
       return; // Prevent opening the bottom sheet if data is still loading
     }
-
+  
     // Ensure the context is valid and use the proper context
     showModalBottomSheet(
       context: context,
@@ -260,6 +272,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                   // Start Timer Button
                   ElevatedButton(
                     onPressed: () {
+                      String soundPath = _getSoundPath(selectedSound);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -273,6 +286,8 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                             longBreakMinutes: _longBreakMinutes,
                             rounds: _rounds,
                             page: widget.page,
+                            selectedSound: soundPath,
+                            selectedSoundText: selectedSound,
                           ),
                         ),
                       );
@@ -428,7 +443,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       loaded = await _loadPreferences(); // Recheck the preferences
     }
     if (loaded) {
-      _openTimeSelector();
+      //_openTimeSelector();
     } else {
       print("Failed to load preferences.");
       // Handle the failure case (e.g., show an error message)
@@ -460,7 +475,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
         ),
         automaticallyImplyLeading: false,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
             horizontal: 20.0,
             vertical: 15.0), // Adjusted padding to reduce the space
@@ -514,19 +529,19 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                   _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
                   Divider(
                     color: Color.fromRGBO(
-                        16, 74, 115, 0.405), // Set the color of the divider
-                    thickness: 0.5, // Set the thickness of the divider
-                    indent: 20, // Set the indent on the left
-                    endIndent: 20, // Set the indent on the right
+                        16, 74, 115, 0.405),
+                    thickness: 0.5,
+                    indent: 20,
+                    endIndent: 20,
                     height: 0,
                   ),
                   _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
                   Divider(
                     color: Color.fromRGBO(
-                        16, 74, 115, 1), // Set the color of the divider
-                    thickness: 0.5, // Set the thickness of the divider
-                    indent: 20, // Set the indent on the left
-                    endIndent: 20, // Set the indent on the right
+                        16, 74, 115, 1),
+                    thickness: 0.5, 
+                    indent: 20, 
+                    endIndent: 20, 
                     height: 0,
                   ),
                   _buildBottomTimeBlock("Rounds", _rounds),
@@ -534,11 +549,95 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
               ),
             ),
             SizedBox(
-              height: 12,
+              height: 3,
             ),
+
+             Padding(
+  padding: const EdgeInsets.symmetric(vertical: 10.0),
+  child: Row(
+    children: [
+      Icon(Icons.category, color: Color(0xFF3B7292)),
+      SizedBox(width: 8),
+      Text(
+        'Current Sound option',
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Poppins',
+          fontSize: 16,
+          color: Color(0xFF545454),
+        ),
+      ),
+    ],
+  ),
+),
+
+SizedBox(height: 7),
+
+// Sound Picker Section
+Container(
+  padding: const EdgeInsets.all(2.0), 
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12), 
+    boxShadow: [
+      BoxShadow(
+        color: Color(0xFF3B7292).withOpacity(0.1),
+        spreadRadius: 2,
+        blurRadius: 4,
+        offset: Offset(0, 2),
+      ),
+    ], 
+  ),
+  child: Column(
+    children: soundOptions.map((String sound) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 0),
+        child: RadioListTile<String>(
+          title: Text(
+            sound,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+            ),
+          ),
+          value: sound,
+          groupValue: selectedSound,
+          onChanged: _onSoundSelectionChanged,
+          activeColor: Color(0xFF3B7292), 
+          contentPadding: EdgeInsets.symmetric(vertical: -3), 
+        ),
+      );
+    }).toList(),
+  ),
+),
+            // Display the current selected times in blocks
+            SizedBox(height: 10),
             Center(
               child: ElevatedButton(
-                onPressed: _openTimeSelector, // Button to open bottom sheet
+                onPressed:  () {
+                  print("Selected Sound: $selectedSound");
+                  String soundPath = _getSoundPath(selectedSound);
+                  print("Selected Sound: $soundPath");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TimerPomodoro(
+                            taskId: widget.taskId,
+                            taskName: widget.taskName,
+                            subTaskID: widget.subTaskID,
+                            subTaskName: widget.subTaskName,
+                            focusMinutes: _focusMinutes,
+                            shortBreakMinutes: _shortBreakMinutes,
+                            longBreakMinutes: _longBreakMinutes,
+                            rounds: _rounds,
+                            page: widget.page,
+                            selectedSound: soundPath,
+                            selectedSoundText: selectedSound,
+                            
+                          ),
+                        ),
+                      );
+                    }, // Button to open bottom sheet
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(
                       0xFF3B7292), // Use the same color as in the second button
@@ -692,4 +791,31 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
       ),
     );
   }
+   String _getSoundPath(String sound) {
+    switch (sound) {
+      case 'Nature Morning':
+        return 'sounds/nature-morning.mp3';
+      case 'Calming Rain':
+        return 'sounds/calming-rain.mp3';
+      case 'White Noise':
+        return 'sounds/white-noise.mp3';
+      case 'Midnight':
+        return 'sounds/midnight.mp3';
+      case 'Sea Wave':
+        return 'sounds/sea-wave.mp3';
+      case 'Flowing Water':
+        return 'sounds/flowing-water.mp3';
+      case 'None': // Case for when the user selects 'none'
+        return ''; // Return an empty string to indicate no sound
+      default:
+        return ''; // If no valid sound is selected, return an empty path
+    }
+  }
+
+ void _onSoundSelectionChanged(String? value) {
+      setState(() {
+        selectedSound = value!;
+      });
+    }
+   
 }

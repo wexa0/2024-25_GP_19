@@ -152,7 +152,12 @@ flutter:
     - assets/images/emailSend.png
     - assets/images/initialPage.png
     - assets/images/greyLogo.png
-
+    - assets/sounds/nature-morning.mp3
+    - assets/sounds/calming-rain.mp3
+    - assets/sounds/white-noise.mp3
+    - assets/sounds/midnight.mp3
+    - assets/sounds/sea-wave.mp3
+    - assets/sounds/flowing-water.mp3
 
 
     

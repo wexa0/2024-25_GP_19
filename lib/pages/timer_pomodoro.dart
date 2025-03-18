@@ -7,6 +7,7 @@ import 'package:flutter_application/pages/calender_page.dart';
 import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
 import 'package:device_apps/device_apps.dart';
+//import 'package:flutter_application/services/notification_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -33,6 +34,8 @@ class TimerPomodoro extends StatefulWidget {
   final int longBreakMinutes;
   final int rounds;
   final String page;
+  String selectedSound;
+  String selectedSoundText;
 
   TimerPomodoro({
     required this.taskId,
@@ -44,6 +47,8 @@ class TimerPomodoro extends StatefulWidget {
     required this.longBreakMinutes,
     required this.rounds,
     required this.page,
+    required this.selectedSound,
+    required this.selectedSoundText
   });
 
   @override
@@ -74,7 +79,24 @@ class _TimerPageState extends State<TimerPomodoro> {
   DateTime first = DateTime.now();
   DateTime second = DateTime.now();
   bool accessed = true;
+  bool userLeft = false; // did user pause and stapped working?
+  Duration pauseDuration = Duration.zero; // to keep track of time user left
+  Timer? _pause; // to keep a real time clock of pause
   String firstString = '';
+  bool _isSoundOn = true;
+  String selectedSound = 'none';
+   // A list of available sounds
+  
+
+  List<String> soundOptions = [
+    'None',
+    'Nature Morning',
+    'Calming Rain',
+    'White Noise',
+    'Midnight',
+    'Sea Wave',
+    'Flowing Water',
+  ];
 
   // Helper function to format time as mm:ss
   String _formatTime(int seconds) {
@@ -136,10 +158,133 @@ Future<bool> checkAccessibilityPermission() async {
     return false;
   }
 }
+ String _getSoundPath(String sound) {
+    switch (sound) {
+      case 'Nature Morning':
+        return 'sounds/nature-morning.mp3';
+      case 'Calming Rain':
+        return 'sounds/calming-rain.mp3';
+      case 'White Noise':
+        return 'sounds/white-noise.mp3';
+      case 'Midnight':
+        return 'sounds/midnight.mp3';
+      case 'Sea Wave':
+        return 'sounds/sea-wave.mp3';
+      case 'Flowing Water':
+        return 'sounds/flowing-water.mp3';
+      case 'None': // Case for when the user selects 'none'
+        return ''; // Return an empty string to indicate no sound
+      default:
+        return ''; // If no valid sound is selected, return an empty path
+    }
+  }
+ void _toggleSound() {
+    setState(() {
+      _isSoundOn = !_isSoundOn; // Toggle the sound state
+    });
+    if (_isSoundOn) {
+      // Play sound if it's turned on
+      _playSelectedSound();
+    } else {
+      // Stop the sound if it's turned off
+      _audioPlayer.stop();
+    }
+  }
+  
+   void _showSoundMenu(BuildContext context) {
+    
+    showDialog(
+     context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.white, 
+        title: Text(
+          '               Select Sound',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF545454), 
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min, // Prevent column from taking unnecessary space
+          children: soundOptions.map((sound) {
+            bool isSelected = selectedSound == sound; // Check if this sound is the selected one
 
+            return TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white, // Button background color
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15), // Padding inside each button
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8), // Rounded corners for buttons
+                ),
+                elevation: 0, // Remove shadow
+              ),
+              onPressed: () {
+                setState(() {
+                  selectedSound = sound;
+                  _isSoundOn = true;
+                });
+                widget.selectedSound = _getSoundPath(sound);
+                _playSelectedSound();
+                Navigator.of(context).pop(); // Close the dialog after selection
+              },
+              child: Row(
+                children: [
+                  Radio<String>(
+                    value: sound,
+                    groupValue: widget.selectedSoundText, // Group value determines which one is selected
+                    onChanged: (String? value) {
+                      setState(() {
+                        widget.selectedSoundText = value!;
+                        _isSoundOn = true;
+                      });
+                      if (value!=null){
+                      widget.selectedSound = _getSoundPath(value);
+                      _playSelectedSound();
+                      Navigator.of(context).pop(); // Close dialog after selecting
+                    }},
+                  ),
+                  Text(
+                    sound,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF545454), // Dark gray color for the text
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    },
+  );
+   
+  }
 
+   // Function to play the selected sound
+  void _playSelectedSound() async {
+     if (widget.selectedSound.isNotEmpty) {
+       // هذه طبعتها للتحقق من عمل الصوت
+    print("Playing sound...:");
+    try {
+      await _audioPlayer.play(AssetSource(widget.selectedSound)); // Use AssetSource instead of string path
+        print("Sound played.");
+    } catch (e) {
+      print("Error playing sound: $e");
+     }
+  }
+  else {
+    if (widget.selectedSound.isEmpty){
+       _audioPlayer.stop();
 
-
+    }
+  }
+  }
 
 
   // Start the timer
@@ -170,6 +315,8 @@ Future<bool> checkAccessibilityPermission() async {
     if (mounted) {
       setState(() {
         _isRunning = true;
+        userLeft=false;
+        _pause?.cancel(); 
         if (_isFocusTime) {
           // Set focus time when starting
           if (_elapsedTime == 0) {
@@ -233,7 +380,7 @@ Future<bool> checkAccessibilityPermission() async {
     }
 
     _playEndSound();
-
+   
     // After focus time ends, switch to break time
     if (_isFocusTime) {
       if (mounted) {
@@ -269,6 +416,7 @@ Future<bool> checkAccessibilityPermission() async {
     if (_isTimerInitialized) {
       _timer?.cancel(); // Safely cancel the timer if initialized
     }
+    _audioPlayer.stop();
     _audioPlayer.dispose(); // Dispose of the audio player
     super.dispose();
   }
@@ -622,7 +770,36 @@ ElevatedButton(
     }
 
     _timer?.cancel(); // Just pause the timer, no reset of elapsed time
-  }
+    userLeft = true;
+  //   if(userLeft){
+  //     print("pausing detected");
+  //       _pause = Timer.periodic(Duration(seconds: 1), (timer) {
+  //     setState(() {
+  //       pauseDuration = Duration(seconds: pauseDuration.inSeconds + 1);
+  //     });
+
+  //     // 10 minutes then show notification
+  //     if (pauseDuration.inSeconds >= 10) {
+  //       print("Notification to be sent"); // added this just to debug
+  //       //_schedulePauseReminder();  // Schedule a reminder notification
+  //       print("Notification sent"); // added this just to debug
+  //       _pause?.cancel();  // Stop the timer once the notification is sent
+  //     }
+  //   });
+  // }
+      
+    }
+
+/////////// paused too long reminder/ notifications/////////////// make sure to un-note the function name in any other code line 
+///(لإعادة إضافة الفنكشن : عن طريق مسح علامة الملاحطة من جانب اسمها في أي جزء من الأسطر)
+// Future<void> _schedulePauseReminder() async {
+//   // Schedule a reminder notification after 10 minutes of consecutive pause
+//   await NotificationHandler.schedulePauseReminder('pause_reminder');
+
+//   // Reset the pause start time to prevent multiple notifications
+//   pauseDuration = Duration.zero;
+//   print("sent notification");
+// }
 
   bool _isRadioChecked = false; // Radio button state (unchecked by default)
 
@@ -780,6 +957,9 @@ ElevatedButton(
     _elapsedTime = widget.focusMinutes * 60;
     _timerText = _formatTime(_elapsedTime);
     _audioPlayer = AudioPlayer();
+    _playSelectedSound();
+    
+
   }
 
   Future<void> _loadBlockedApps() async {
@@ -818,7 +998,7 @@ ElevatedButton(
         elevation: 0,
         backgroundColor: backgroundColor,
         title: Padding(
-          padding: EdgeInsets.only(top: 7.0),
+          padding: EdgeInsets.only(top: 7.0,),
           child: Text(
             widget.taskId == widget.subTaskID
                 ? widget
@@ -841,6 +1021,29 @@ ElevatedButton(
                 _toggleRadioButton, // Toggle radio button state when clicked
           ),
         ),
+         actions: [
+          Padding(
+      padding: EdgeInsets.only(right: 7.0), // Add 7 padding to the right
+       child: PopupMenuTheme(
+          data: PopupMenuThemeData(
+            color: Colors.white, // Set the background color of the menu to white
+          ),
+          child: GestureDetector(
+            onLongPress: () {
+              _showSoundMenu(context); // Show the sound menu on long press
+            },
+            child: IconButton(
+              icon: Icon(
+                _isSoundOn && widget.selectedSound != '' 
+                    ? Icons.volume_up 
+                    : Icons.volume_off,
+                color: Colors.white,
+              ),
+              onPressed: _toggleSound, // Regular press to toggle sound
+            ),
+          ),
+        ),
+      ),  ],
       ),
       body: Center(
         child: Column(
