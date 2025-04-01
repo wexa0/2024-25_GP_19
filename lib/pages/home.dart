@@ -42,6 +42,13 @@ class HomePageState extends State<HomePage> {
 
   // List of screens for navigation
   final List<Widget> _pages = [];
+final ScrollController _scrollController = ScrollController();
+
+@override
+void dispose() {
+  _scrollController.dispose(); // إلغاء استخدام الـ ScrollController
+  super.dispose();
+}
 
   @override
   void initState() {
@@ -78,10 +85,12 @@ class HomePageState extends State<HomePage> {
           var data =
               ds.data(); // No need for casting anymore with the correct type
           if (data != null) {
-            setState(() {
-              Name = data['name'] ?? ''; // Ensure fName is never null
+            if (mounted) {
+  setState(() {
+    Name = data['name'] ?? '';
+  });
+}
 
-            });
           }
         } else {
           print('Document does not exist.');
@@ -708,4 +717,5 @@ AppBar _buildAppBar() {
     centerTitle: true,
     automaticallyImplyLeading: false,
   );
+  
 }

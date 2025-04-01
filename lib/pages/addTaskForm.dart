@@ -771,7 +771,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 backgroundColor: Colors.grey[200],
                 onSelected: (bool selected) {
                   setState(() {
-                    // If the selected category is already active, unselect it
                     if (selectedCategory == category) {
                       selectedCategory = '';
                     } else {
