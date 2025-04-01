@@ -869,7 +869,7 @@ eventLoader: (day) {
       children: [
          Image.asset(
       'assets/images/done.png',
-      width: 140,
+      width: 280,
     ),
      
         const SizedBox(height: 20),

@@ -5,6 +5,7 @@ import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,7 @@ class ChatbotpageWidget extends StatefulWidget {
 class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
 
   final FlutterTts flutterTts = FlutterTts();
+DateTime? currentSessionStart;
 
   String? userID;
   int selectedIndex = 2;
@@ -54,6 +56,9 @@ Map<String, String> typingMessages = {};
 void initState() {
   super.initState();
   _speech = stt.SpeechToText();
+    _fetchUserID().then((_) {
+    checkSessionStatus(); 
+  });
   _fetchUserID();
   _scrollController.addListener(_scrollListener);
  WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,6 +71,49 @@ void initState() {
   setupTts();
 }
 
+Future<void> checkSessionStatus() async {
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? savedSessionStart = prefs.getString('sessionStart');
+
+  if (savedSessionStart != null) {
+    currentSessionStart = DateTime.parse(savedSessionStart);
+    print("🔁 Loaded saved session start: $currentSessionStart");
+  }
+
+  QuerySnapshot firstMsgSnap = await _firestore
+      .collection("ChatBot")
+      .where("userID", isEqualTo: userID ?? "guest_user")
+      .orderBy("timestamp", descending: false)
+      .limit(1)
+      .get();
+
+
+  if (firstMsgSnap.docs.isNotEmpty) {
+    DateTime firstTime = (firstMsgSnap.docs.first.data() as Map<String, dynamic>)['timestamp'].toDate();
+
+if (currentSessionStart == null) {
+  currentSessionStart = firstTime;
+} else {
+  print("🔄 Using already renewed session: $currentSessionStart");
+}
+
+  Duration sinceStart = DateTime.now().difference(currentSessionStart!);
+  print("⏳ Time since session start: $sinceStart");
+
+
+    if (sinceStart.inMinutes >= 5 ) {
+
+
+      await _showSessionExpiredDialog();
+      return;
+    
+  
+
+      
+    }
+  }
+}
 
 
  String prevText = ""; 
@@ -243,30 +291,7 @@ Future<void> _sendMessage([String? messageText]) async {
     isWaitingForResponse = true;
   });
 
-  // 👇 نجيب أول رسالة لهاليوزر
-  QuerySnapshot snapshot = await _firestore
-      .collection("ChatBot")
-      .where("userID", isEqualTo: userID ?? "guest_user")
-      .orderBy("timestamp", ascending: true)
-      .limit(1)
-      .get();
-        if (snapshot.docs.isNotEmpty) {
-    DateTime firstMessageTime = (snapshot.docs.first.data() as Map<String, dynamic>)['timestamp'].toDate();
-    Duration diff = DateTime.now().difference(firstMessageTime);
 
-    if (diff.inHours >= 24) {
-      // ✅ الجلسة انتهت
-      bool isInApp = ModalRoute.of(context)?.isCurrent ?? false;
-
-      if (isInApp) {
-        // اليوزر لسه بالتطبيق → نكمل الجلسة عادي
-      } else {
-        // 👇 اليوزر طلع من التطبيق، نطلب منه قرار
-        await _showSessionExpiredDialog();
-        return;
-      }
-    }
-  }
 
     DocumentReference docRef = await _firestore.collection("ChatBot").add({
       "userID": userID ?? "guest_user",
@@ -329,16 +354,16 @@ Future<void> _showSessionExpiredDialog() async {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               "THE SESSION HAS ENDED!",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1D4F6D),
+                color: Color(0xFF545454),
               ),
               textAlign: TextAlign.center,
             ),
@@ -354,13 +379,25 @@ Future<void> _showSessionExpiredDialog() async {
               children: [
                 _sessionButton(
                   text: "Continue Previous Session",
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showTopNotification("Continuing previous session");
-                  },
+                  
+                onPressed: () async {
+  DateTime now = DateTime.now();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('sessionStart', now.toIso8601String());
+
+  setState(() {
+    currentSessionStart = now;
+    print("✅ Session renewed at: $currentSessionStart");
+  });
+  Navigator.of(context).pop();
+  _showTopNotification("Continuing previous session");
+},
+
+                  
                 ),
+                 const SizedBox(width: 1),
                 _sessionButton(
-                  text: "Start new session",
+                  text: "    Start new session    ",
                   onPressed: () async {
                     // حذف المحادثة القديمة
                     var chatDocs = await _firestore
@@ -389,18 +426,24 @@ Widget _sessionButton({required String text, required VoidCallback onPressed}) {
   return ElevatedButton(
     onPressed: onPressed,
     style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF1D4F6D),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      backgroundColor:  Color(0xFF79A3B7),
+      padding: const EdgeInsets.symmetric(horizontal: 54, vertical: 10),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: Color(0xFF79A3B7)),
+        borderRadius: BorderRadius.circular(8.0),
       ),
     ),
     child: Text(
       text,
-      style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        fontSize: 13,
+        color: Colors.white,
+        fontWeight: FontWeight.w500,
+      ),
     ),
   );
 }
+
 
 Future<void> _waitForResponse(DocumentReference docRef) async {
   docRef.snapshots().listen((snapshot) {
@@ -422,6 +465,26 @@ Future<void> _waitForResponse(DocumentReference docRef) async {
 
 
   bool isFirstLoad = true;
+void _confirmStartNewSession() async {
+
+    var chatDocs = await _firestore
+        .collection("ChatBot")
+        .where("userID", isEqualTo: userID ?? "guest_user")
+        .get();
+
+    for (var doc in chatDocs.docs) {
+      await doc.reference.delete();
+    }
+
+    // Reset session time
+    currentSessionStart = DateTime.now();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sessionStart', currentSessionStart!.toIso8601String());
+
+    _showTopNotification("Started a new session");
+    setState(() {});
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -431,19 +494,44 @@ Future<void> _waitForResponse(DocumentReference docRef) async {
       resizeToAvoidBottomInset: true,
 
       appBar: AppBar(
-        title: const Text(
-          'Chatbot',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+  title: const Text(
+    'Chatbot',
+    style: TextStyle(
+      color: Colors.black,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  backgroundColor: const Color.fromARGB(255, 226, 231, 234),
+  elevation: 0.0,
+  centerTitle: true,
+  automaticallyImplyLeading: false,
+  actions: [
+    PopupMenuButton<String>(
+        color: Colors.white, 
+     icon: const Icon(Icons.menu, color: Color(0xFF104A73)),
+
+      onSelected: (value) {
+        if (value == 'new_session') {
+          _confirmStartNewSession();
+        }
+      },
+      itemBuilder: (BuildContext context) => [
+        const PopupMenuItem<String>(
+          value: 'new_session',
+          child: Row(
+            children: [
+              Icon(Icons.restart_alt, color: Color(0xFF545454)),
+              SizedBox(width: 10),
+              Text('Start New Session'),
+            ],
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 226, 231, 234),
-        elevation: 0.0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
+      ],
+    ),
+  ],
+),
+
       backgroundColor: const Color.fromRGBO(245, 247, 248, 1),
       
       body: Stack(
@@ -1026,9 +1114,12 @@ Future<void> _simulateTyping(String message) async {
   for (int i = 0; i < message.length; i++) {
     displayed += message[i];
     try {
+      if (!mounted) return;
+
       setState(() {
         typingMessages[message] = displayed;
       });
+        
     } catch (_) {
     }
     await Future.delayed(const Duration(milliseconds: 30));
@@ -1040,6 +1131,8 @@ Future<void> _simulateTyping(String message) async {
 @override
 void dispose() {
   flutterTts.stop(); 
+   _scrollController.dispose(); 
+  _messageController.dispose(); 
   super.dispose();
 }
 
