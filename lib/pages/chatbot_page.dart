@@ -490,7 +490,13 @@ void _confirmStartNewSession() async {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
+    return GestureDetector(
+  behavior: HitTestBehavior.translucent,
+  onTap: () {
+    _removeCopyOverlay(); // يمسح الزر إذا ضغطت برا
+  },
+  child: Scaffold(
+
       resizeToAvoidBottomInset: true,
 
       appBar: AppBar(
@@ -907,6 +913,7 @@ if (showScrollButton)
                 },
               ),
       
+    ),
     );
   }
 
@@ -914,7 +921,7 @@ void _showCopyButton(BuildContext context, Offset position, String message) {
   _removeCopyOverlay(); 
   _copyOverlay = OverlayEntry(
     builder: (context) => Positioned(
-      left: position.dx + 95,
+      left: position.dx + 100,
       top: position.dy - 45,
       child: Material(
         color: Colors.transparent,
