@@ -2,13 +2,13 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <solid android:color="#FFFFFF" /> <!-- اللون الأبيض للخلفية -->
+    <solid android:color="#FFFFFF" /> 
 
-    <corners android:radius="16dp" /> <!-- الأطراف البيضاوية -->
+    <corners android:radius="16dp" /> 
     <solid android:color="#CCFFFFFF" />
     
     <stroke
         android:width="2dp"
-        android:color="#DDDDDD" /> <!-- حواف رمادية فاتحة -->
+        android:color="#DDDDDD" /> 
 
 </shape>

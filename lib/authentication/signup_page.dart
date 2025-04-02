@@ -101,12 +101,12 @@ class _SignUpPageState extends State<SignUpPage> {
       _showTopNotification('You must be at least 13 years old to sign up.');
       return;
     } else if (age < 18) {
-      // المراهقون بين 13 و17 سنة
-      _showTeenagerDialog(); // عرض نافذة للمراهقين
+      //for ten between 13 and 17
+      _showTeenagerDialog();
       return;
     }
 
-    // متابعة التسجيل إذا كان العمر 18 أو أكبر
+    //if the user 18 or bigger
     _registerUser();
   }
 }
@@ -123,14 +123,11 @@ void _registerUser() async {
 
     User? user = userCredential.user;
     if (user != null) {
-      // إضافة بيانات المستخدم إلى Firestore
     
 
-      // إرسال بريد التحقق
       if (!user.emailVerified) {
         await user.sendEmailVerification();
 
-        // الانتقال إلى صفحة التحقق
         Navigator.pushReplacement(
   context,
   MaterialPageRoute(
@@ -160,7 +157,6 @@ void _registerUser() async {
   }
 }
 
-// نافذة تأكيد للمراهقين
 Future<void> _showTeenagerDialog() async {
 
   
@@ -227,7 +223,7 @@ Future<void> _showTeenagerDialog() async {
   @override
   Widget build(BuildContext context) {
     final screenHeight =
-        MediaQuery.of(context).size.height; // Get screen height
+        MediaQuery.of(context).size.height; 
     final bottomsize = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       body: SingleChildScrollView(
@@ -291,7 +287,7 @@ Future<void> _showTeenagerDialog() async {
                                   } else if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
                                     return 'Name must contain only letters and spaces'; // إذا كان الحقل يحتوي على أرقام أو رموز
                                   }
-                                  return null; // إذا كان الإدخال صحيحًا
+                                  return null; 
                                 },
                               ),
 
