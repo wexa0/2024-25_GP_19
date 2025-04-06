@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application/pages/guest_home.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -15,6 +15,12 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 final GlobalKey<TaskPageState> taskPageKey = GlobalKey<TaskPageState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown, // اختياري، لو تبي يقبل رأسي مقلوب
+  ]);
+
 
   // Initialize Firebase
   await _initializeFirebase();
@@ -86,21 +92,17 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show loading spinner while waiting for auth state
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasData) {
           final user = FirebaseAuth.instance.currentUser;
 
-          // User is logged in, navigate to HomePage
   if (user != null && user.emailVerified) {
-            return HomePage(); // إذا كان البريد الإلكتروني مُفعّل، الانتقال إلى الصفحة الرئيسية
+            return HomePage(); 
           }
           else {
-          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
           return const WelcomePage();
         } 
         } else {
-          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
           return const WelcomePage();
         }
       },
