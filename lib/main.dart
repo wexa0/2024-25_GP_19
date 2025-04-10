@@ -1,18 +1,24 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application/pages/guest_home.dart';
 import 'package:flutter_application/welcome_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:flutter_application/services/notification_handler.dart'; // Import the new utility
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_application/services/notification_handler.dart';
 import 'package:flutter_application/pages/task_page.dart';
 import 'package:flutter_application/pages/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application/services/notification_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 final GlobalKey<TaskPageState> taskPageKey = GlobalKey<TaskPageState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +31,7 @@ void main() async {
   // Initialize Notifications
   await _initializeNotifications();
 
+  
   runApp(const MyApp());
 }
 
@@ -64,6 +71,7 @@ Future<void> _initializeNotifications() async {
   );
 }
 
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -79,6 +87,10 @@ class MyApp extends StatelessWidget {
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
+  Future<void> _initializeUserNotifications() async {
+    await NotificationService.scheduleDailyMotivationalNotification();
+    await NotificationService.scheduleCombinedReminderForIncompleteTasks();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,21 +98,16 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show loading spinner while waiting for auth state
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasData) {
           final user = FirebaseAuth.instance.currentUser;
-
-          // User is logged in, navigate to HomePage
-  if (user != null && user.emailVerified) {
-            return HomePage(); // إذا كان البريد الإلكتروني مُفعّل، الانتقال إلى الصفحة الرئيسية
+          if (user != null && user.emailVerified) {
+            _initializeUserNotifications();
+            return HomePage();
+          } else {
+            return const WelcomePage();
           }
-          else {
-          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
-          return const WelcomePage();
-        } 
         } else {
-          // إذا لم يتم تسجيل الدخول، الانتقال إلى صفحة الترحيب
           return const WelcomePage();
         }
       },
