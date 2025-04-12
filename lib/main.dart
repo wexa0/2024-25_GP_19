@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application/pages/guest_home.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/welcome_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -21,6 +21,12 @@ final GlobalKey<TaskPageState> taskPageKey = GlobalKey<TaskPageState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown, // اختياري، لو تبي يقبل رأسي مقلوب
+  ]);
+
 
   // Initialize Firebase
   await _initializeFirebase();

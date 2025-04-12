@@ -29,76 +29,107 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 Timer? _emailCheckTimer;
 int _remainingTime = 300; 
  Timer? _countdownTimer;
+bool _canResend = false;
+int _resendCooldown = 60; 
+Timer? _resendTimer;
 
   @override
   void initState() {
     super.initState();
    _startEmailVerificationCheck();
        _startCountdownTimer();
+    _startResendCooldown();
 
 
   }
 
-   void _startEmailVerificationCheck() {
-    _emailCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-      try {
-        await widget.user.reload();
-        final User? updatedUser = FirebaseAuth.instance.currentUser;
+void _startEmailVerificationCheck() {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
-        if (updatedUser != null && updatedUser.emailVerified) {
-          timer.cancel();
-            _countdownTimer?.cancel(); 
-          _onEmailVerified(updatedUser);
-        }
-      } catch (e) {
-        print('Error checking email verification: $e');
+  if (currentUser == null) {
+    print('No user is signed in. Cannot start verification check.');
+    return;
+  }
+
+  _emailCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    try {
+      await currentUser.reload();
+      final User? updatedUser = FirebaseAuth.instance.currentUser;
+
+      if (updatedUser != null && updatedUser.emailVerified) {
+        timer.cancel();
+        _countdownTimer?.cancel();
+        _onEmailVerified(updatedUser);
       }
-    });
-  }
+    } catch (e) {
+      print('Error checking email verification: $e');
+    }
+  });
+}
+
 
    void _handleTimeout() async {
   try {
-    await widget.user.delete(); // حذف الحساب من Firebase Authentication
+        await _reauthenticateAndDelete(widget.user); 
+
     showDialog(
       context: context,
-      barrierDismissible: false, // يمنع إغلاق المربع بالضغط خارج المربع
+      barrierDismissible: false, 
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFFF5F7F8), // لون الخلفية
+          backgroundColor: const Color(0xFFF5F7F8), 
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0), // شكل الحواف
+            borderRadius: BorderRadius.circular(16.0), 
           ),
           title: const Text(
             'Timeout',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black, // لون النص
+              color: Colors.black, 
             ),
           ),
           content: const Text(
             'Verification timeout. Registration failed.',
             style: TextStyle(
               fontSize: 16,
-              color: Color(0xFF545454), // لون النص
-              fontWeight: FontWeight.w500, // وزن النص
+              color: Color(0xFF545454), 
+              fontWeight: FontWeight.w500, 
             ),
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // إغلاق مربع الحوار
+                onPressed: () async {
+
+                                Navigator.pop(context); 
+  try {
+    final AuthCredential credential = EmailAuthProvider.credential(
+      email: widget.userData['email'],
+      password: widget.userData['password'],
+    );
+
+    await widget.user.reauthenticateWithCredential(credential);
+    await widget.user.delete();
+    print('User deleted after pressing Leave.');
+  } catch (e) {
+    print('Error deleting user after pressing Leave: $e');
+  }
+                 Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => SignUpPage()), 
+      (route) => false,
+    );
              
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF79A3B7), // لون الزر
+                backgroundColor: const Color(0xFF79A3B7), 
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0), // شكل الحواف
+                  borderRadius: BorderRadius.circular(8.0), 
                 ),
               ),
               child: const Text(
                 'OK',
                 style: TextStyle(
-                  color: Colors.white, // لون النص داخل الزر
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -114,7 +145,7 @@ int _remainingTime = 300;
 
   
    Future<void> _onEmailVerified(User user) async {
-    await _saveUserData(user); // حفظ بيانات المستخدم
+    await _saveUserData(user); 
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -124,20 +155,15 @@ int _remainingTime = 300;
   }
 Future<void> _reauthenticateAndDelete(User user) async {
   try {
-    final AuthCredential credential = EmailAuthProvider.credential(
-      email: user.email!,
-      password: widget.userData['password'],     );
+      final AuthCredential credential = EmailAuthProvider.credential(
+      email: widget.userData['email'], 
+      password: widget.userData['password'],
+    );
 
-    // إعادة تسجيل الدخول
     await user.reauthenticateWithCredential(credential);
 
-    // حذف الحساب بعد إعادة تسجيل الدخول
     await user.delete();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => SignUpPage()), 
-      (route) => false,
-    );
+   
   } catch (e) {
     print('Error during reauthentication and deletion: $e');
     _showTopNotification('Failed to delete account. Please try again.');
@@ -148,6 +174,8 @@ Future<void> _reauthenticateAndDelete(User user) async {
   void dispose() {
     _emailCheckTimer?.cancel(); 
      _countdownTimer?.cancel();
+       _resendTimer?.cancel(); 
+
     super.dispose();
   }
 
@@ -196,9 +224,17 @@ Future<void> _saveUserData(User user) async {
 }
 
 void _resendVerificationEmail() async {
+
+    if (!_canResend) {
+    _showTopNotification('Please wait $_resendCooldown seconds before resending.');
+    return;
+  }
+
   if (mounted) {
     setState(() {
-      isLoading = true;
+       isLoading = true;
+    _canResend = false;
+    _startResendCooldown();
     });
   }
 
@@ -212,12 +248,14 @@ void _resendVerificationEmail() async {
     if (mounted) {
       _showTopNotification('Verification email has been resent.');
     }
-  } catch (e) {
+   } catch (e) {
     print('Error resending verification email: $e');
-    if (mounted) {
-      _showTopNotification('Failed to resend the verification email. Please try again later.');
-    }
-  } finally {
+ if (e is FirebaseAuthException && e.code == 'too-many-requests') {
+    _showTopNotification('Too many requests. Please wait and try again later.');
+  } else {
+    _showTopNotification('Failed to resend the verification email. Please try again later.');
+  }
+} finally {
     if (mounted) {
       setState(() {
         isLoading = false;
@@ -226,12 +264,33 @@ void _resendVerificationEmail() async {
   }
 }
 
+void _startResendCooldown() {
+  _resendCooldown = 60;
+
+  Future.delayed(Duration(seconds: 1), () {
+    _resendTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_resendCooldown > 0) {
+        setState(() {
+          _resendCooldown--;
+        });
+      } else {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _canResend = true;
+          });
+        }
+      }
+    });
+  });
+}
+
 
 
 
   void _showTopNotification(String message) {
     final overlayState =
-        Navigator.of(context).overlay; // Access the root navigator's overlay
+        Navigator.of(context).overlay; 
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: MediaQuery.of(context).size.height * 0.1, // Top position
@@ -266,14 +325,103 @@ void _resendVerificationEmail() async {
     });
   }
 
+void _showExitVerificationDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: const Color(0xFFF5F7F8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        title: const Text(
+          'Are you sure?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        content: const Text(
+          'Leaving this page now will cancel your email verification and fail the registration process.',
+          style: TextStyle(
+            fontSize: 16,
+            color: Color(0xFF545454),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+             style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: Color(0xFF79A3B7)),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: Color(0xFF79A3B7),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+    try {
+      final AuthCredential credential = EmailAuthProvider.credential(
+        email: widget.userData['email'],
+        password: widget.userData['password'],
+      );
+
+      await widget.user.reauthenticateWithCredential(credential);
+      await widget.user.delete();
+      print('User deleted after pressing Leave.');
+    } catch (e) {
+      print('Error deleting user after pressing Leave: $e');
+      _showTopNotification('Failed to delete account. Please try again.');
+    }
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SignUpPage(),
+                ),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF79A3B7),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+            child: const Text(
+              'Leave',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
 
 
   @override
   Widget build(BuildContext context) {
      final minutes = (_remainingTime ~/ 60).toString().padLeft(2, '0');
     final seconds = (_remainingTime % 60).toString().padLeft(2, '0');
-
-    return Scaffold(
+return WillPopScope(
+  onWillPop: () async {
+    _showExitVerificationDialog();
+    return false; 
+  },
+  child: Scaffold(
       appBar: AppBar(
         title: const Text(
           'Email Verification',
@@ -285,8 +433,8 @@ void _resendVerificationEmail() async {
         ),
         backgroundColor: const Color.fromARGB(255, 226, 231, 234),
          elevation: 0,
-        centerTitle: true, // Center the title
-        automaticallyImplyLeading: false, // Remove the back arrow
+        centerTitle: true, 
+        automaticallyImplyLeading: false, 
       ),
             backgroundColor: const Color(0xFFF5F5F5),
 
@@ -310,7 +458,7 @@ void _resendVerificationEmail() async {
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
-            fontSize: 25
+            fontSize: 23
           ),
           textAlign: TextAlign.center,
         ),
@@ -318,19 +466,19 @@ void _resendVerificationEmail() async {
       RichText(
         textAlign: TextAlign.center,
         text: TextSpan(
-          style: const TextStyle(fontSize: 15, color: Colors.black), // النمط الافتراضي
+          style: const TextStyle(fontSize: 14, color: Colors.black), 
           children: [
             const TextSpan(
               text: "A verification link has been sent to ",
-              style: TextStyle(fontWeight: FontWeight.normal), // خط عادي
+              style: TextStyle(fontWeight: FontWeight.normal), 
             ),
             TextSpan(
-              text: widget.user.email, // الإيميل
-              style: const TextStyle(fontWeight: FontWeight.bold), // خط عريض
+              text: widget.user.email, 
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const TextSpan(
               text: ". Please click on the link to activate your account.",
-              style: TextStyle(fontWeight: FontWeight.normal), // خط عادي
+              style: TextStyle(fontWeight: FontWeight.normal), 
             ),
           ],
         ),
@@ -355,33 +503,36 @@ void _resendVerificationEmail() async {
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
-                        fontSize: 15.5,
+                        fontSize: 12.5,
                       ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Didn't receive an email? ",
+                          "Didn't receive an email?",
                           style: TextStyle(
                             color: Colors.black,
                             fontWeight: FontWeight.normal,
-                            fontSize: 15.5,
+                            fontSize: 12.5,
                           ),
                         ),
-                        TextButton(
-                          onPressed: _resendVerificationEmail,
-                          child: const Text(
-                            'Resend the email',
-                            style: TextStyle(
-                              color: const Color(0xFF3B7292),
+                       TextButton(
+  onPressed: _canResend ? _resendVerificationEmail : null,
+  child: Text(
+    _canResend
+        ? 'Resend the email'
+        : 'Wait $_resendCooldown second to resend',
+    style: TextStyle(
+      color: const Color(0xFF3B7292),
+      fontWeight: FontWeight.bold,
+      fontSize: 12.5,
+      decoration:
+          _canResend ? TextDecoration.underline : TextDecoration.none,
+    ),
+  ),
+),
 
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15.5,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
               const SizedBox(height: 10),
@@ -390,6 +541,7 @@ void _resendVerificationEmail() async {
         ],
       ),
     ),
+  )
   );
 }
 }

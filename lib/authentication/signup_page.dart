@@ -106,7 +106,7 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    //if the user 18 or bigger
+    // متابعة التسجيل إذا كان العمر 18 أو أكبر
     _registerUser();
   }
 }
@@ -157,6 +157,7 @@ void _registerUser() async {
   }
 }
 
+// نافذة تأكيد للمراهقين
 Future<void> _showTeenagerDialog() async {
 
   
