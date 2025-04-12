@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/models/BottomNavigationBar.dart';
 import 'package:flutter_application/models/GuestBottomNavigationBar.dart';
+import 'package:flutter_application/welcome_page.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +23,8 @@ class ChatbotpageWidget extends StatefulWidget {
 bool isSpeaking = false;
 String? currentlySpokenText;
 
-class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
+class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
+    with WidgetsBindingObserver {
   final FlutterTts flutterTts = FlutterTts();
   DateTime? currentSessionStart;
 
@@ -35,11 +38,11 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   Set<String> copiedMessages = {};
-  String _text = '';
   Map<String, bool> messageIsPlaying = {};
   DateTime? lastMessageDate;
   Map<String, String> typingMessages = {};
   List<DateTime> selectedDates = [];
+  Map<String, bool> showAllTasksByDate = {};
 
   Future<void> pickOneDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -64,6 +67,34 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
     setState(() {
       selectedDates.clear();
     });
+  }
+
+  Future<Map<DateTime, bool>> _fetchTasksStatus() async {
+    Map<DateTime, bool> tasksStatus = {};
+
+    var tasksSnapshot = await _firestore
+        .collection('Tasks')
+        .where('userID', isEqualTo: userID)
+        .get();
+
+    for (var doc in tasksSnapshot.docs) {
+      var data = doc.data();
+      DateTime taskDate = (data['date'] as Timestamp).toDate();
+
+      bool isCompleted = data['completionStatus'] == 1;
+
+      DateTime dayOnly = DateTime(taskDate.year, taskDate.month, taskDate.day);
+
+      if (!tasksStatus.containsKey(dayOnly)) {
+        tasksStatus[dayOnly] = true;
+      }
+
+      if (!isCompleted) {
+        tasksStatus[dayOnly] = false;
+      }
+    }
+
+    return tasksStatus;
   }
 
   void _pickMultipleDatesInDialog() async {
@@ -186,36 +217,46 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
     );
   }
 
-  final List<Map<String, dynamic>> suggestedQuestions = [
-    {
-      "image": "assets/images/task.png",
-      "text": "What do I have today?",
-      "color": Color(0xFF2C678E)
-    },
-    {
-      "image": "assets/images/productivity.png",
-      "text": "Give me a productivity tip!",
-      "color": Color(0xFF78A1BA)
-    },
-    {
-      "image": "assets/images/focus.png",
-      "text": "How can I stay focused?",
-      "color": Color(0xFF78A1BA)
-    },
-    {
-      "image": "assets/images/breakdown.png",
-      "text": "Help me to break\n down a big task?",
-      "color": Color(0xFF2C678E)
-    },
-  ];
+  late List<Map<String, dynamic>> suggestedQuestions;
 
   @override
   void initState() {
     super.initState();
+    isInChatbotPage = true;
+    WidgetsBinding.instance.addObserver(this);
     _speech = stt.SpeechToText();
     _fetchUserID().then((_) {
       checkSessionStatus();
     });
+    _fetchUserID().then((_) {
+      suggestedQuestions = [
+        {
+          "image": "assets/images/task.png",
+          "text": userID != null && userID!.startsWith("guest_")
+              ? "What can you help me with?"
+              : "What do I have today?",
+          "color": Color(0xFF2C678E)
+        },
+        {
+          "image": "assets/images/productivity.png",
+          "text": "Give me a productivity tip!",
+          "color": Color(0xFF78A1BA)
+        },
+        {
+          "image": "assets/images/focus.png",
+          "text": "How can I stay focused?",
+          "color": Color(0xFF78A1BA)
+        },
+        {
+          "image": "assets/images/breakdown.png",
+          "text": "Help me to break\n down a big task?",
+          "color": Color(0xFF2C678E)
+        },
+      ];
+
+      setState(() {});
+    });
+
     _fetchUserID();
     _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -229,6 +270,11 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
   }
 
   Future<void> checkSessionStatus() async {
+    if (userID != null && userID!.startsWith('guest_')) {
+      print("🚫 Guest user -> No session handling");
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedSessionStart = prefs.getString('sessionStart');
 
@@ -261,6 +307,34 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
       if (sinceStart.inHours >= 24) {
         await _showSessionExpiredDialog();
         return;
+      }
+    }
+  }
+
+  Timer? _exitTimer;
+  bool isInChatbotPage = true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
+      print('🚪 User left the app COMPLETELY');
+
+      if (userID != null && userID!.startsWith('guest_')) {
+        var chatDocs = await _firestore
+            .collection("ChatBot")
+            .where("userID", isEqualTo: userID)
+            .get();
+
+        for (var doc in chatDocs.docs) {
+          await doc.reference.delete();
+        }
+
+        print('🗑️ Deleted ChatBot messages for guest');
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.remove('guestUserID');
+        print('🗑️ Removed guestUserID from SharedPreferences');
       }
     }
   }
@@ -314,7 +388,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
       if (_isValidCodeUnit(codeUnit)) {
         buffer.writeCharCode(codeUnit);
       } else {
-        buffer.write('�'); 
+        buffer.write('�');
       }
     }
     return buffer.toString();
@@ -422,10 +496,27 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
   }
 
   Future<void> _fetchUserID() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     User? user = FirebaseAuth.instance.currentUser;
-    setState(() {
-      userID = user?.uid;
-    });
+
+    if (user == null) {
+      // هل موجود guest id محفوظ؟
+      String? savedGuestID = prefs.getString('guestUserID');
+
+      if (savedGuestID != null) {
+        userID = savedGuestID;
+        print('👻 Loaded existing guest userID: $userID');
+      } else {
+        userID = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+        await prefs.setString('guestUserID', userID!);
+        print('👻 Created new guest userID: $userID');
+      }
+    } else {
+      userID = user.uid;
+    }
+
+    setState(() {});
   }
 
   Future<void> _sendMessage([String? messageText]) async {
@@ -494,7 +585,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.white,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -515,8 +606,10 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                     fit: BoxFit.contain),
               ),
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
                 children: [
                   _sessionButton(
                     text: "Continue Previous Session",
@@ -529,15 +622,13 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
 
                       setState(() {
                         currentSessionStart = now;
-                        print("✅ Session renewed at: $currentSessionStart");
                       });
                       Navigator.of(context).pop();
                       _showTopNotification("Continuing previous session");
                     },
                   ),
-                  const SizedBox(width: 1),
                   _sessionButton(
-                    text: "    Start new session    ",
+                    text: "        Start New Session       ",
                     onPressed: () async {
                       var chatDocs = await _firestore
                           .collection("ChatBot")
@@ -636,7 +727,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () {
-        _removeCopyOverlay(); 
+        _removeCopyOverlay();
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
@@ -741,6 +832,55 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                     thickness: 0.2,
                   ),
                 ),
+                if (userID != null && userID!.startsWith('guest_'))
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFE0B2),
+                    ),
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text:
+                                "⚠️ You're in guest mode. The session won't be saved until you ",
+                            style: TextStyle(
+                              color: Color(0xFF6A3805),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextSpan(
+                            text: "register",
+                            style: const TextStyle(
+                              color: Color(0xFF6A3805),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => WelcomePage()),
+                                );
+                              },
+                          ),
+                          const TextSpan(
+                            text: ".",
+                            style: TextStyle(
+                              color: Color(0xFF6A3805),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
@@ -904,10 +1044,98 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                         } else if (isValidUtf16(response)) {
                           Widget? extraContent;
 
+                          if (actionSuggestion == "registerNow") {
+                            extraContent = GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 255, 255, 255),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(16.0),
+                                      ),
+                                      title: const Text(
+                                        'Sign In & Explore!',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      content: const Text(
+                                        'Ready to view and manage your tasks? Sign in or create an account to enjoy the full experience!',
+                                      ),
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              side: const BorderSide(
+                                                  color: Color(0xFF79A3B7)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Cancel',
+                                            style: TextStyle(
+                                                color: Color(0xFF79A3B7)),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      WelcomePage()),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color(0xFF79A3B7),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Join Now',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C678E),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  "🔐 Join Now to View Tasks",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
                           if (actionSuggestion == "openCalendar") {
                             extraContent = GestureDetector(
                               onTap: () {
-                                _pickMultipleDatesInDialog(); 
+                                _pickMultipleDatesInDialog();
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -927,6 +1155,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                               ),
                             );
                           }
+
                           messageWidgets.add(
                             _buildChatBubble(
                               message: response,
@@ -1133,7 +1362,8 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
   }
 
   List<InlineSpan> _parseBoldText(String text) {
-    final regex = RegExp(r'\*\*(.*?)\*\*');
+    final regex = RegExp(r'\*\* ?(.*?) ?\*\*'); // يسمح بمسافات قبل/بعد النجمتين
+
     final spans = <InlineSpan>[];
     int start = 0;
 
@@ -1158,15 +1388,14 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
       }
     } catch (e) {
       print("❌ Error while parsing text: $e");
-      return [TextSpan(text: "")]; 
+      return [TextSpan(text: "")];
     }
 
     return spans;
   }
 
   String cleanText(String input) {
-    return input.replaceAll(
-        RegExp(r'[^\u0000-\uFFFF]'), '');
+    return input.replaceAll(RegExp(r'[^\u0000-\uFFFF]'), '');
   }
 
   void _removeCopyOverlay() {
@@ -1184,6 +1413,229 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
     Widget? extraContent,
   }) {
     bool isBot = !isUser && !isLoading;
+    bool isTaskList = message.contains("📝 **Task Name:");
+
+    List<String> allTaskBlocks = [];
+
+    if (isBot && isTaskList) {
+      String introText = "";
+      Map<String, List<String>> tasksByDate = {};
+
+      final lines = message.trim().split('\n');
+      if (lines.isNotEmpty && lines.first.trim().startsWith("🧠")) {
+        introText = lines.first.trim();
+      }
+
+      List<String> sections = message.split("📅 **Tasks for ");
+
+      for (int s = 1; s < sections.length; s++) {
+        String section = sections[s];
+        if (section.trim().isEmpty) continue;
+
+        final dateEndIndex = section.indexOf("**");
+        if (dateEndIndex == -1) continue;
+
+        String date = section.substring(0, dateEndIndex).trim();
+        String rest = section.substring(dateEndIndex + 2).trim();
+
+        List<String> tasks = rest.split("📝 **Task Name:**");
+
+        for (int i = 1; i < tasks.length; i++) {
+          String block = tasks[i].trim();
+          String taskName = block.split('\n').first.trim();
+          String taskDetails = block.split('\n').skip(1).join('\n').trim();
+
+          tasksByDate.putIfAbsent(date, () => []);
+          tasksByDate[date]!.add("""
+$taskName
+$taskDetails
+""");
+        }
+      }
+
+      int displayLimit = 10;
+
+      bool showAll = showAllTasksByDate['global'] ?? false;
+
+      List<String> allTasks = tasksByDate.values.expand((x) => x).toList();
+
+      List<String> visibleTasks =
+          showAll ? allTasks : allTasks.take(displayLimit).toList();
+
+      List<Widget> taskWidgets = [];
+
+      tasksByDate.forEach((date, tasks) {
+        var tasksForDate =
+            visibleTasks.where((task) => tasks.contains(task)).toList();
+
+        if (tasksForDate.isEmpty) return;
+
+        taskWidgets.addAll([
+          const SizedBox(height: 18),
+          Divider(color: Colors.grey.withOpacity(0.3), thickness: 0.8),
+          const SizedBox(height: 10),
+          SelectableText(
+            "📅 Tasks for $date",
+            style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2C3E50)),
+          ),
+          const SizedBox(height: 10),
+        ]);
+
+        taskWidgets.addAll(tasksForDate.map((taskBlock) {
+          String taskName =
+              taskBlock.split('\n')[0].replaceAll("📝 Task Name:", "").trim();
+          String details = taskBlock.split('\n').skip(1).join('\n');
+
+          return Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F8FA),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Theme(
+              data:
+                  Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: Tooltip(
+                message: '👀 Tap to show the task details',
+                preferBelow: false,
+                child: ExpansionTile(
+                  title: Text('$taskName'),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(13),
+                      child: SelectableText.rich(
+                        TextSpan(children: _parseBoldText(details)),
+                        style: const TextStyle(
+                            fontSize: 14, color: Color(0xFF455A64)),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList());
+      });
+      String getMotivationalMessage(String message) {
+        if (message.contains("It's today!")) {
+          return "🔥 It's today! Let's get things done step by step 💪 Remember: Start small, stay consistent ✨";
+        } else if (message.contains("Only one task")) {
+          return "🧐 Only one task for this day? That's totally fine! But maybe adding another tiny goal could boost your momentum 🚀";
+        } else if (message.contains("Nice and light schedule!")) {
+          return "✨ Nice and light schedule! Don't forget to celebrate every small win 🏆";
+        } else if (message.contains("Looking at your whole month")) {
+          return "📅 Wow! Looking at your whole month? That's a great way to plan ahead and avoid surprises 🔥";
+        } else {
+          return "👏 You're doing amazing organizing your tasks! Keep balancing between focus and rest 💡";
+        }
+      }
+
+      taskWidgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 17),
+          child: SelectableText(
+            getMotivationalMessage(message),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+        ),
+      );
+      if (tasksByDate.values.expand((x) => x).length > displayLimit &&
+          !showAll) {
+        taskWidgets.add(
+          Column(
+            children: [
+              const SizedBox(height: 9),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAllTasksByDate['global'] = true;
+                    });
+                  },
+                  child: const Text(
+                    "Show more ▼",
+                    style: TextStyle(
+                      color: Color(0xFF2C678E),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (showAll &&
+          tasksByDate.values.expand((x) => x).length > displayLimit) {
+        taskWidgets.add(
+          Column(
+            children: [
+              const SizedBox(height: 9),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAllTasksByDate['global'] = false;
+                    });
+                  },
+                  child: const Text(
+                    "Show less ▲",
+                    style: TextStyle(
+                      color: Color(0xFF2C678E),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEF6FA),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (introText.isNotEmpty) const SizedBox(height: 10),
+              SelectableText(
+                introText,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF2C3E50),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (introText.isNotEmpty) const SizedBox(height: 10),
+              ...taskWidgets,
+            ],
+          ),
+        ),
+      );
+    }
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -1193,8 +1645,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
         children: [
           Builder(
             builder: (messageContext) {
-              final GlobalKey msgKey =
-                  GlobalKey(); 
+              final GlobalKey msgKey = GlobalKey();
 
               return Column(
                 crossAxisAlignment:
@@ -1203,8 +1654,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                   InkWell(
                     onLongPress: isUser
                         ? () {
-                            _showCopyButton(
-                                context, message, msgKey); 
+                            _showCopyButton(context, message, msgKey);
                           }
                         : null,
                     child: Container(
@@ -1248,7 +1698,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                                     typingMessages[message] ?? message;
                                 if (!isValidUtf16(textToShow)) {
                                   print("❌ Skipping invalid UTF-16 message");
-                                  return const SizedBox.shrink(); 
+                                  return const SizedBox.shrink();
                                 }
 
                                 try {
@@ -1276,8 +1726,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
                                 } catch (e) {
                                   print(
                                       "⚠️ Ignored display error in _buildChatBubble: $e");
-                                  return const SizedBox
-                                      .shrink(); 
+                                  return const SizedBox.shrink();
                                 }
                               },
                             ),
@@ -1350,7 +1799,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
   Future<void> _simulateTyping(String message) async {
     if (!isValidUtf16(message)) {
       print("⚠️ Skipping malformed message due to invalid UTF-16.");
-      return; 
+      return;
     }
 
     String displayed = "";
@@ -1368,83 +1817,10 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget> {
     }
   }
 
-  Widget _buildBotMessage(String message, double screenWidth) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Stack(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 24), // Space for copy button
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFC7D9E1),
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(24),
-                topLeft: Radius.circular(0),
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            constraints: BoxConstraints(
-              maxWidth: screenWidth * 0.7,
-            ),
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color.fromRGBO(48, 52, 55, 1),
-              ),
-            ),
-          ),
-
-          // ✅ Copy button in fixed position
-          Positioned(
-            top: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: message));
-                _showTopNotification("Copied to clipboard!");
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.copy, size: 16, color: Colors.black54),
-                    SizedBox(width: 6),
-                    Text(
-                      "Copy",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   void dispose() {
+    isInChatbotPage = false; 
+    WidgetsBinding.instance.removeObserver(this);
     flutterTts.stop();
     _removeCopyOverlay();
     _scrollController.dispose();
