@@ -101,12 +101,12 @@ class _SignUpPageState extends State<SignUpPage> {
       _showTopNotification('You must be at least 13 years old to sign up.');
       return;
     } else if (age < 18) {
-      //for ten between 13 and 17
-      _showTeenagerDialog();
+      // المراهقون بين 13 و17 سنة
+      _showTeenagerDialog(); // عرض نافذة للمراهقين
       return;
     }
 
-    //if the user 18 or bigger
+    // متابعة التسجيل إذا كان العمر 18 أو أكبر
     _registerUser();
   }
 }
@@ -123,11 +123,14 @@ void _registerUser() async {
 
     User? user = userCredential.user;
     if (user != null) {
+      // إضافة بيانات المستخدم إلى Firestore
     
 
+      // إرسال بريد التحقق
       if (!user.emailVerified) {
         await user.sendEmailVerification();
 
+        // الانتقال إلى صفحة التحقق
         Navigator.pushReplacement(
   context,
   MaterialPageRoute(
@@ -137,7 +140,9 @@ void _registerUser() async {
         'name': _nameController.text.trim(),
         'email': user.email,
         'dateOfBirth': _dobController.text.trim(), 
-        'password': _passwordController.text.trim(), 
+        'password': _passwordController.text.trim(),
+        'level':1,
+        'point':0, 
       },
     ),
   ),
@@ -157,6 +162,7 @@ void _registerUser() async {
   }
 }
 
+// نافذة تأكيد للمراهقين
 Future<void> _showTeenagerDialog() async {
 
   
@@ -223,7 +229,7 @@ Future<void> _showTeenagerDialog() async {
   @override
   Widget build(BuildContext context) {
     final screenHeight =
-        MediaQuery.of(context).size.height; 
+        MediaQuery.of(context).size.height; // Get screen height
     final bottomsize = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
       body: SingleChildScrollView(
@@ -287,7 +293,7 @@ Future<void> _showTeenagerDialog() async {
                                   } else if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
                                     return 'Name must contain only letters and spaces'; // إذا كان الحقل يحتوي على أرقام أو رموز
                                   }
-                                  return null; 
+                                  return null; // إذا كان الإدخال صحيحًا
                                 },
                               ),
 

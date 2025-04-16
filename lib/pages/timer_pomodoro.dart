@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application/Classes/SubTask';
+import 'package:flutter_application/Classes/Task';
 import 'package:flutter_application/pages/calender_page.dart';
 import 'package:flutter_application/pages/task_page.dart'; // Firestore import
 import 'package:audioplayers/audioplayers.dart'; //audio import
@@ -98,6 +100,12 @@ class _TimerPageState extends State<TimerPomodoro> {
     'Flowing Water',
   ];
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  int userPoints = 0;
+  int userLevel = 1;
+  String? userID;
+
+  
   // Helper function to format time as mm:ss
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
@@ -831,15 +839,35 @@ ElevatedButton(
     }
   }
 
-  // Function to update Firestore when task is completed
+// Function to update Firestore when task is completed
  Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  DateTime? completionDate = DateTime.now(); // Capture completion timestamp
 
   if (taskId == subTaskID) {
-    await firestore
-        .collection('Task')
-        .doc(taskId)
-        .update({'completionStatus': 2});
+    // ✅ Mark Task as Completed
+    await firestore.collection('Task').doc(taskId).update({
+      'completionStatus': 2,
+      'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
+    });
+
+
+    // ✅ Assign Task Points
+    DocumentSnapshot taskDoc = await firestore.collection('Task').doc(taskId).get();
+    if (taskDoc.exists) {
+      Task task = Task(
+        taskID: taskId,
+        title: taskDoc['title'],
+        scheduledDate: (taskDoc['scheduledDate'] as Timestamp).toDate(),
+        priority: taskDoc['priority'],
+        reminder: [],
+        timer: DateTime.now(),
+        note: taskDoc['note'],
+        completionStatus: 2,
+        userID: taskDoc['userID'],
+      );
+      await assignTaskPoints(task);
+    }
 
     QuerySnapshot subtasksSnapshot = await firestore
         .collection('SubTask')
@@ -847,27 +875,31 @@ ElevatedButton(
         .get();
 
     for (var subtaskDoc in subtasksSnapshot.docs) {
-      await subtaskDoc.reference.update({'completionStatus': 1});
+      await subtaskDoc.reference.update({
+        'completionStatus': 1,
+        'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
+      });
     }
   } else {
-    await firestore
-        .collection('SubTask')
-        .doc(subTaskID)
-        .update({'completionStatus': 1});
+    // ✅ Update Subtask Completion Status
+    await firestore.collection('SubTask').doc(subTaskID).update({
+      'completionStatus': 1,
+      'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
+    });
 
     QuerySnapshot subtasksSnapshot = await firestore
         .collection('SubTask')
         .where('taskID', isEqualTo: taskId)
         .get();
 
-    // Ensure allSubtasksComplete and anySubtaskComplete handle null or missing data
+    // ✅ Check if all subtasks are completed
     bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
-      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
+      var data = doc.data() as Map<String, dynamic>?;
       return data != null && data['completionStatus'] == 1;
     });
 
     bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
-      var data = doc.data() as Map<String, dynamic>?; // Safely cast to Map
+      var data = doc.data() as Map<String, dynamic>?;
       return data != null && data['completionStatus'] == 1;
     });
 
@@ -880,10 +912,249 @@ ElevatedButton(
       newTaskStatus = 0;
     }
 
-    await firestore
-        .collection('Task')
-        .doc(taskId)
-        .update({'completionStatus': newTaskStatus});
+    await firestore.collection('Task').doc(taskId).update({
+      'completionStatus': newTaskStatus,
+      if (newTaskStatus == 2) 'completionDate': Timestamp.fromDate(completionDate),
+    });
+
+    // ✅ Assign Subtask Points
+    DocumentSnapshot subtaskDoc = await firestore.collection('SubTask').doc(subTaskID).get();
+    if (subtaskDoc.exists) {
+      DocumentSnapshot taskDoc = await firestore.collection('Task').doc(taskId).get();
+      if (taskDoc.exists) {
+        Task task = Task(
+          taskID: taskId,
+          title: taskDoc['title'],
+          scheduledDate: (taskDoc['scheduledDate'] as Timestamp).toDate(),
+          priority: taskDoc['priority'],
+          reminder: [],
+          timer: DateTime.now(),
+          note: taskDoc['note'],
+          completionStatus: newTaskStatus,
+          userID: taskDoc['userID'],
+        );
+
+        SubTask subTask = SubTask(
+          subTaskID: subTaskID,
+          taskID: taskId,
+          title: subtaskDoc['title'],
+          completionStatus: 1,
+        );
+
+        await assignSubtaskPoints(task, subTask);
+      }
+    }
+  }
+
+  // ✅ Update User Level
+  await updateLevel();
+}
+
+Future<void> assignTaskPoints(Task task) async {
+  if (userID == null) return;
+
+  try {
+    print("🔹 Starting assignTaskPoints for Task: ${task.taskID}");
+
+    double taskPoints = 10.0;
+    int priority = task.priority;
+    int newPoints = userPoints;
+
+    QuerySnapshot subtasksSnapshot = await _firestore
+        .collection('SubTask')
+        .where('taskID', isEqualTo: task.taskID)
+        .get();
+
+    int subtaskCount = subtasksSnapshot.docs.length;
+    if(subtaskCount>0){
+      // ✅ Count only **incomplete subtasks before completion**
+    int incompleteSubtasks = subtasksSnapshot.docs
+        .where((doc) =>
+            doc['completionStatus'] == null || doc['completionStatus'] != 1)
+        .length;
+
+    if (incompleteSubtasks > 0) {
+      double subtaskPoints = taskPoints / subtaskCount;
+      int awardedSubtaskPoints = (subtaskPoints * incompleteSubtasks).round();
+      newPoints += awardedSubtaskPoints;
+      print("✅ Added points for remaining incomplete subtasks: +$awardedSubtaskPoints");
+
+      // ✅ Ensure no points are lost due to rounding
+      int expectedTotal = (subtaskPoints * subtaskCount).round();
+      int actualTotal = awardedSubtaskPoints +
+          (subtaskCount - incompleteSubtasks) * subtaskPoints.round();
+
+      if (actualTotal < expectedTotal) {
+        int roundingFix = expectedTotal - actualTotal;
+        newPoints += roundingFix;
+        print("🛠 Fix applied: Adjusted for rounding error by adding +$roundingFix");
+      }
+        newPoints += 2;
+
+    }
+    }else {
+      // ✅ If no subtasks exist, award full task points
+      newPoints += taskPoints.toInt();
+      print("✅ No subtasks found. Awarded full task points: +${taskPoints.toInt()}");
+    }
+    
+
+    newPoints += (priority - 1); // Priority bonus
+
+    // ✅ Fetch completion date & scheduled date
+    DocumentSnapshot taskSnapshot =
+        await _firestore.collection('Task').doc(task.taskID).get();
+
+    if (taskSnapshot.exists && taskSnapshot['completionDate'] != null) {
+      DateTime completionDate =
+          (taskSnapshot['completionDate'] as Timestamp).toDate();
+      DateTime scheduledDate = task.scheduledDate;
+
+      // ✅ Only compare date (not time)
+      DateTime normalizedScheduledDate =
+          DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
+      DateTime normalizedCompletionDate =
+          DateTime(completionDate.year, completionDate.month, completionDate.day);
+
+      int dayDifference =
+          normalizedScheduledDate.difference(normalizedCompletionDate).inDays;
+
+      print("📅 Scheduled Date: $normalizedScheduledDate");
+      print("✅ Completion Date: $normalizedCompletionDate");
+      print("📊 Day Difference: $dayDifference");
+
+      if (dayDifference > 0) {
+        newPoints += dayDifference; // Add 1 point per early day
+        print("✅ Task completed EARLY! +$dayDifference points");
+      } else if (dayDifference < 0) {
+        int maxPenalty = newPoints > -dayDifference ? -dayDifference : newPoints;
+        newPoints -= maxPenalty; // Subtract 1 point per late day
+        print("⚠ Task completed LATE! -$maxPenalty points");
+      }
+    }
+
+    // ✅ Ensure points never drop below 0
+    if (newPoints < 0) newPoints = 0;
+
+    await _firestore.runTransaction((transaction) async {
+      DocumentReference userRef = _firestore.collection('User').doc(userID);
+      transaction.update(userRef, {'point': newPoints});
+    });
+
+    setState(() {
+      userPoints = newPoints;
+    });
+
+    await updateLevel();
+  } catch (e) {
+    print("Error in assignTaskPoints: $e");
+  }
+}
+
+
+Future<void> assignSubtaskPoints(Task task, SubTask subtask) async {
+  if (userID == null) return;
+
+  try {
+    double taskPoints = 10.0;
+    int newPoints = userPoints;
+
+    QuerySnapshot subtasksSnapshot = await _firestore
+        .collection('SubTask')
+        .where('taskID', isEqualTo: task.taskID)
+        .get();
+
+    int totalSubtasks = subtasksSnapshot.docs.length;
+
+    if (totalSubtasks > 0) {
+      double subtaskPoints = taskPoints / totalSubtasks;
+      newPoints += subtaskPoints.toInt();
+
+      bool allSubtasksCompleted = subtasksSnapshot.docs.every(
+          (doc) => doc['completionStatus'] != null && doc['completionStatus'] == 1);
+
+      // Fetch the parent task
+DocumentSnapshot taskSnapshot = await _firestore
+    .collection('Task')
+    .doc(task.taskID)
+    .get();
+
+  int taskCompletionStatus = taskSnapshot['completionStatus'];
+//if (allSubtasksCompleted && taskCompletionStatus != 2)
+  // Apply condition
+  if (allSubtasksCompleted ) {
+     if(totalSubtasks % 2 ==0)
+        newPoints += 2;
+      else
+        newPoints += 3;
+    //newPoints += 2;
+  }
+
+    } else {
+      newPoints += taskPoints.toInt();
+    }
+
+    // Check completion date against scheduled date
+    DocumentSnapshot subtaskSnapshot =
+        await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
+    if (subtaskSnapshot.exists && subtaskSnapshot['completionDate'] != null) {
+      DateTime completionDate =
+          (subtaskSnapshot['completionDate'] as Timestamp).toDate();
+      DateTime scheduledDate = task.scheduledDate;
+
+      int dayDifference = scheduledDate.difference(completionDate).inDays;
+      if (dayDifference > 0) {
+        newPoints += dayDifference; // Add 1 point per early day
+      } else if (dayDifference < 0) {
+        newPoints -= dayDifference.abs(); // Subtract 1 point per late day
+        if (newPoints < 0) newPoints = 0; // Ensure lowest score remains 0
+      }
+    }
+
+    await _firestore.collection('User').doc(userID).update({'point': newPoints});
+
+    setState(() {
+      userPoints = newPoints;
+    });
+
+    await updateLevel();
+  } catch (e) {
+    print("Error in assignSubtaskPoints: $e");
+  }
+}
+
+
+Future<void> updateLevel() async {
+  if (userID == null) return;
+
+  try {
+    int newLevel = 1;
+    int pointsRequired = 100;
+    int accumulatedPoints = 0;
+
+    while (userPoints >= accumulatedPoints + pointsRequired) {
+      accumulatedPoints += pointsRequired;
+      pointsRequired += 50;
+      newLevel++;
+    }
+
+    // ✅ Only update Firestore if the level has changed
+    if (newLevel != userLevel) {
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference userRef = _firestore.collection('User').doc(userID);
+        transaction.update(userRef, {'level': newLevel});
+      });
+
+      setState(() {
+        userLevel = newLevel;
+      });
+
+      print("🎉 Level Up! New Level: $newLevel");
+    } else {
+      print("ℹ️ Level remains the same: $newLevel");
+    }
+  } catch (e) {
+    print("Error in updateLevel: $e");
   }
 }
 
