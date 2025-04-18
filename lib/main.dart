@@ -24,7 +24,7 @@ void main() async {
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown, // اختياري، لو تبي يقبل رأسي مقلوب
+    DeviceOrientation.portraitDown, 
   ]);
 
 
