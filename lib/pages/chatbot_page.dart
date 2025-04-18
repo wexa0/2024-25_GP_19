@@ -12,6 +12,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:flutter_application/services/notification_handler.dart';
+
 
 class ChatbotpageWidget extends StatefulWidget {
   const ChatbotpageWidget({super.key});
@@ -997,6 +999,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
 
                         Timestamp? timestamp = msgData['timestamp'];
                         DateTime? messageDate = timestamp?.toDate();
+                        final actionType = msgData['actionType'] as String?;
 
                         if (lastMessageDate == null ||
                             messageDate?.day != lastMessageDate!.day ||
@@ -1155,6 +1158,10 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                               ),
                             );
                           }
+                          if (actionType == "Delete Task") {
+                            extraContent =
+                                handleDelete(response);
+                          }
 
                           messageWidgets.add(
                             _buildChatBubble(
@@ -1162,6 +1169,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                               isUser: false,
                               screenWidth: MediaQuery.of(context).size.width,
                               extraContent: extraContent,
+                              actionType: actionType, 
                             ),
                           );
                         } else {
@@ -1405,53 +1413,72 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
 
   OverlayEntry? _copyOverlay;
 
-  Widget _buildChatBubble({
-    required String message,
-    required bool isUser,
-    required double screenWidth,
-    bool isLoading = false,
-    Widget? extraContent,
-  }) {
-    bool isBot = !isUser && !isLoading;
-    bool isTaskList = message.contains("📝 **Task Name:");
+Widget _buildChatBubble({
+  required String message,
+  required bool isUser,
+  required double screenWidth,
+  bool isLoading = false,
+  Widget? extraContent,
+  String? actionType,
+}) {
+  bool isBot = !isUser && !isLoading;
+  bool isTaskList = message.contains("📝 **Task Name:");
+  bool isDeletePreview = message.contains("🗑️ Here are the matching tasks:");
 
-    List<String> allTaskBlocks = [];
+  // 🔁 Handle Delete Task separately with preview and buttons
+if (isBot && actionType == "Delete Task" && isDeletePreview) {
+return Align(
+alignment: Alignment.centerLeft,
+child: Container(
+margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+padding: const EdgeInsets.all(12),
+decoration: BoxDecoration(
+color: const Color(0xFFEEF6FA),
+borderRadius: BorderRadius.circular(18),
+),
+constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
+child: handleDelete(message),
+),
+);
+}
 
-    if (isBot && isTaskList) {
-      String introText = "";
-      Map<String, List<String>> tasksByDate = {};
+  // 🔁 Handle grouped task responses (View My Schedule)
+  if (isBot && isTaskList) {
+    String introText = "";
+    Map<String, List<String>> tasksByDate = {};
+    final lines = message.trim().split('\n');
 
-      final lines = message.trim().split('\n');
-      if (lines.isNotEmpty && lines.first.trim().startsWith("🧠")) {
-        introText = lines.first.trim();
-      }
+    if (lines.isNotEmpty && lines.first.trim().startsWith("🧠")) {
+      introText = lines.first.trim();
+    }
 
-      List<String> sections = message.split("📅 **Tasks for ");
+    List<String> sections = message.split("📅 **Tasks for ");
 
-      for (int s = 1; s < sections.length; s++) {
-        String section = sections[s];
-        if (section.trim().isEmpty) continue;
+    for (int s = 1; s < sections.length; s++) {
+      String section = sections[s];
+      if (section.trim().isEmpty) continue;
 
-        final dateEndIndex = section.indexOf("**");
-        if (dateEndIndex == -1) continue;
+      final dateEndIndex = section.indexOf("**");
+      if (dateEndIndex == -1) continue;
 
-        String date = section.substring(0, dateEndIndex).trim();
-        String rest = section.substring(dateEndIndex + 2).trim();
+      String date = section.substring(0, dateEndIndex).trim();
+      String rest = section.substring(dateEndIndex + 2).trim();
 
-        List<String> tasks = rest.split("📝 **Task Name:**");
+      List<String> tasks = rest.split("📝 **Task Name:**");
 
-        for (int i = 1; i < tasks.length; i++) {
-          String block = tasks[i].trim();
-          String taskName = block.split('\n').first.trim();
-          String taskDetails = block.split('\n').skip(1).join('\n').trim();
+      for (int i = 1; i < tasks.length; i++) {
+        String block = tasks[i].trim();
+        String taskName = block.split('\n').first.trim();
+        String taskDetails = block.split('\n').skip(1).join('\n').trim();
 
-          tasksByDate.putIfAbsent(date, () => []);
-          tasksByDate[date]!.add("""
+        tasksByDate.putIfAbsent(date, () => []);
+        tasksByDate[date]!.add("""
 $taskName
 $taskDetails
 """);
-        }
       }
+    }
+
 
       int displayLimit = 10;
 
@@ -1527,18 +1554,22 @@ $taskDetails
         }).toList());
       });
       String getMotivationalMessage(String message) {
-        if (message.contains("It's today!")) {
-          return "🔥 It's today! Let's get things done step by step 💪 Remember: Start small, stay consistent ✨";
-        } else if (message.contains("Only one task")) {
-          return "🧐 Only one task for this day? That's totally fine! But maybe adding another tiny goal could boost your momentum 🚀";
-        } else if (message.contains("Nice and light schedule!")) {
-          return "✨ Nice and light schedule! Don't forget to celebrate every small win 🏆";
-        } else if (message.contains("Looking at your whole month")) {
-          return "📅 Wow! Looking at your whole month? That's a great way to plan ahead and avoid surprises 🔥";
-        } else {
-          return "👏 You're doing amazing organizing your tasks! Keep balancing between focus and rest 💡";
-        }
-      }
+  if (message.contains("🗑️ Here are the matching tasks:")) {
+    return ""; // skip motivational text for delete preview
+  }
+  if (message.contains("It's today!")) {
+    return "🔥 It's today! Let's get things done step by step 💪 Remember: Start small, stay consistent ✨";
+  } else if (message.contains("Only one task")) {
+    return "🧐 Only one task for this day? That's totally fine! But maybe adding another tiny goal could boost your momentum 🚀";
+  } else if (message.contains("Nice and light schedule!")) {
+    return "✨ Nice and light schedule! Don't forget to celebrate every small win 🏆";
+  } else if (message.contains("Looking at your whole month")) {
+    return "📅 Wow! Looking at your whole month? That's a great way to plan ahead and avoid surprises 🔥";
+  } else {
+    return "👏 You're doing amazing organizing your tasks! Keep balancing between focus and rest 💡";
+  }
+}
+
 
       taskWidgets.add(
         Padding(
@@ -1816,10 +1847,292 @@ $taskDetails
       await Future.delayed(const Duration(milliseconds: 30));
     }
   }
+Widget handleDelete(String response) {
+   List<Widget> widgets = [];
+
+  // Step 1: Split by task sections
+  List<String> taskSections = response.split("📝 **Task Name:");
+
+  // Step 2: Handle intro
+  final hasTasks = taskSections.length > 1 &&
+    taskSections.skip(1).any((section) => section.trim().isNotEmpty);
+
+if (hasTasks) {
+  widgets.add(
+    const Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        "🗑️ Here are the matching tasks:",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF2C3E50),
+        ),
+      ),
+    ),
+  );
+}
+
+
+  // Step 3: Render each task
+  for (int i = 1; i < taskSections.length; i++) {
+    String block = taskSections[i].trim();
+    if (block.isEmpty) continue;
+
+    final lines = block.split('\n');
+    String taskName = lines.first.trim().replaceAll("**", "");
+    String taskDetails = lines.skip(1).takeWhile((line) => !line.contains("delete://")).join('\n').trim();
+
+    final deleteMatch = RegExp(r'\[❌ Delete this task\]\(delete:\/\/(.+?)\)').firstMatch(block);
+    String? taskId = deleteMatch?.group(1);
+
+    widgets.add(
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F8FA),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Theme(
+  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+  childrenPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          title: Text(
+            taskName,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: Color(0xFF2C3E50),
+            ),
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(13),
+              child: SelectableText.rich(
+                TextSpan(children: _parseBoldText(taskDetails)),
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF455A64),
+                ),
+              ),
+            ),
+            if (taskId != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: ElevatedButton.icon(
+  onPressed: () async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Prevent dismiss by tapping outside
+      builder: (BuildContext context) {
+  return AlertDialog(
+     backgroundColor: Colors.white,
+    title: const Text(
+      "Delete Task",
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+    ),
+    content: const Text(
+      "Are you sure you want to delete this task?\nThis action cannot be undone.",
+      style: TextStyle(fontSize: 14),
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    actions: [
+       OutlinedButton(
+        onPressed: () => Navigator.of(context).pop(false),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFBDBDBD)), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text(
+          "Cancel",
+          style: TextStyle(
+            color: Color(0xFF1976D2), 
+          ),
+        ),
+      ),
+      ElevatedButton(
+        onPressed: () => Navigator.of(context).pop(true),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFFE53935), 
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text("Delete"),
+      ),
+    ],
+  );
+}
+    );
+
+    if (confirmed == true) {
+      await deleteTaskById(taskId);
+      _showTopNotification("Task deleted ✅"); // Optional feedback
+    }
+  },
+  icon: const Icon(Icons.delete_outline, color: Colors.white),
+  label: const Text("Delete this task"),
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.redAccent,
+    foregroundColor: Colors.white,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+  ),
+),
+
+                ),
+              )
+          ],
+        ),
+        ),
+      ),
+    );
+  }
+  if (taskSections.length > 2) {
+  widgets.add(
+    Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                 backgroundColor: Colors.white,
+  title: const Text(
+    "Delete All Tasks",
+    style: TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 18,
+    ),
+  ),
+  content: const Text(
+    "Are you sure you want to delete all listed tasks?\nThis action cannot be undone.",
+    style: TextStyle(fontSize: 14),
+  ),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+  ),
+  actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  actions: [
+    OutlinedButton(
+        onPressed: () => Navigator.of(context).pop(false),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFBDBDBD)), 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text(
+          "Cancel",
+          style: TextStyle(
+            color: Color(0xFF1976D2),
+          ),
+        ),
+      ),
+      ElevatedButton(
+        onPressed: () => Navigator.of(context).pop(true),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFFE53935), 
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      child: const Text("Delete"),
+    ),
+  ],
+),
+
+            );
+
+            if (confirm == true) {
+              for (int i = 1; i < taskSections.length; i++) {
+                final match = RegExp(r'delete:\/\/(.+?)\)').firstMatch(taskSections[i]);
+                final taskId = match?.group(1);
+                if (taskId != null) {
+                  await deleteTaskById(taskId); //  This  handle subtasks + cancel notifications
+                }
+              }
+              _showTopNotification("All tasks deleted ✅");
+            }
+          },
+          icon: const Icon(Icons.delete_sweep_outlined),
+          label: const Text("Delete All Tasks"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.redAccent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: widgets,
+  );
+}
+
+Future<void> deleteTaskById(String taskId) async {
+  final firestore = FirebaseFirestore.instance;
+
+  try {
+    final taskDoc = await firestore.collection("Task").doc(taskId).get();
+
+    if (!taskDoc.exists) {
+      print("⚠️ Task not found: $taskId");
+      return;
+    }
+
+    final taskData = taskDoc.data()!;
+    final userId = taskData["userID"];
+
+    await NotificationHandler.cancelNotification(taskId);
+
+    final subtaskQuery = await firestore
+        .collection("SubTask")
+        .where("taskID", isEqualTo: taskId)
+        .get();
+
+    for (var subDoc in subtaskQuery.docs) {
+      await NotificationHandler.cancelNotification(subDoc.id); // cancel each subtask
+      await firestore.collection("SubTask").doc(subDoc.id).delete();
+    }
+
+    // ❌ Delete task itself
+    await firestore.collection("Task").doc(taskId).delete();
+
+    print("✅ Deleted task $taskId and its subtasks");
+
+  } catch (e) {
+    print("❌ Error deleting task: $e");
+  }
+}
+
+
+
 
   @override
   void dispose() {
-    isInChatbotPage = false; 
+    isInChatbotPage = false;
     WidgetsBinding.instance.removeObserver(this);
     flutterTts.stop();
     _removeCopyOverlay();

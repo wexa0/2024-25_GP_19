@@ -76,6 +76,8 @@ dependencies:
   toggle_switch: ^2.3.0
   streak_calendar: ^1.1.2
   liquid_progress_indicator_v2: ^0.5.0
+  sliver_tools: ^0.2.12
+  easy_sticky_header: ^1.1.1
 
 dev_dependencies:
   flutter_test:
