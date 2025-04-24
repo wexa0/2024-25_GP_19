@@ -19,7 +19,6 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    // تحقق من إذن Overlay عند بدء التطبيق
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
         val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -151,12 +150,6 @@ private fun checkAccessibilityPermission(): Boolean {
         val editor = sharedPreferences.edit()
         editor.remove("blockedApps")
         editor.apply()
-
-        Toast.makeText(
-            this,
-            "Blocking has been stopped. All apps are now accessible.",
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     private fun requestAccessibilityPermission() {

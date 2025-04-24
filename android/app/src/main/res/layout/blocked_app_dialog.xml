@@ -3,9 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#646464"
-    android:gravity="center"> <!-- محاذاة المحتوى إلى المنتصف -->
+    android:gravity="center"> 
 
-    <!-- المحتوى الرئيسي للنافذة -->
     <LinearLayout
         android:layout_width="280dp"
         android:layout_height="wrap_content"

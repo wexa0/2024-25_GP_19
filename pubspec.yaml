@@ -62,7 +62,11 @@ dependencies:
   installed_apps: ^1.5.2
   permission_handler: ^10.2.0
   device_apps: ^2.0.4
- 
+  speech_to_text: ^6.3.0
+  flutter_tts: ^3.6.3
+  crypto: ^3.0.3
+  multi_date_picker: ^0.0.1-beta.1
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -72,6 +76,8 @@ dependencies:
   toggle_switch: ^2.3.0
   streak_calendar: ^1.1.2
   liquid_progress_indicator_v2: ^0.5.0
+  sliver_tools: ^0.2.12
+  easy_sticky_header: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -81,7 +87,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logo2.png"
     
 
 
@@ -133,6 +139,10 @@ flutter:
     - assets/images/addTask.png
     - assets/images/viewProgress.png
     - assets/images/todayTask.png
+    - assets/images/focus.png
+    - assets/images/breakdown.png
+    - assets/images/task.png
+    - assets/images/productivity.png
     - assets/images/signedAllFeatures.gif
     - assets/images/signedHome.png
     - assets/images/signUpForFeatures.png
@@ -144,6 +154,7 @@ flutter:
     - assets/images/empty_list.png
     - assets/images/done.png
     - assets/images/logo.png
+    - assets/images/welcomeChatbot.png
     - assets/images/chatProfile.png
     - assets/sounds/countdown-timer.wav
     - assets/sounds/simple-notification.mp3
@@ -158,7 +169,7 @@ flutter:
     - assets/sounds/midnight.mp3
     - assets/sounds/sea-wave.mp3
     - assets/sounds/flowing-water.mp3
-
+    - assets/images/session_bot.png
 
     
 

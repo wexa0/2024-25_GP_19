@@ -20,6 +20,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 class AppBlockerService : AccessibilityService() {
+    
+   private fun getAppName(packageName: String): String {
+    return try {
+        val appInfo = packageManager.getApplicationInfo(packageName, 0)
+        packageManager.getApplicationLabel(appInfo).toString()
+    } catch (e: PackageManager.NameNotFoundException) {
+        Log.e("AppBlockerService", "Application not found for package: $packageName")
+        packageName
+    }
+}
 
   
     private val sharedPreferences by lazy {
@@ -31,23 +41,14 @@ class AppBlockerService : AccessibilityService() {
 
         val packageName = event.packageName.toString()
         val blockedApps = sharedPreferences.getStringSet("blockedApps", emptySet()) ?: emptySet()
-        
+        val appName = getAppName(packageName)
+
          if (blockedApps.contains(packageName) && !isDialogVisible) {
-        showBlockedAppDialog(packageName)
+        showBlockedAppDialog(appName)
     }
-        // الحصول على اسم التطبيق
-       // الحصول على اسم التطبيق
-        val appName = try {
-        packageManager.getApplicationLabel(
-                packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-            ).toString()
-        } catch (e: PackageManager.NameNotFoundException) {
-            Log.e("AppBlockerService", "Application not found for package: $packageName")
-            packageName // Fallback to package name if the app name cannot be retrieved
-        }
+       
 
 
-        // إذا كانت الحزمة موجودة ضمن التطبيقات المحظورة
         if (blockedApps.contains(packageName)) {
             Log.d("AppBlocker", "Blocked app detected: $appName")
             if (hasOverlayPermission()) {
@@ -61,10 +62,9 @@ class AppBlockerService : AccessibilityService() {
     }
 private var isDialogVisible = false
 
-    // عرض نافذة مخصصة لتطبيق محظور
     private fun showBlockedAppDialog(appName: String) {
 
-          if (isDialogVisible) return // لا تعرض النافذة إذا كانت مرئية بالفعل
+          if (isDialogVisible) return 
     isDialogVisible = true
 
     val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -80,26 +80,33 @@ private var isDialogVisible = false
 
     val view = LayoutInflater.from(this).inflate(R.layout.blocked_app_dialog, null)
 
-    // إعداد النصوص داخل النافذة
-    view.findViewById<TextView>(R.id.dialog_title).text = "Blocked App Detected"
-    view.findViewById<TextView>(R.id.dialog_message).text =
-        "The app $appName is currently blocked. Please focus on your task."
+    view.findViewById<TextView>(R.id.dialog_title).text = "Hold on!"
+    val message = "The app $appName is currently blocked. Please focus on your task."
+    val spannable = android.text.SpannableString(message)
+    val start = message.indexOf(appName)
+    val end = start + appName.length
+
+spannable.setSpan(
+    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+    start, end,
+    android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+)
+
+view.findViewById<TextView>(R.id.dialog_message).text = spannable
+
     view.findViewById<ImageView>(R.id.dialog_icon).setImageResource(R.drawable.ic_launcher_foreground)
 
-    // إعداد زر OK
     view.findViewById<Button>(R.id.dialog_button).setOnClickListener {
         performGlobalAction(GLOBAL_ACTION_HOME) 
         windowManager.removeView(view) 
         isDialogVisible = false 
     }
 
-    // عرض النافذة
     windowManager.addView(view, params)
 }
 
 
 
-    // التحقق من أذونات الـ Overlay
     private fun hasOverlayPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Settings.canDrawOverlays(this)
@@ -108,7 +115,6 @@ private var isDialogVisible = false
         }
     }
 
-    // إنشاء قناة الإشعارات
    private fun createNotificationChannel() {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -127,7 +133,6 @@ private var isDialogVisible = false
     }
 }
 
-    // بدء تشغيل الخدمة في الوضع الأمامي مع إشعار
     private fun startForegroundService() {
     try {
         val notification = NotificationCompat.Builder(this, "AppBlockerChannel")
@@ -165,7 +170,6 @@ private fun requestAccessibilityPermission() {
     override fun onServiceConnected() {
     super.onServiceConnected()
 
-    // تحقق من إذن Overlay
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
         val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -176,22 +180,19 @@ private fun requestAccessibilityPermission() {
             Toast.LENGTH_LONG
         ).show()
 
-        stopSelf() // أوقف الخدمة إذا لم يتم منح الإذن
+        stopSelf() 
         return
     }
 
-    // إذا كانت الأذونات موجودة، أكمل العملية
     createNotificationChannel()
     startForegroundService()
 }
 
 
-    // عند إيقاف الخدمة
     override fun onInterrupt() {
         Log.d("AppBlocker", "Service interrupted")
     }
 
-    // بدء حظر التطبيقات
     fun startBlocking(blockedApps: Set<String>) {
         val editor = sharedPreferences.edit()
         editor.putStringSet("blockedApps", blockedApps)
@@ -199,7 +200,6 @@ private fun requestAccessibilityPermission() {
         Log.d("AppBlocker", "Blocking started for apps: $blockedApps")
     }
 
-    // إيقاف حظر التطبيقات
     fun stopBlocking() {
         val editor = sharedPreferences.edit()
         editor.remove("blockedApps")

@@ -24,6 +24,47 @@ class Task {
     required this.userID,
   });
 
+
+static DateTime safeParseTimer(dynamic value, String taskId) {
+  try {
+    if (value == null) {
+      print("⚠️ Timer is null for task: $taskId");
+      return DateTime.now();
+    }
+
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String) {
+      final trimmed = value.trim();
+
+      if (trimmed.isEmpty) {
+        print("⚠️ Timer string is empty for task: $taskId");
+        return DateTime.now();
+      }
+
+      try {
+        return DateTime.parse(trimmed);
+      } catch (e) {
+        print("❌ Failed to parse timer string for task $taskId: $trimmed");
+        return DateTime.now();
+      }
+    }
+
+    print("⚠️ Unknown timer type for task $taskId: ${value.runtimeType}");
+    return DateTime.now();
+  } catch (e) {
+    print("❌ Exception in safeParseTimer for task $taskId: $e");
+    return DateTime.now();
+  }
+}
+
+
   // Add a new task
   static Future<void> addTask(Task task) async {
     await FirebaseFirestore.instance.collection('Task').doc(task.taskID).set({
@@ -158,21 +199,9 @@ return Task(
   scheduledDate: (data['scheduledDate'] as Timestamp).toDate(),
   priority: data['priority'],
   reminder: reminder,
-  timer: (() {
-    if (data['timer'] is Timestamp) {
-      return (data['timer'] as Timestamp).toDate();
-    } else if (data['timer'] is String) {
-      try {
-        return DateTime.parse(data['timer']);
-      } catch (e) {
-        print("Invalid date format in timer field: ${data['timer']}");
-        return DateTime.now();
-      }
-    } else {
-      print("Unexpected format for timer field: ${data['timer']}");
-      return DateTime.now(); 
-    }
-  })(),
+    timer: safeParseTimer(data['timer'], doc.id),
+
+
   note: data['note'],
   completionStatus: data['completionStatus'],
   userID: data['userID'],

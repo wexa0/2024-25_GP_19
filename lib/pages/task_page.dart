@@ -1159,7 +1159,7 @@ void showMotivationalMessage(String message) {
                           const SizedBox(height: 20),
                           Image.asset(
                             'assets/images/empty_list.png',
-                            width: 120,
+                            width: 180,
                           ),
                           const SizedBox(height: 20),
                           Stack(
@@ -1206,7 +1206,7 @@ void showMotivationalMessage(String message) {
                           const SizedBox(height: 20),
                           Image.asset(
                             'assets/images/empty_list.png',
-                            width: 120,
+                            width: 180,
                           ),
                           const SizedBox(height: 20),
                           Stack(
@@ -1312,8 +1312,8 @@ void showMotivationalMessage(String message) {
                                   Center(
                                     child: Image.asset(
                                       'assets/images/empty_list.png',
-                                      width: 100,
-                                      height: 110,
+                                      width: 120,
+                                      height: 140,
                                     ),
                                   ),
                                   const SizedBox(height: 20),
@@ -1484,7 +1484,7 @@ void showMotivationalMessage(String message) {
                                         children: [
                                           Image.asset(
                                             'assets/images/done.png',
-                                            width: 160,
+                                            width: 380,
                                           ),
                                           const SizedBox(height: 20),
                                           Text(

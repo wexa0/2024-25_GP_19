@@ -8,6 +8,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/Classes/User';
 import 'guest_profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application/services/notification_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,23 +50,33 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut(); 
+    await FirebaseAuth.instance.signOut();
     setState(() {
-      user = AppUser(); 
+      user = AppUser();
     });
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-          builder: (context) =>
-              const WelcomePage()), 
+      MaterialPageRoute(builder: (context) => const WelcomePage()),
     );
   }
 
 // Callback to reload data and refresh the interface
   void _refreshUserData() {
     setState(() {}); // Trigger a rebuild with updated data
-  }          
+  }
 
+  void _showNotificationSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: NotificationTimePicker(),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,11 +128,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           width: double.infinity,
                           color: Color(0xFFF5F7F8),
                           padding: EdgeInsets.all(16),
-                          
                           child: Padding(
-                            
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            
                             child: Text(
                               'Profile Information',
                               style: TextStyle(
@@ -153,9 +163,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                          '${user.name ?? ''} '
-                                              .trim()),
+                                      Text('${user.name ?? ''} '.trim()),
                                       SizedBox(width: 8),
                                       Icon(Icons.arrow_forward_ios),
                                     ],
@@ -269,7 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 ))),
-                                Container(
+                        Container(
                           width: double.infinity,
                           color: Color(0xFFF5F7F8),
                           padding: EdgeInsets.all(16),
@@ -284,7 +292,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                         ),
-                        
                         Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: ClipRRect(
@@ -298,12 +305,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: Colors.white,
                                   child: InkWell(
                                     onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => AppBlockerPage()),
-                                    );
-                                  },
-
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                AppBlockerPage()),
+                                      );
+                                    },
                                     child: ListTile(
                                       title: Text(
                                         'App Blocker',
@@ -324,7 +332,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 ))),
-                                Divider(
+                        Divider(
                           color: Color.fromRGBO(16, 74, 115,
                               0.377), // Set the color of the divider
                           thickness: 0.5, // Set the thickness of the divider
@@ -332,7 +340,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           endIndent: 30, // Set the indent on the right
                           height: 0,
                         ),
-                            Padding(
+                        Padding(
                             padding: EdgeInsets.only(right: 16, left: 16),
                             child: ClipRRect(
                                 borderRadius: BorderRadius.only(
@@ -344,11 +352,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Material(
                                   color: Colors.white,
                                   child: InkWell(
-                                    onTap: () {
-                                   
-                                  },
-                                  
-
+                                    onTap: () =>
+                                        _showNotificationSettingsDialog(
+                                            context),
                                     child: ListTile(
                                       title: Text(
                                         'Notifications',
@@ -369,7 +375,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                                 ))),
-
                         Container(
                           width: double.infinity,
                           color: Color(0xFFF5F7F8),
@@ -440,7 +445,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               minimumSize: Size(
                                   MediaQuery.of(context).size.width * 0.9, 52),
                             ),
-                            
+
                             child: Row(
                               children: [
                                 Icon(Icons.logout,
@@ -497,39 +502,35 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         Padding(
-  padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    
-         Image.asset(
-          'assets/images/greyLogo.png', 
-          width: 120,
-          height: 80,
-        ),
-
-      Text(
-        "AttentionLens INC © 2025",
-        style: TextStyle(
-          color: const Color.fromARGB(255, 186, 186, 186),
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'Poppins',
-        ),
-      ),
-    ],
-  ),
-),
-
+                          padding:
+                              const EdgeInsets.only(top: 20.0, bottom: 10.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/greyLogo.png',
+                                width: 120,
+                                height: 80,
+                              ),
+                              Text(
+                                "AttentionLens INC © 2025",
+                                style: TextStyle(
+                                  color:
+                                      const Color.fromARGB(255, 186, 186, 186),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
-                      
                     ),
                   ],
-                  
                 ),
               ),
       ),
-      
       bottomNavigationBar: CustomNavigationBar(
         selectedIndex: selectedIndex,
         onTabChange: (index) {
@@ -537,6 +538,222 @@ class _ProfilePageState extends State<ProfilePage> {
             selectedIndex = index;
           });
         },
+      ),
+    );
+  }
+}
+
+class NotificationTimePicker extends StatefulWidget {
+  @override
+  _NotificationTimePickerState createState() => _NotificationTimePickerState();
+}
+
+class _NotificationTimePickerState extends State<NotificationTimePicker> {
+  TimeOfDay? motivationalTime;
+  TimeOfDay? taskReminderTime;
+  bool isMotivationEnabled = true;
+  bool isTaskReminderEnabled = true;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedTimes();
+  }
+
+  Future<void> _loadSavedTimes() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Load saved times or fallback to default
+  setState(() {
+    motivationalTime = _parseTime(prefs.getString('motivational_time')) ?? TimeOfDay(hour: 8, minute: 0);
+    taskReminderTime = _parseTime(prefs.getString('task_reminder_time')) ?? TimeOfDay(hour: 21, minute: 0);
+
+    // 🟢 Load ON/OFF switch values (true if not saved yet)
+    isMotivationEnabled = prefs.getBool('motivation_enabled') ?? true;
+    isTaskReminderEnabled = prefs.getBool('task_reminder_enabled') ?? true;
+  });
+}
+
+
+  TimeOfDay? _parseTime(String? timeString) {
+    if (timeString == null) return null;
+    final parts = timeString.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+Future<void> _pickTime(String type) async {
+  final picked = await showTimePicker(
+    context: context,
+    initialTime: type == 'motivation' ? motivationalTime! : taskReminderTime!,
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Color(0xFF104A73),
+            onPrimary: Color(0xFFF5F7F8),
+            onSurface: Color(0xFF545454),
+            secondary: Color(0xFF79A3B7),
+          ),
+          dialogBackgroundColor: Color(0xFFF5F7F8),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (picked != null) {
+    final prefs = await SharedPreferences.getInstance();
+    final timeKey = type == 'motivation' ? 'motivational_time' : 'task_reminder_time';
+    await prefs.setString(timeKey, '${picked.hour}:${picked.minute}');
+
+    if (type == 'motivation') {
+      setState(() {
+        motivationalTime = picked;
+      });
+
+      if (isMotivationEnabled) {
+        await NotificationService.cancelMotivationalNotification();
+        await NotificationService.scheduleDailyMotivationalNotification();
+      }
+    } else {
+      setState(() {
+        taskReminderTime = picked;
+      });
+
+      if (isTaskReminderEnabled) {
+        await NotificationService.cancelTaskReminderNotification();
+        await NotificationService.scheduleCombinedReminderForIncompleteTasks();
+      }
+    }
+  }
+}
+
+Future<void> _toggleNotification(String type, bool value) async {
+  final prefs = await SharedPreferences.getInstance();
+  if (type == 'motivation') {
+    setState(() => isMotivationEnabled = value);
+    prefs.setBool('motivation_enabled', value);
+
+    if (value) {
+      await NotificationService.scheduleDailyMotivationalNotification();
+    } else {
+      await NotificationService.cancelMotivationalNotification();
+    }
+  } else {
+    setState(() => isTaskReminderEnabled = value);
+    prefs.setBool('task_reminder_enabled', value);
+
+    if (value) {
+      await NotificationService.scheduleCombinedReminderForIncompleteTasks();
+    } else {
+      await NotificationService.cancelTaskReminderNotification();
+    }
+  }
+}
+
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Color(0xFFF5F7F8),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Notification Preferences",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Color(0xFF545454),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Motivation Time + Switch
+          ListTile(
+            leading: Icon(Icons.wb_sunny_outlined, color: Color(0xFF545454)),
+            title: Text(
+              "Daily Motivation",
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF545454),
+              ),
+            ),
+            subtitle: Text(
+              "${motivationalTime?.format(context) ?? 'Not Set'}",
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontFamily: 'Poppins',
+              ),
+            ),
+            trailing: Switch(
+              value: isMotivationEnabled,
+              onChanged: (val) => _toggleNotification('motivation', val),
+              activeColor: Color(0xFF3B7292),
+            ),
+            onTap: () => _pickTime('motivation'),
+          ),
+          Divider(indent: 20, endIndent: 20, color: Colors.grey[400]),
+
+          // Task Reminder Time + Switch
+          ListTile(
+            leading: Icon(Icons.check_circle_outline, color: Color(0xFF545454)),
+            title: Text(
+              "Unfinished tasks Reminders",
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF545454),
+              ),
+            ),
+            subtitle: Text(
+              "${taskReminderTime?.format(context) ?? 'Not Set'}",
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontFamily: 'Poppins',
+              ),
+            ),
+            trailing: Switch(
+              value: isTaskReminderEnabled,
+              onChanged: (val) => _toggleNotification('taskReminder', val),
+              activeColor: Color(0xFF3B7292),
+            ),
+            onTap: () => _pickTime('taskReminder'),
+          ),
+          const SizedBox(height: 20),
+
+          // Close Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromRGBO(199, 217, 225, 1),
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                "Close",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF363636),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

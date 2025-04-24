@@ -17,27 +17,27 @@ plugins {
 }
 
 android {
-    compileSdkVersion 34 // Update to match the latest compile SDK version
+    compileSdkVersion 34 
     namespace = "com.example.flutter_application"
 
     defaultConfig {
         applicationId "com.example.flutter_application" // Unique Application ID
         minSdkVersion 23
-        targetSdkVersion 34 // Ensure this matches compileSdkVersion
-        versionCode 1 // Increment for app updates
+        targetSdkVersion 34 
+        versionCode 1 
         versionName "1.0"
 
-        multiDexEnabled true // Enable MultiDex if needed
+        multiDexEnabled true 
     }
 
    buildTypes {
         release {
-            shrinkResources false // Disable resource shrinking if minifyEnabled is false
-            minifyEnabled false   // Disable code shrinking for now
+            shrinkResources false 
+            minifyEnabled false  
             signingConfig signingConfigs.debug
         }
         debug {
-            shrinkResources false // Ensure consistency for debug builds
+            shrinkResources false 
             minifyEnabled false
         }
     }
@@ -53,11 +53,11 @@ android {
     }
 
 
-    ndkVersion = "25.2.9519653" // Optional: Set NDK version explicitly
+    ndkVersion = "25.2.9519653" 
 }
 
 flutter {
-    source = "../.." // Flutter project source path
+    source = "../.." 
 }
 
 dependencies {
