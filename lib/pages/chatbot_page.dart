@@ -13,6 +13,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:flutter_application/services/notification_handler.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 
 class ChatbotpageWidget extends StatefulWidget {
@@ -45,7 +46,38 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
   Map<String, String> typingMessages = {};
   List<DateTime> selectedDates = [];
   Map<String, bool> showAllTasksByDate = {};
-
+///////////////////////////
+// ----ADD task feature variables section----//
+final TextEditingController taskTitleController = TextEditingController();
+final TextEditingController taskNoteController = TextEditingController();
+  DateTime? taskselectedDate;
+  TimeOfDay? selectedTime;
+  String selectedPriorityLabel = 'Normal'; // default
+String? selectedPriority;
+Color darkGray = Color(0xFF545454);
+Color priorityIconColor = Color(0xFF3B7292);
+TextEditingController subtaskController = TextEditingController();
+Color darkBlue = Color(0xFF104A73);
+List<String> subtasks = [];
+  Color lightBlue = Color(0xFF79A3B7);
+  Color lightestBlue = Color(0xFFC7D9E1);
+  Color lightGray = Color(0xFFF5F7F8);
+    Color mediumBlue = Color(0xFF3B7292);
+DateTime selectedDateforSubtask = DateTime.now();
+  List<String> categories = [];
+    TextEditingController categoryController = TextEditingController();
+  String selectedCategory = '';
+  User? _user = FirebaseAuth.instance.currentUser;
+  List<String> hardcodedCategories = [];
+bool showOptionalFields = false;
+bool taskFieldsLocked = false;
+DateTime ReminderselectedDate = DateTime.now();
+TimeOfDay reminderSelectedTime = TimeOfDay.now();
+bool _TaskDataInitialized = false;
+String? _lastInitTaskTimestamp;
+Map<String, Map<String, dynamic>> tasksAddData = {};
+Map<String, Widget> taskExtraContent = {};
+///////////
   Future<void> pickOneDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -60,7 +92,219 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
       });
     }
   }
+  
+  void _showCategoryEditDialog() {
+    List<String> tempCategories = List.from(categories);
+    List<Map<String, String>> renamedCategories = [];
+    List<String> deletedCategories = [];
+    List<String> addedCategories = [];
 
+    FocusNode firstCategoryFocusNode = FocusNode();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              backgroundColor: lightGray,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkGray,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Rename, create, or delete categories.',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: darkGray,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Column(
+                      children: tempCategories.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        String category = entry.value;
+                        TextEditingController renameController =
+                            TextEditingController(text: category);
+
+                        return ListTile(
+                          title: TextField(
+                            controller: renameController,
+                            focusNode:
+                                index == 0 ? firstCategoryFocusNode : null,
+                            onSubmitted: (newName) {
+                              if (newName.isNotEmpty && newName != category) {
+                                setState(() {
+                                  int index = tempCategories.indexOf(category);
+                                  if (index != -1) {
+                                    renamedCategories.add({
+                                      'oldName': category,
+                                      'newName': newName,
+                                    });
+                                    tempCategories[index] = newName;
+                                  }
+                                });
+                              }
+                            },
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                            ),
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: darkGray,
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                deletedCategories.add(category);
+                                tempCategories.remove(category);
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    Divider(),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: categoryController,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Add new category...',
+                                  hintStyle: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_upward,
+                                color: mediumBlue,
+                                size: 24.0,
+                              ),
+                              onPressed: () {
+                                if (categoryController.text.isNotEmpty) {
+                                  if (tempCategories.length < 7) {
+                                    setState(() {
+                                      tempCategories
+                                          .add(categoryController.text);
+                                      addedCategories
+                                          .add(categoryController.text);
+                                      categoryController.clear();
+                                    });
+                                  } else {
+                                    _showTopNotification(
+                                        'You can only create up to 7 categories.');
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: darkBlue,
+                      ),
+                      child: Text(
+                        'Discard',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    TextButton(
+                      onPressed: () async {
+                        await _saveChangesToDatabase(
+                          addedCategories,
+                          renamedCategories,
+                          deletedCategories,
+                        );
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: darkBlue,
+                      ),
+                      child: Text(
+                        'Save and Close',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          color: darkBlue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      firstCategoryFocusNode.requestFocus();
+    });
+  }
   Future<void> sendSelectedDates() async {
     for (final date in selectedDates) {
       final formatted = DateFormat('yyyy-MM-dd').format(date);
@@ -97,6 +341,244 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
     }
 
     return tasksStatus;
+  }
+int _getPriorityValue() {
+    switch (selectedPriority) {
+      case 'Urgent':
+        return 4;
+      case 'High':
+        return 3;
+      case 'Normal':
+        return 2;
+      case 'Low':
+        return 1;
+      default:
+        return 2;
+    }
+  }
+  Widget _priorityFlag(String label, Color color) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(Icons.flag, color: color),
+          onPressed: () {
+            setState(() {
+              selectedPriority = label;
+              priorityIconColor = color;
+
+            });
+          },
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: darkGray,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildReminderSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  // Icon(Icons.notifications, color: mediumBlue),
+                  // SizedBox(width: 8),
+                  Text(
+  '⏰ Reminder:',
+  style: const TextStyle(
+    fontWeight: FontWeight.bold, // 💪 Same as Priority
+    fontSize: 14, // 📏 Same size
+    color: Colors.black87, // 🎨 Same color
+  ),
+),
+                ],
+              ),
+              Switch(
+                value: isReminderOn,
+                onChanged: (value) {
+                  setState(() {
+                    isReminderOn = value;
+                    if (!isReminderOn) {
+                      selectedReminderOption = null;
+                      customReminderDateTime = null;
+                    }
+                  });
+                },
+                activeColor: mediumBlue, // Thumb color when switch is ON
+                activeTrackColor: lightBlue,
+                inactiveThumbColor: const Color.fromARGB(
+                    255, 172, 172, 172), // Thumb color when switch is OFF
+                inactiveTrackColor: Colors.grey[350],
+              ),
+            ],
+          ),
+          if (isReminderOn)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: DropdownButtonFormField<Map<String, dynamic>>(
+                value: selectedReminderOption,
+                isExpanded: true,
+                items: reminderOptions.map((option) {
+                  return DropdownMenuItem<Map<String, dynamic>>(
+                    value: option,
+                    child: Text(
+                      option['label'],
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: darkGray,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedReminderOption = value;
+                    if (value?['label'] == "Custom Time") {
+                      _pickCustomReminderTime();
+                    }
+                  });
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: lightestBlue),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                hint: Text(
+                  "Select a reminder time",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: darkGray,
+                  ),
+                ),
+                dropdownColor: const Color.fromARGB(255, 245, 245, 245),
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: darkGray,
+                ),
+                iconEnabledColor: mediumBlue,
+              ),
+            ),
+          if (selectedReminderOption != null &&
+              selectedReminderOption!['label'] == "Custom Time" &&
+              customReminderDateTime != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                "Custom Reminder: ${DateFormat('MMM dd, yyyy - hh:mm a').format(customReminderDateTime!)}",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: darkGray,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  
+  void _pickCustomReminderTime() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: ReminderselectedDate,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: darkBlue,
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: Color(0xFFF5F7F8),
+              surface: Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
+            ),
+            dialogBackgroundColor: Color(0xFFF5F7F8),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              primaryColor: darkBlue,
+              colorScheme: ColorScheme.light(
+                primary: darkBlue,
+                onPrimary: Color(0xFFF5F7F8),
+                surface: Color(0xFFF5F7F8),
+                onSurface: darkGray,
+                secondary: lightBlue,
+              ),
+              dialogBackgroundColor: Color(0xFFF5F7F8),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        DateTime selectedReminder = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        DateTime taskDateTime = DateTime(
+          ReminderselectedDate.year,
+          ReminderselectedDate.month,
+          ReminderselectedDate.day,
+          reminderSelectedTime.hour,
+          reminderSelectedTime.minute,
+        );
+
+        if (selectedReminder.isAfter(taskDateTime)) {
+          _showTopNotification(
+              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
+          setState(() {
+            customReminderDateTime = null; // Reset invalid time
+          });
+        } else {
+          setState(() {
+            customReminderDateTime = selectedReminder;
+          });
+        }
+      }
+    }
   }
 
   void _pickMultipleDatesInDialog() async {
@@ -227,6 +709,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
     isInChatbotPage = true;
     WidgetsBinding.instance.addObserver(this);
     _speech = stt.SpeechToText();
+    _getCategories();
     _fetchUserID().then((_) {
       checkSessionStatus();
     });
@@ -721,7 +1204,1073 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
       return false;
     }
   }
+  
+  
+  Future<User?> _getCurrentUser() async {
+    if (_user == null) {
+      _user = FirebaseAuth.instance.currentUser;
+      if (_user == null) {
+        _showTopNotification('No logged-in user found');
+      }
+    }
+    return _user;
+  }
 
+    Future<void> _saveChangesToDatabase(
+      List<String> addedCategories,
+      List<Map<String, String>> renamedCategories,
+      List<String> deletedCategories) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    for (String category in addedCategories) {
+      await addCategory(category);
+    }
+
+    for (var renameMap in renamedCategories) {
+      String oldName = renameMap['oldName']!;
+      String newName = renameMap['newName']!;
+      await updateCategory(oldName, newName);
+    }
+
+    for (String deletedCategory in deletedCategories) {
+      await deleteCategory(deletedCategory);
+    }
+
+    await _getCategories();
+  }
+
+  Future<void> _getCategories() async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    try {
+      QuerySnapshot categorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      List<String> fetchedCategories = [];
+
+      for (var doc in categorySnapshot.docs) {
+        String categoryName = doc['categoryName'] ?? '';
+        if (categoryName.isNotEmpty) {
+          fetchedCategories.add(categoryName);
+        }
+      }
+
+      List<String> combinedCategories = [
+        ...hardcodedCategories,
+        ...fetchedCategories
+      ];
+
+      List<String> uniqueCategories = combinedCategories.toSet().toList();
+
+      setState(() {
+        categories = uniqueCategories;
+      });
+    } catch (e) {
+      _showTopNotification('Failed to fetch categories: $e');
+    }
+  }
+  
+  Future<void> addCategory(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    try {
+      // Check if the category already exists for the current user
+      QuerySnapshot existingCategorySnapshot = await FirebaseFirestore.instance
+          .collection('Category')
+          .where('categoryName', isEqualTo: categoryName)
+          .where('userID', isEqualTo: currentUser.uid)
+          .get();
+
+      if (existingCategorySnapshot.docs.isNotEmpty) {
+        // Display a message if the category already exists
+        _showTopNotification('Category "$categoryName" already exists.');
+        return;
+      }
+
+      // If it doesn't exist, add the new category
+      await FirebaseFirestore.instance.collection('Category').add({
+        'categoryName': categoryName,
+        'userID': currentUser.uid,
+        'taskIDs': [],
+      });
+
+      _showTopNotification('Category "$categoryName" added successfully.');
+    } catch (e) {
+      _showTopNotification('Failed to add category: $e');
+    }
+  }
+
+  Future<void> updateCategory(String oldCategory, String newCategory) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('categoryName', isEqualTo: oldCategory)
+        .where('userID', isEqualTo: currentUser.uid)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      DocumentReference categoryRef = snapshot.docs.first.reference;
+      await categoryRef.update({'categoryName': newCategory});
+    }
+  }
+
+  Future<void> deleteCategory(String categoryName) async {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) return;
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('Category')
+        .where('categoryName', isEqualTo: categoryName)
+        .where('userID', isEqualTo: currentUser.uid)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      List<dynamic> taskIDs = snapshot.docs.first['taskIDs'];
+
+      if (taskIDs.isNotEmpty) {
+        bool confirmDelete =
+            await _showCategoryDeleteConfirmation(categoryName, taskIDs.length);
+
+        if (!confirmDelete) {
+          return;
+        }
+
+        for (var taskId in taskIDs) {
+          await FirebaseFirestore.instance
+              .collection('Task')
+              .doc(taskId)
+              .update({
+            'category': '',
+          });
+        }
+      }
+
+      await snapshot.docs.first.reference.delete();
+      _showTopNotification('Category "$categoryName" deleted successfully');
+    }
+  }
+
+  Future<bool> _showCategoryDeleteConfirmation(
+      String categoryName, int taskCount) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: lightGray,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: Text(
+                'Delete Category?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: darkGray,
+                ),
+              ),
+              content: Text(
+                'The category "$categoryName" is assigned to $taskCount tasks. '
+                'Deleting this category will remove it from all those tasks. '
+                'Do you still want to proceed?',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 14,
+                  color: darkGray,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: mediumBlue,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
+List<String> subtasksToAdd = [];
+
+Widget _buildSubtaskSection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (subtasks.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Text(
+            'Subtasks',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: darkGray,
+            ),
+          ),
+        ),
+      ...subtasks.map((subtask) {
+        final TextEditingController subtaskEditingController =
+            TextEditingController(text: subtask);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+          child: Slidable(
+            key: ValueKey(subtask),
+            endActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              children: [
+                CustomSlidableAction(
+                  onPressed: (_) {
+                    setState(() {
+                      subtasks.remove(subtask);
+                      _showTopNotification("✅ Subtask deleted successfully!");
+                      subtaskReminders.remove(subtask);
+                    });
+                  },
+                  backgroundColor: const Color(0xFFC2C2C2),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            child: Container( 
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                title: TextField(
+                  controller: subtaskEditingController,
+                  onChanged: (newValue) {
+                    setState(() {
+                      final index = subtasks.indexOf(subtask);
+                      if (index != -1) {
+                        subtasks[index] = newValue;
+                      }
+                    });
+                  },
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    color: darkGray,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Icon(
+                    Icons.notifications,
+                    color: subtaskReminders[subtask] != null
+                        ? mediumBlue
+                        : Colors.grey,
+                  ),
+                  onPressed: () async {
+                    _pickSubtaskReminderTime(subtask);
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+
+    
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: TextField(
+          controller: subtaskController,
+          decoration: InputDecoration(
+            labelText: 'Add sub tasks',
+            labelStyle: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: darkBlue,
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: darkBlue, width: 2.0),
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
+              onPressed: () {
+                if (subtasks.length >= 10) {
+                  _showTopNotification('🚫 You can only add up to 10 subtasks.');
+                  return;
+                }
+
+                if (subtaskController.text.isNotEmpty) {
+                  setState(() {
+                    subtasks.add(subtaskController.text);
+                    subtaskReminders[subtaskController.text] = null;
+                    subtaskController.clear();
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+}
+Widget _buildCategorySection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 0),
+        child: Row(
+          children: [
+            Text(
+              '🏷️ Category:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+              onPressed: () {
+                _showCategoryEditDialog(); 
+              },
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Wrap(
+          spacing: 6.0,
+          runSpacing: 6.0,
+          children: categories.map((category) {
+            return ChoiceChip(
+              label: Text(
+                category,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+              selected: selectedCategory == category,
+              selectedColor: const Color(0xFF2C678E),
+              backgroundColor: Colors.grey[200],
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              onSelected: (bool selected) {
+                setState(() {
+                  selectedCategory = selected ? category : ''; 
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    ],
+  );
+}
+
+
+  Map<String, Map<String, dynamic>?> subtaskReminders = {};
+
+  bool isReminderOn = false;
+  List<Map<String, dynamic>> reminderOptions = [
+    {"label": "1 day before", "duration": Duration(days: 1)},
+    {"label": "3 hours before", "duration": Duration(hours: 3)},
+    {"label": "1 hour before", "duration": Duration(hours: 1)},
+    {"label": "30 minutes before", "duration": Duration(minutes: 30)},
+    {"label": "10 minutes before", "duration": Duration(minutes: 10)},
+    {"label": "Custom Time", "duration": null},
+  ];
+  Map<String, dynamic>? selectedReminderOption;
+  DateTime? customReminderDateTime;
+  void _pickSubtaskReminderTime(String subtask) async {
+    bool isReminderOn = subtaskReminders[subtask] != null;
+    Map<String, dynamic>? selectedOption = subtaskReminders[subtask];
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            // Filter options to prevent duplicate "Custom Time"
+            List<Map<String, dynamic>> filteredOptions = reminderOptions
+                .where((option) => option['label'] != "Custom Time")
+                .toList();
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              backgroundColor: lightGray,
+              title: Row(
+                children: [
+                  Icon(Icons.notifications, color: mediumBlue),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Set Reminder for "$subtask"',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: darkGray,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Toggle switch for reminder On/Off
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Reminder On/Off",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: darkGray,
+                          ),
+                        ),
+                        Switch(
+                          value: isReminderOn,
+                          onChanged: (value) {
+                            setState(() {
+                              isReminderOn = value;
+                              if (!isReminderOn) {
+                                selectedOption =
+                                    null; // Clear reminder settings
+                              }
+                            });
+                          },
+                          activeColor: mediumBlue,
+                          activeTrackColor: lightBlue,
+                          inactiveThumbColor: Colors.grey,
+                          inactiveTrackColor: Colors.grey[350],
+                        ),
+                      ],
+                    ),
+                    // Show predefined options if reminder is on
+                    if (isReminderOn)
+                      ...filteredOptions.map((option) {
+                        bool isSelected = selectedOption != null &&
+                            selectedOption?['duration'] == option['duration'];
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedOption = {
+                                'duration': option['duration'],
+                                'customDateTime': null,
+                              };
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.symmetric(vertical: 8),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? mediumBlue.withOpacity(0.2)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 1,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time, color: mediumBlue),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    option['label'],
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: darkGray,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    // قسم التايم يعامل يشكل منفصب
+                    if (isReminderOn)
+                      GestureDetector(
+                        onTap: () async {
+                          final customTime =
+                              await _pickCustomSubtaskReminderTime(subtask);
+                          if (customTime != null) {
+                            setState(() {
+                              selectedOption = {
+                                'duration': null,
+                                'customDateTime': customTime,
+                              };
+                            });
+                          }
+                        },
+                        child: Container(
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: selectedOption?['customDateTime'] != null
+                                ? mediumBlue.withOpacity(0.2)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 2,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, color: mediumBlue),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  "Custom Time",
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: darkGray,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      subtaskReminders[subtask] =
+                          isReminderOn ? selectedOption : null;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Save',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: mediumBlue,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+  Future<void> _updateTaskTitleInFirestore(Map<String, dynamic> msgData) async {
+  try {
+    final timestamp = msgData['timestamp'];
+
+    // هنا نحدث اسم التايل عشان نسمح بالايديت
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('ChatBot')
+        .where('timestamp', isEqualTo: timestamp)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      // نجعل الاسم pulled 
+      for (var doc in snapshot.docs) {
+        await doc.reference.update({
+          'title': 'pulled', 
+        });
+      }
+      print("Task title updated successfully.");
+    } else {
+      print("No task found with the provided timestamp.");
+    }
+  } catch (e) {
+    print("Error updating task in Firestore: $e");
+  }
+}
+     String? _currentTaskTimestamp ;
+
+Widget buildTaskInputSection(Map<String, dynamic> msgData) {
+    final currentTaskTimestamp = msgData['timestamp'].toString();
+      if ( _currentTaskTimestamp != msgData['timestamp'].toString() ) {
+  _TaskDataInitialized = false; }
+
+  if (msgData["title"] !='pulled') {
+
+  // Initialize task data
+  if (msgData["title"] != null) {
+    taskTitleController.text = msgData["title"];
+  }
+  if (msgData["date"] != null) {
+    taskselectedDate = DateTime.tryParse(msgData["date"]);
+  }
+  if (msgData["time"] != null) {
+    final timeParts = msgData["time"].split(":");
+    if (timeParts.length == 2) {
+      selectedTime = TimeOfDay(
+        hour: int.parse(timeParts[0]),
+        minute: int.parse(timeParts[1]),
+      );
+    }
+  }
+  if (msgData['subtasks'] != null) {
+  subtasks = List<String>.from(msgData['subtasks'].take(10)); // فقط 10 subtasks
+}
+  if (msgData['note'] != null) {
+  taskNoteController.text = msgData["note"];
+}
+  //_TaskDataInitialized = true; 
+  _currentTaskTimestamp = currentTaskTimestamp;
+  _updateTaskTitleInFirestore(msgData);
+
+  // currentTaskTimestamp = msgData['timestamp'].toString();  // Track the timestamp for comparison
+}
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // 📝 Task Name
+      const Text("📝 Task Name:", style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 6),
+      TextField(
+        controller: taskTitleController,
+        style: const TextStyle(fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Type task title',
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.85),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16.0),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+           // تعديل i will take user input for task title and allow him/her to edit it
+            // taskTitleController.text = value;
+            
+            taskTitleController.selection = TextSelection.fromPosition(
+              TextPosition(offset: value.length),
+            );
+          });
+        },
+      ),
+      const SizedBox(height: 16),
+
+      // Date & Time الوقت والتاريخ
+      const Text("📅 Date & ⏰ Time:", style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 6),
+      Row(
+        children: [
+          // Date Picker اختيار التاريخ
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2C678E),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () async {
+                DateTime? date = await showDatePicker(
+                  context: context,
+                  initialDate: taskselectedDate ?? DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (date != null) {
+                  setState(() {
+                    taskselectedDate = date; 
+                  });
+                }
+              },
+              child: Text(
+                taskselectedDate == null
+                    ? '📅 Pick Date'
+                    : '📅 ${DateFormat('yyyy-MM-dd').format(taskselectedDate!)}',
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Time Picker اختيار الوقت
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2C678E),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () async {
+                TimeOfDay? time = await showTimePicker(
+                  context: context,
+                  initialTime: selectedTime ?? TimeOfDay.now(),
+                );
+                if (time != null) {
+                  setState(() {
+                    selectedTime = time; 
+                  });
+                }
+              },
+              child: Text(
+                selectedTime == null
+                    ? '⏰ Pick Time'
+                    : '⏰ ${selectedTime!.format(context)}',
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+
+const SizedBox(height: 3),
+TextButton.icon(
+      onPressed: () {
+        setState(() {
+          showOptionalFields = !showOptionalFields;
+          
+        });
+      },
+      icon: Icon(
+        showOptionalFields ? Icons.remove_circle_outline : Icons.add_circle_outline,
+        color: const Color(0xFF2C678E),
+      ),
+      label: Text(
+        showOptionalFields ? "Hide Optional Fields" : "Add Optional Fields",
+        style: const TextStyle(
+          color: Color(0xFF2C678E),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+
+    if (showOptionalFields) ...[
+      
+      const SizedBox(height: 6),
+
+      // Subtasks قسم البتاسكس
+      const Text("📌 Subtasks:", style: TextStyle(fontWeight: FontWeight.bold)),
+      const SizedBox(height: 0),
+    _buildSubtaskSection(),
+      const SizedBox(height: 16),
+       _buildCategorySection(),
+       const SizedBox(height: 6),
+    //  Priority
+    Row(
+  children: [
+    Icon(Icons.flag, color: priorityIconColor),
+    const SizedBox(width: 8), 
+    const Text(
+      "Priority:",
+      style: TextStyle(fontWeight: FontWeight.bold),
+    ),
+  ],
+),
+    const SizedBox(height: 4),
+    Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _priorityFlag('Urgent', Colors.red),
+        _priorityFlag('High', Colors.orange),
+        _priorityFlag('Medium', Colors.blue),
+        _priorityFlag('Low', Colors.grey),
+      ],
+    ),
+    const SizedBox(height: 12),
+    _buildReminderSection(),
+    const SizedBox(height: 12),
+      //  Note الملاحظات
+     const Text("🗒️ Note:", style: TextStyle(fontWeight: FontWeight.bold)),
+Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: TextField(
+          controller: taskNoteController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Add a note',
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.8),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (newValue) {
+            setState(() {
+        
+              taskNoteController.text = newValue;
+            });
+          },
+        ),
+      ), ],
+    const SizedBox(height: 6),
+
+ // Add Button
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    const SizedBox(width: 2),
+
+    // Add Button للحفظ
+    ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF79A3B7),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+onPressed: () async {
+  if (taskTitleController.text.trim().isEmpty) {
+    _showTopNotification("Please enter a task name ✏️");
+    return;
+  }
+
+  if (taskselectedDate == null || selectedTime == null) {
+    _showTopNotification("Please select both a date and time 📅⏰");
+    return;
+  }
+
+  final DateTime taskDateTime = DateTime(
+    taskselectedDate!.year,
+    taskselectedDate!.month,
+    taskselectedDate!.day,
+    selectedTime!.hour,
+    selectedTime!.minute,
+  );
+
+  try {
+    User? currentUser = await _getCurrentUser();
+    if (currentUser == null) {
+      _showTopNotification("User not logged in 🔒");
+      return;
+    }
+QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
+          .collection('Task')
+          .where('title', isEqualTo: taskTitleController.text.trim())
+          .where('scheduledDate', isEqualTo: Timestamp.fromDate(taskDateTime))
+          .where('userID', isEqualTo: currentUser.uid) // Optional: check for the user ID
+          .get();
+
+      if (existingTasksSnapshot.docs.isNotEmpty) {
+        // If task already exists with same title, date, and time امنعها من الحفظ
+        _showTopNotification("Task already exists with this title, date, and time ⚠️");
+        return;
+      }
+
+    // Create new Task document
+    DocumentReference taskRef = FirebaseFirestore.instance.collection('Task').doc();
+    String taskId = taskRef.id;
+
+    await taskRef.set({
+      'completionStatus': 0,
+      'scheduledDate': Timestamp.fromDate(taskDateTime),
+      'note': taskNoteController.text.trim(),
+      'priority': _getPriorityValue(),
+      'reminder': null,
+      'timer': '',
+      'title': taskTitleController.text.trim(),
+      'userID': currentUser.uid,
+      'category': selectedCategory,
+    });
+
+    //Save subtasks
+    for (String subtask in subtasks) {
+      if (subtask.trim().isEmpty) continue;
+
+      DocumentReference subtaskRef =
+          FirebaseFirestore.instance.collection('SubTask').doc();
+
+      await subtaskRef.set({
+        'completionStatus': 0,
+        'taskID': taskRef.id,
+        'timer': '',
+        'title': subtask.trim(),
+        'reminder': null,
+      });
+    }
+
+    // TASK SAVED SUCCESSFULLY
+    _showTopNotification("Task saved successfully ✅");
+
+  } catch (e) {
+     // TASK SAVED SUCCESSFULLY في الحالة الأخرى
+    _showTopNotification("Failed to save task 😢: $e");
+  }
+},
+
+      child: const Text(
+        'Save',
+        style: TextStyle(color: Colors.white),
+      ),
+    ),
+  ],
+),
+    
+  ],
+); }
+  
+  Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: selectedDateforSubtask,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: Color(0xFFF5F7F8),
+              surface: Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
+            ),
+            dialogBackgroundColor: Color(0xFFF5F7F8),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return Theme(
+            data: ThemeData.light().copyWith(
+              colorScheme: ColorScheme.light(
+                primary: darkBlue,
+                onPrimary: Color(0xFFF5F7F8),
+                onSurface: darkGray,
+                secondary: lightBlue,
+              ),
+              dialogBackgroundColor: Color(0xFFF5F7F8),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedTime != null) {
+        final DateTime customTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        if (customTime.isAfter(DateTime.now())) {
+          return customTime;
+        } else {
+          _showTopNotification(
+              "Custom reminder time must be in the future. Please select a valid time.");
+        }
+      }
+    }
+    return null;
+  }
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -1135,6 +2684,9 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                               ),
                             );
                           }
+if (actionSuggestion == "addition") {
+    extraContent = buildTaskInputSection(msgData);
+ }
                           if (actionSuggestion == "openCalendar") {
                             extraContent = GestureDetector(
                               onTap: () {
