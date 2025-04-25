@@ -206,7 +206,6 @@ Future<void> _saveUserData(User user) async {
         'name': widget.userData['name'],
         'email': widget.userData['email'],
         'dateOfBirth': widget.userData['dateOfBirth'],
-        'createdAt': FieldValue.serverTimestamp(),
         'preferences': {
           'focusMinutes': 25,
           'longBreakMinutes': 30,

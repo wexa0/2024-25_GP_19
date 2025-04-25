@@ -1108,8 +1108,11 @@ Widget _buildLevelSection() {
       }
 
       // Retrieve points and level from Firestore
-      int points = snapshot.data!['point'] ?? 0;
-      int level = snapshot.data!['level'] ?? 1;
+      final data = snapshot.data!.data() as Map<String, dynamic>;
+      int points = data.containsKey('point') ? data['point'] : 0;
+
+      int level = data.containsKey('level') ? data['level'] : 1;
+
       final String levelString = level.toString().padLeft(2, '0');
 
       return Container(
