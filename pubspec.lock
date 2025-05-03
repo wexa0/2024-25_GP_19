@@ -1172,11 +1172,7 @@ packages:
       sha256: "9f47fd3630d76be3ab26f0ee06d213679aa425996925ff3feffdec504931c377"
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
     version: "1.12.0"
-=======
-    version: "1.11.1"
->>>>>>> 0cbcc89f77cc72a621056eaa103df43f4071a5c2
   state_notifier:
     dependency: transitive
     description:
