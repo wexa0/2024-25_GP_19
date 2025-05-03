@@ -369,7 +369,9 @@ if (diff == 0) {
 
     // Actually show the alert
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
   showDialog(
+    
     context: context,
     builder: (context) {
       return AlertDialog(
@@ -1084,6 +1086,7 @@ Widget _buildStreakCalendar() {
 
 
 Widget _buildLevelSection() {
+  
   User? firebaseUser = FirebaseAuth.instance.currentUser;
 
   if (firebaseUser == null) {
@@ -1116,6 +1119,7 @@ Widget _buildLevelSection() {
       final String levelString = level.toString().padLeft(2, '0');
 
       return Container(
+        
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
         decoration: BoxDecoration(
           color: Color(0xFFF9F9F9),
@@ -1129,9 +1133,12 @@ Widget _buildLevelSection() {
           ],
         ),
         child: Column(
+          
           crossAxisAlignment: CrossAxisAlignment.start,
+          
           children: [
             // ✅ Title "Achievement Level"
+            
             const Text(
               "Achievement Level",
               style: TextStyle(
@@ -1787,9 +1794,11 @@ Widget _buildLevelSection() {
         isLoading = false;
       });
     } catch (e) {
+      if (mounted) {
       setState(() {
         isLoading = false;
       });
+      }
     }
   }
 

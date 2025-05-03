@@ -566,17 +566,21 @@ int _getPriorityValue() {
           reminderSelectedTime.minute,
         );
 
-        if (selectedReminder.isAfter(taskDateTime)) {
-          _showTopNotification(
-              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
-          setState(() {
-            customReminderDateTime = null; // Reset invalid time
-          });
-        } else {
-          setState(() {
-            customReminderDateTime = selectedReminder;
-          });
-        }
+       if (selectedReminder.isAfter(taskDateTime)) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _showTopNotification(
+      "Custom reminder time cannot be after the scheduled task time. Please select a valid time.",
+    );
+    setState(() {
+      customReminderDateTime = null;
+    });
+  });
+} else {
+  setState(() {
+    customReminderDateTime = selectedReminder;
+  });
+}
+
       }
     }
   }
@@ -884,6 +888,7 @@ int _getPriorityValue() {
   }
 
   void _showTopNotification(String message) {
+    if (!mounted) return;
     OverlayState? overlayState = Overlay.of(context);
     OverlayEntry overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -1210,7 +1215,6 @@ int _getPriorityValue() {
     if (_user == null) {
       _user = FirebaseAuth.instance.currentUser;
       if (_user == null) {
-        _showTopNotification('No logged-in user found');
       }
     }
     return _user;
@@ -2189,8 +2193,37 @@ QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
       });
     }
 
-    // TASK SAVED SUCCESSFULLY
-    _showTopNotification("Task saved successfully ✅");
+   // TASK SAVED SUCCESSFULLY
+
+List<String> missingHints = [];
+String finalHint = "";
+
+
+if (_getPriorityValue() == 0) {
+  missingHints.add("⚡ Try setting a **priority** next time to stay on track with what’s urgent!");
+} else if (taskNoteController.text.trim().isEmpty) {
+  missingHints.add("📝 A short **note** can help your future self remember the details easily.");
+} else if (selectedReminderOption == null && customReminderDateTime == null) {
+  missingHints.add("⏰ Adding a **reminder** is super helpful — especially when things slip your mind!");
+} else {
+  missingHints.add("🎯 You're all set! Great job organizing your task! 💪");
+}
+
+String successMessage = "✅ Task **\"${taskTitleController.text.trim()}\"** has been added successfully! 🎉\n"
+    "You can find it anytime in your **Tasks Page** or the **Calendar** 📅.";
+
+String finalMessage = "$successMessage\n\n💡 **Hint:**\n${missingHints.first}";
+
+await FirebaseFirestore.instance.collection("ChatBot").add({
+  "userID": currentUser.uid,
+  "response": finalMessage,
+  "timestamp": Timestamp.now(),
+});
+
+
+_showTopNotification("Task added successfully! ✅");
+
+
 
   } catch (e) {
      // TASK SAVED SUCCESSFULLY في الحالة الأخرى
@@ -2199,7 +2232,7 @@ QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
 },
 
       child: const Text(
-        'Save',
+        '                      Save                       ',
         style: TextStyle(color: Colors.white),
       ),
     ),
@@ -2578,11 +2611,14 @@ QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
                         }
 
                         lastMessageDate = messageDate;
-                        messageWidgets.add(_buildChatBubble(
-                          message: msgData["message"] ?? "",
-                          isUser: true,
-                          screenWidth: MediaQuery.of(context).size.width,
-                        ));
+                        if (msgData["message"] != null && msgData["message"].toString().trim().isNotEmpty) {
+  messageWidgets.add(_buildChatBubble(
+    message: msgData["message"],
+    isUser: true,
+    screenWidth: MediaQuery.of(context).size.width,
+  ));
+}
+
 
                         if (response == null || response.isEmpty) {
                           messageWidgets.add(
@@ -2674,7 +2710,7 @@ QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: const Text(
-                                  "🔐 Join Now to View Tasks",
+                                  "🔐 Join Now to Manage Your Tasks",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w500,
@@ -3093,7 +3129,7 @@ $taskDetails
                     Padding(
                       padding: const EdgeInsets.all(13),
                       child: SelectableText.rich(
-                        TextSpan(children: _parseBoldText(details)),
+  TextSpan(children: _parseBoldText(cleanDetails(details))),
                         style: const TextStyle(
                             fontSize: 14, color: Color(0xFF455A64)),
                       ),
@@ -3681,6 +3717,20 @@ Future<void> deleteTaskById(String taskId) async {
 
 
 
+String cleanDetails(String details) {
+  final lines = details.split('\n');
+  final filteredLines = lines.where((line) =>
+      !line.contains("🔥 It's today!") &&
+      !line.contains("Start small, stay consistent") &&
+      !line.contains("🧐 Only one task") &&
+      !line.contains("✨ Nice and light schedule!") &&
+      !line.contains("📅 Wow! Looking at your whole month?") &&
+      !line.contains("👏 You're doing amazing organizing") &&
+      !line.contains("Don't forget to celebrate") &&
+      !line.contains("Keep balancing between focus and rest")
+  ).toList();
+  return filteredLines.join('\n');
+}
 
   @override
   void dispose() {

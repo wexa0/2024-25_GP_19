@@ -308,7 +308,11 @@ Future<bool> checkAccessibilityPermission() async {
     await requestAccessibilityPermission();
     final newPermission = await checkAccessibilityPermission();
     if (newPermission) {
-      _blockApps(); // استدعاء دالة الحظر بعد منح الصلاحيات
+      if (_isFocusTime) {
+      _blockApps();
+    } else {
+      _unblockApps();
+    }
     } else {
       print("Accessibility permission denied.");
     }
@@ -395,7 +399,9 @@ Future<bool> checkAccessibilityPermission() async {
         setState(() {
           _isFocusTime = false; // Switch to break time
         });
+         _unblockApps(); 
       }
+
     } else {
       // After break time, check if we need to switch to long break or back to focus time
       if (_completedRounds < widget.rounds - 1) {
@@ -407,6 +413,7 @@ Future<bool> checkAccessibilityPermission() async {
             displayshow = true; // Ensure the "LONG BREAK" text shows first
           });
         }
+         _blockApps();
         _completedRounds++; // Increment completed rounds after short break
       } else {
         // Before transitioning to long break, show dialog
@@ -430,6 +437,7 @@ Future<bool> checkAccessibilityPermission() async {
   }
 
   void _showCongratsDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -440,8 +448,8 @@ Future<bool> checkAccessibilityPermission() async {
             children: [
               Image.asset(
                 'assets/images/check.png', // المسار إلى الصورة
-                width: 80, // عرض الصورة
-                height: 80, // ارتفاع الصورة
+                width: 150, // عرض الصورة
+                height: 150, // ارتفاع الصورة
               ),
               const SizedBox(height: 10), // إضافة مسافة بين الصورة والعنوان
               Text(
@@ -712,6 +720,8 @@ ElevatedButton(
                           _formatTime(_elapsedTime); // Update the timer text
                     });
                     print("Completed Rounds: $_completedRounds");
+                    _blockApps();
+
                     _startTimer(); // Start the timer
                   }
 
@@ -752,11 +762,13 @@ ElevatedButton(
 
   // Reset the timer
   Future<void>  _resetTimer() async {
+    if (mounted){
     setState(() {
       _elapsedTime = widget.focusMinutes * 60;
       _timerText = _formatTime(_elapsedTime);
       _isRunning = false;
     });
+    }
     if (_isTimerInitialized) {
       _timer?.cancel();
     }

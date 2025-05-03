@@ -170,7 +170,30 @@ flutter:
     - assets/sounds/sea-wave.mp3
     - assets/sounds/flowing-water.mp3
     - assets/images/session_bot.png
-
+    - assets/images/lvl_Badges/lvl_01_locked.png
+    - assets/images/lvl_Badges/lvl_01.png
+    - assets/images/lvl_Badges/lvl_02_locked.png
+    - assets/images/lvl_Badges/lvl_02.png
+    - assets/images/lvl_Badges/lvl_03_locked.png
+    - assets/images/lvl_Badges/lvl_03.png
+    - assets/images/lvl_Badges/lvl_04_locked.png
+    - assets/images/lvl_Badges/lvl_04.png
+    - assets/images/lvl_Badges/lvl_05_locked.png
+    - assets/images/lvl_Badges/lvl_05.png
+    - assets/images/lvl_Badges/lvl_06_locked.png
+    - assets/images/lvl_Badges/lvl_06.png
+    - assets/images/lvl_Badges/lvl_07_locked.png
+    - assets/images/lvl_Badges/lvl_07.png
+    - assets/images/lvl_Badges/lvl_08_locked.png
+    - assets/images/lvl_Badges/lvl_08.png
+    - assets/images/lvl_Badges/lvl_09_locked.png
+    - assets/images/lvl_Badges/lvl_09.png
+    - assets/images/lvl_Badges/lvl_10_locked.png
+    - assets/images/lvl_Badges/lvl_10.png
+    - assets/images/lvl_Badges/lvl_11_locked.png
+    - assets/images/lvl_Badges/lvl_11.png
+    - assets/images/lvl_Badges/lvl_12_locked.png
+    - assets/images/lvl_Badges/lvl_12.png
     
 
 
