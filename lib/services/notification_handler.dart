@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_application/main.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 class NotificationHandler {
   static final FlutterLocalNotificationsPlugin
@@ -125,6 +126,36 @@ class NotificationHandler {
     // Debug remaining notifications
     await debugPendingNotifications();
   }
+  static Future<void> scheduleReminder({
+  required String taskId,
+  required String title,
+  required DateTime reminderTime,
+}) async {
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  const androidDetails = AndroidNotificationDetails(
+    'reminder_channel_id',
+    'Reminders',
+    channelDescription: 'Task reminders',
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+
+  const notificationDetails = NotificationDetails(android: androidDetails);
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    taskId.hashCode,
+    '⏰ Reminder',
+    title,
+    tz.TZDateTime.from(reminderTime, tz.local),
+    notificationDetails,
+    uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, 
+    matchDateTimeComponents: DateTimeComponents.time,
+    payload: taskId,
+  );
+}
 
   /// Cancel all notifications
   static Future<void> cancelAllNotifications() async {
