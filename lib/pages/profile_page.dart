@@ -260,7 +260,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     onTap: () =>
                                         user.showChangePasswordDialog(context),
                                     child: ListTile(
-                                      title: Text('Change Password',
+                                      title: Text('Password',
                                           style: TextStyle(
                                               fontFamily: 'Poppins',
                                               fontWeight: FontWeight.w600,

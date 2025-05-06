@@ -37,7 +37,7 @@ class HomePageState extends State<HomePage> {
     'assets/images/mainCrousel.png',
     'assets/images/managaTasksCrousel.png',
     'assets/images/setRemindersCrousel.png',
-    'assets/images/chatCrousel.png',
+    'assets/images/signedHome.png',
   ]; //carousel list
 
   // List of screens for navigation
@@ -204,7 +204,7 @@ class HomePageContentState extends State<HomePageContent> {
     'assets/images/mainCrousel.png',
     'assets/images/managaTasksCrousel.png',
     'assets/images/setRemindersCrousel.png',
-    'assets/images/chatCrousel.png',
+    'assets/images/signedHome.png',
   ];
 
   @override

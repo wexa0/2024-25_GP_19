@@ -515,6 +515,7 @@ void showMotivationalMessage(String message) {
   }
 
   void showSortDialog() {
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1769,8 +1770,12 @@ class TaskCard extends StatelessWidget {
   }) : super(key: key);
 
   void showDeleteConfirmationDialog(
+    
       BuildContext context, Map<String, dynamic> subtask) {
+        Image.asset('images/lvl_Badges/lvl_01.png');
+
     showDialog(
+      
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
