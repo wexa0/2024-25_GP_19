@@ -1091,7 +1091,7 @@ void showMotivationalMessage(String message) {
                         Icon(Icons.label, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text(
-                          'filter',
+                          'Filter',
                           style: TextStyle(
                             fontSize: 18,
                             color: Color(0xFF545454),
