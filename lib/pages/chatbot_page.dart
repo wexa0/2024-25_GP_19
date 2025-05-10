@@ -2612,21 +2612,25 @@ _showTopNotification("Task added successfully! ✅");
 
                         lastMessageDate = messageDate;
                         if (msgData["message"] != null && msgData["message"].toString().trim().isNotEmpty) {
+  var doc;
   messageWidgets.add(_buildChatBubble(
     message: msgData["message"],
     isUser: true,
     screenWidth: MediaQuery.of(context).size.width,
+    doc:doc,
   ));
 }
 
 
                         if (response == null || response.isEmpty) {
+                          var doc;
                           messageWidgets.add(
                             _buildChatBubble(
                               message: "",
                               isUser: false,
                               isLoading: true,
                               screenWidth: MediaQuery.of(context).size.width,
+                              doc:doc,
                             ),
                           );
                         } else if (isValidUtf16(response)) {
@@ -2750,6 +2754,7 @@ if (actionSuggestion == "addition") {
                             extraContent = handleDelete(response);
                           }
 
+                          var doc;
                           messageWidgets.add(
                             _buildChatBubble(
                               message: response,
@@ -2757,15 +2762,18 @@ if (actionSuggestion == "addition") {
                               screenWidth: MediaQuery.of(context).size.width,
                               extraContent: extraContent,
                               actionType: actionType,
+                              doc: doc,
                             ),
                           );
                         } else {
+                          var doc;
                           messageWidgets.add(
                             _buildChatBubble(
                               message:
                                   "⚠️ Sorry, the message contains invalid characters and can't be displayed.",
                               isUser: false,
                               screenWidth: MediaQuery.of(context).size.width,
+                              doc:doc,
                             ),
                           );
                         }
@@ -3007,6 +3015,7 @@ if (actionSuggestion == "addition") {
     bool isLoading = false,
     Widget? extraContent,
     String? actionType,
+    required DocumentSnapshot doc,
   }) {
     bool isBot = !isUser && !isLoading;
     bool isTaskList = message.contains("📝 **Task Name:");
@@ -3044,6 +3053,64 @@ if (actionSuggestion == "addition") {
         ),
       );
     }
+
+    
+// handle breakdown task
+if (isBot && actionType == "Breakdown Task" && (doc.data() as Map<String, dynamic>?)?['show_breakdown_form'] == true) {
+  return Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF6FA),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
+      child: handleBreakdownTaskInput(
+        onSubmit: (taskName, estimatedTime) async {
+          await doc.reference.update({
+  'userMessage': {
+    'task_name': taskName,
+    'estimated_time': estimatedTime,
+  },
+  'actionType': 'Breakdown Task',
+  'show_breakdown_form': false,
+  'response': 'pending_submission',
+  'message': "Please break down the task '${taskName}' which will take about ${estimatedTime}.", // ✅ SMART NEW MESSAGE
+});
+
+          await Future.delayed(Duration(seconds: 1));
+          print("✅ Form submitted: taskName = $taskName, estimatedTime = $estimatedTime");
+        },
+      ),
+    ),
+  );
+}
+
+if (isBot) {
+  final response = (doc.data() as Map<String, dynamic>?)?['response'] ?? '';
+
+  if (response == 'pending_submission') {
+    // 🚫 Don't render anything while waiting
+    return const SizedBox.shrink();
+  }
+
+  // ✅ Otherwise, show the breakdown response
+  return Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE0F7FA),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Text(response),
+    ),
+  );
+}
+
 
     // 🔁 Handle grouped task responses (View My Schedule)
     if (isBot && isTaskList) {
@@ -3721,6 +3788,64 @@ $taskDetails
       children: widgets,
     );
   }
+
+  
+Widget handleBreakdownTaskInput({
+  required Function(String taskName, String estimatedTime) onSubmit,
+}) {
+  final TextEditingController taskController = TextEditingController();
+  final TextEditingController timeController = TextEditingController();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        "Let's break down a task!",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF2C3E50),
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      TextField(
+        controller: taskController,
+        decoration: const InputDecoration(
+          labelText: 'What do you want to break down?',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      TextField(
+        controller: timeController,
+        decoration: const InputDecoration(
+          labelText: 'Estimated time (e.g. 2 hours)',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      Align(
+        alignment: Alignment.centerRight,
+        child: ElevatedButton(
+          onPressed: () {
+            final taskName = taskController.text.trim();
+            final estimatedTime = timeController.text.trim();
+
+            if (taskName.isNotEmpty && estimatedTime.isNotEmpty) {
+              onSubmit(taskName, estimatedTime);
+              taskController.clear();
+              timeController.clear();
+            }
+          },
+          child: const Text("Break Down"),
+        ),
+      ),
+    ],
+  );
+}
 
   Future<void> deleteTaskById(String taskId) async {
     final firestore = FirebaseFirestore.instance;
