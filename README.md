@@ -22,7 +22,8 @@
 - **Framework:** Flutter (cross-platform development)
 - **Database:** Firebase
 - **Cloud Services:** Firebase for backend services
-- **AI Model:** OpenAI GPT-based chatbot, fine-tuned for ADHD support
+- **Backend Integration:** Python + Firebase Admin SDK
+- **AI Model:** OpenAI GPT3.5 Turbo
 - **Version Control:** GitHub
 - **Project Management:** Jira
 - **UI/UX Design:** Figma
@@ -57,7 +58,6 @@
      ```bash
      flutter run
      ```
-
 ---
 
 ### 🛠️ Troubleshooting
@@ -66,3 +66,9 @@
   ```bash
   flutter --version
   dart --version
+
+---
+### 🤖 Chatbot Backend
+  The source code and full running instructions for the AttentionLens chatbot backend — including the Python code, OpenAI API integration, and Firebase configuration — are available in the following repository:
+
+🔗 https://github.com/wexa0/AttentionsLens-Chatbot
