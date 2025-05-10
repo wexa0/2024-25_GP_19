@@ -22,7 +22,7 @@
 - **Framework:** Flutter (cross-platform development)
 - **Database:** Firebase
 - **Cloud Services:** Firebase for backend services
-- **AI Model:** OpenAI GPT-based chatbot, fine-tuned for ADHD support
+- **AI Model:** OpenAI GPT3.5 Turbo
 - **Version Control:** GitHub
 - **Project Management:** Jira
 - **UI/UX Design:** Figma
