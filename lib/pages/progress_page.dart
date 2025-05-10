@@ -1167,7 +1167,7 @@ Widget _buildLevelSection() {
                     radius: 40,
                     backgroundColor: Colors.transparent,
                     backgroundImage: AssetImage(
-                      'images/lvl_Badges/lvl_$levelString.png',
+                      'assets/images/lvl_Badges/lvl_$levelString.png',
                     ),
                   ),
                 ),
@@ -2478,9 +2478,9 @@ class SingleBadgePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Build paths for unlocked vs locked badges
     final unlockedBadgePath =
-        'images/lvl_Badges/lvl_${badgeLevel.toString().padLeft(2, '0')}.png';
+        'assets/images/lvl_Badges/lvl_${badgeLevel.toString().padLeft(2, '0')}.png';
     final lockedBadgePath =
-        'images/lvl_Badges/lvl_${badgeLevel.toString().padLeft(2, '0')}_locked.png';
+        'assets/images/lvl_Badges/lvl_${badgeLevel.toString().padLeft(2, '0')}_locked.png';
 
     // Calculate total points required
     final int totalPointsNeeded = getPointsRequiredForLevel(badgeLevel);
@@ -2565,7 +2565,7 @@ class AllBadgesPage extends StatelessWidget {
 Widget build(BuildContext context) {
   // Paths for current level badge image
   final String currentBadgePath =
-      'images/lvl_Badges/lvl_${userLevel.toString().padLeft(2, '0')}.png';
+      'assets/images/lvl_Badges/lvl_${userLevel.toString().padLeft(2, '0')}.png';
 
   return Scaffold(
     backgroundColor: const Color(0xFFF5F5F5),
@@ -2703,9 +2703,9 @@ FutureBuilder<DocumentSnapshot>(
 
               // Paths for each badge
               final unlockedBadgePath =
-                  'images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}.png';
+                  'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}.png';
               final lockedBadgePath =
-                  'images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}_locked.png';
+                  'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}_locked.png';
 
               return InkWell(
                 onTap: () {
