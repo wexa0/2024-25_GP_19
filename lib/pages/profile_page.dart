@@ -11,7 +11,6 @@ import 'guest_profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application/services/notification_service.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(home: ProfilePage()));
@@ -554,7 +553,6 @@ class _NotificationTimePickerState extends State<NotificationTimePicker> {
   bool isMotivationEnabled = true;
   bool isTaskReminderEnabled = true;
 
-
   @override
   void initState() {
     super.initState();
@@ -562,19 +560,20 @@ class _NotificationTimePickerState extends State<NotificationTimePicker> {
   }
 
   Future<void> _loadSavedTimes() async {
-  final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-  // Load saved times or fallback to default
-  setState(() {
-    motivationalTime = _parseTime(prefs.getString('motivational_time')) ?? TimeOfDay(hour: 8, minute: 0);
-    taskReminderTime = _parseTime(prefs.getString('task_reminder_time')) ?? TimeOfDay(hour: 21, minute: 0);
+    // Load saved times or fallback to default
+    setState(() {
+      motivationalTime = _parseTime(prefs.getString('motivational_time')) ??
+          TimeOfDay(hour: 8, minute: 0);
+      taskReminderTime = _parseTime(prefs.getString('task_reminder_time')) ??
+          TimeOfDay(hour: 21, minute: 0);
 
-    // 🟢 Load ON/OFF switch values (true if not saved yet)
-    isMotivationEnabled = prefs.getBool('motivation_enabled') ?? true;
-    isTaskReminderEnabled = prefs.getBool('task_reminder_enabled') ?? true;
-  });
-}
-
+      // 🟢 Load ON/OFF switch values (true if not saved yet)
+      isMotivationEnabled = prefs.getBool('motivation_enabled') ?? true;
+      isTaskReminderEnabled = prefs.getBool('task_reminder_enabled') ?? true;
+    });
+  }
 
   TimeOfDay? _parseTime(String? timeString) {
     if (timeString == null) return null;
@@ -582,77 +581,77 @@ class _NotificationTimePickerState extends State<NotificationTimePicker> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-Future<void> _pickTime(String type) async {
-  final picked = await showTimePicker(
-    context: context,
-    initialTime: type == 'motivation' ? motivationalTime! : taskReminderTime!,
-    builder: (BuildContext context, Widget? child) {
-      return Theme(
-        data: ThemeData.light().copyWith(
-          colorScheme: ColorScheme.light(
-            primary: Color(0xFF104A73),
-            onPrimary: Color(0xFFF5F7F8),
-            onSurface: Color(0xFF545454),
-            secondary: Color(0xFF79A3B7),
+  Future<void> _pickTime(String type) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: type == 'motivation' ? motivationalTime! : taskReminderTime!,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFF104A73),
+              onPrimary: Color(0xFFF5F7F8),
+              onSurface: Color(0xFF545454),
+              secondary: Color(0xFF79A3B7),
+            ),
+            dialogBackgroundColor: Color(0xFFF5F7F8),
           ),
-          dialogBackgroundColor: Color(0xFFF5F7F8),
-        ),
-        child: child!,
-      );
-    },
-  );
+          child: child!,
+        );
+      },
+    );
 
-  if (picked != null) {
+    if (picked != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final timeKey =
+          type == 'motivation' ? 'motivational_time' : 'task_reminder_time';
+      await prefs.setString(timeKey, '${picked.hour}:${picked.minute}');
+
+      if (type == 'motivation') {
+        setState(() {
+          motivationalTime = picked;
+        });
+
+        if (isMotivationEnabled) {
+          await NotificationService.cancelMotivationalNotification();
+          await NotificationService.scheduleDailyMotivationalNotification();
+        }
+      } else {
+        setState(() {
+          taskReminderTime = picked;
+        });
+
+        if (isTaskReminderEnabled) {
+          await NotificationService.cancelTaskReminderNotification();
+          await NotificationService
+              .scheduleCombinedReminderForIncompleteTasks();
+        }
+      }
+    }
+  }
+
+  Future<void> _toggleNotification(String type, bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    final timeKey = type == 'motivation' ? 'motivational_time' : 'task_reminder_time';
-    await prefs.setString(timeKey, '${picked.hour}:${picked.minute}');
-
     if (type == 'motivation') {
-      setState(() {
-        motivationalTime = picked;
-      });
+      setState(() => isMotivationEnabled = value);
+      prefs.setBool('motivation_enabled', value);
 
-      if (isMotivationEnabled) {
-        await NotificationService.cancelMotivationalNotification();
+      if (value) {
         await NotificationService.scheduleDailyMotivationalNotification();
+      } else {
+        await NotificationService.cancelMotivationalNotification();
       }
     } else {
-      setState(() {
-        taskReminderTime = picked;
-      });
+      setState(() => isTaskReminderEnabled = value);
+      prefs.setBool('task_reminder_enabled', value);
 
-      if (isTaskReminderEnabled) {
-        await NotificationService.cancelTaskReminderNotification();
+      if (value) {
         await NotificationService.scheduleCombinedReminderForIncompleteTasks();
+      } else {
+        await NotificationService.cancelTaskReminderNotification();
       }
     }
   }
-}
-
-Future<void> _toggleNotification(String type, bool value) async {
-  final prefs = await SharedPreferences.getInstance();
-  if (type == 'motivation') {
-    setState(() => isMotivationEnabled = value);
-    prefs.setBool('motivation_enabled', value);
-
-    if (value) {
-      await NotificationService.scheduleDailyMotivationalNotification();
-    } else {
-      await NotificationService.cancelMotivationalNotification();
-    }
-  } else {
-    setState(() => isTaskReminderEnabled = value);
-    prefs.setBool('task_reminder_enabled', value);
-
-    if (value) {
-      await NotificationService.scheduleCombinedReminderForIncompleteTasks();
-    } else {
-      await NotificationService.cancelTaskReminderNotification();
-    }
-  }
-}
-
-
 
   @override
   Widget build(BuildContext context) {

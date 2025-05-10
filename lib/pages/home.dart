@@ -42,13 +42,13 @@ class HomePageState extends State<HomePage> {
 
   // List of screens for navigation
   final List<Widget> _pages = [];
-final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
-@override
-void dispose() {
-  _scrollController.dispose(); // إلغاء استخدام الـ ScrollController
-  super.dispose();
-}
+  @override
+  void dispose() {
+    _scrollController.dispose(); // إلغاء استخدام الـ ScrollController
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -86,11 +86,10 @@ void dispose() {
               ds.data(); // No need for casting anymore with the correct type
           if (data != null) {
             if (mounted) {
-  setState(() {
-    Name = data['name'] ?? '';
-  });
-}
-
+              setState(() {
+                Name = data['name'] ?? '';
+              });
+            }
           }
         } else {
           print('Document does not exist.');
@@ -116,7 +115,6 @@ void dispose() {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) {
-
               switch (index) {
                 case 0:
                   return HomePage();
@@ -167,10 +165,7 @@ void dispose() {
 
         if (ds.exists) {
           var data = ds.data() as Map<String, dynamic>?; // Cast to Map
-          if (data != null &&
-              data.containsKey('name') 
-              ) {
-         
+          if (data != null && data.containsKey('name')) {
           } else {
             print('name does not exist');
           }
@@ -247,7 +242,8 @@ class HomePageContentState extends State<HomePageContent> {
             builder: (context, snapshot) {
               if (snapshot.hasData && snapshot.data != null) {
                 // Access the DocumentSnapshot properly
-                var userData = snapshot.data!.data(); // Use '!' to ensure non-null
+                var userData =
+                    snapshot.data!.data(); // Use '!' to ensure non-null
 
                 if (userData != null) {
                   return Text(
@@ -717,5 +713,4 @@ AppBar _buildAppBar() {
     centerTitle: true,
     automaticallyImplyLeading: false,
   );
-  
 }

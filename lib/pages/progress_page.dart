@@ -31,7 +31,8 @@ class _ProgressPageState extends State<ProgressPage> {
   String selectedSegment = "Task";
   String selectedTime = "Daily";
   int periodOffset = 0; // Tracks the offset for the date period navigation
-  bool _weeklyNotificationShown = false; // NEW: track if we already showed the snack bar
+  bool _weeklyNotificationShown =
+      false; // NEW: track if we already showed the snack bar
 
   // Category Dropdown Variables
   List<String> availableCategories = [];
@@ -56,7 +57,7 @@ class _ProgressPageState extends State<ProgressPage> {
     const Color(0xFF5D9CBE), // Muted Blue-Gray
     const Color(0xFF999999), // Medium Gray
   ];
- List<String> labels = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
+  List<String> labels = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
   @override
   void initState() {
     super.initState();
@@ -72,7 +73,7 @@ class _ProgressPageState extends State<ProgressPage> {
     }
 
     // Temporary testing override to always show the notification
-  _showWeeklyNotification(reset: true);
+    _showWeeklyNotification(reset: true);
 
     // NEW: Check if we should show the weekly comparison
     _checkWeeklyNotification();
@@ -86,109 +87,109 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Theme(
-    data: ThemeData(
-      textTheme: GoogleFonts.poppinsTextTheme(
-        Theme.of(context).textTheme,
-      ),
-    ),
-    child: Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text(
-          'Progress',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+  Widget build(BuildContext context) {
+    return Theme(
+      data: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(
+          Theme.of(context).textTheme,
         ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFEAEFF0),
-        elevation: 0,
-        automaticallyImplyLeading: false,
       ),
-      body: isLoading
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 170,
-                    height: 170,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        appBar: AppBar(
+          title: const Text(
+            'Progress',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: const Color(0xFFEAEFF0),
+          elevation: 0,
+          automaticallyImplyLeading: false,
+        ),
+        body: isLoading
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 170,
+                      height: 170,
+                    ),
+                    const SizedBox(height: 0),
+                    Lottie.asset(
+                      'assets/animations/loading.json',
+                      width: 150,
+                      height: 150,
+                    ),
+                  ],
+                ),
+              )
+            : CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _buildSegmentControl(),
+                    ),
                   ),
-                  const SizedBox(height: 0),
-                  Lottie.asset(
-                    'assets/animations/loading.json',
-                    width: 150,
-                    height: 150,
+
+                  // ✅ Sticky Date Navigation using `sliver_tools`
+                  SliverPinnedHeader(
+                    child: Container(
+                      color: const Color(0xFFF5F5F5),
+                      padding: const EdgeInsets.all(8.0),
+                      child: _buildDateNavigation(
+                          formattedCurrentDate(selectedTime, periodOffset)),
+                    ),
+                  ),
+
+                  // ✅ Main Content
+                  SliverList(
+                    delegate: SliverChildListDelegate([
+                      const SizedBox(height: 20),
+                      _buildLevelSection(),
+                      const SizedBox(height: 20),
+                      _buildTaskSummaryCards(),
+                      const SizedBox(height: 20),
+                      if (selectedSegment == "Task")
+                        _buildTaskCompletionSection(),
+                      if (selectedSegment == "Time") ...[
+                        _buildStreakCalendar(),
+                        const SizedBox(height: 20),
+                        _buildTimeSpentSection(),
+                      ],
+                    ]),
                   ),
                 ],
               ),
-            )
-          : CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _buildSegmentControl(),
-                  ),
-                ),
 
-                // ✅ Sticky Date Navigation using `sliver_tools`
-                SliverPinnedHeader(
-                  child: Container(
-                    color: const Color(0xFFF5F5F5),
-                    padding: const EdgeInsets.all(8.0),
-                    child: _buildDateNavigation(
-                        formattedCurrentDate(selectedTime, periodOffset)),
-                  ),
-                ),
+        // ✅ Added Navigation Bar Here
+        bottomNavigationBar: userID != null
+            ? CustomNavigationBar(
+                selectedIndex: selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              )
+            : GuestCustomNavigationBar(
+                selectedIndex: selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                },
+              ),
+      ),
+    );
+  }
 
-                // ✅ Main Content
-                SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 20),
-                    _buildLevelSection(),
-                    const SizedBox(height: 20),
-                    _buildTaskSummaryCards(),
-                    const SizedBox(height: 20),
-                    if (selectedSegment == "Task") _buildTaskCompletionSection(),
-                    if (selectedSegment == "Time") ...[
-                      _buildStreakCalendar(),
-                      const SizedBox(height: 20),
-                      _buildTimeSpentSection(),
-                    ],
-                  ]),
-                ),
-              ],
-            ),
-            
-      // ✅ Added Navigation Bar Here
-      bottomNavigationBar: userID != null
-          ? CustomNavigationBar(
-              selectedIndex: selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              },
-            )
-          : GuestCustomNavigationBar(
-              selectedIndex: selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  selectedIndex = index;
-                });
-              },
-            ),
-    ),
-  );
-}
-
-  
   Widget _buildSegment(String label, {required bool isSelected}) {
     // to switch between Time and Task Progress
     return Expanded(
@@ -267,21 +268,18 @@ Widget build(BuildContext context) {
   // }
 
   Future<void> _showWeeklyNotification({bool reset = false}) async {
-  final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-  if (reset) {
-    // Reset the last visited date for testing
-    await prefs.remove('lastVisitedWeekKey');
+    if (reset) {
+      // Reset the last visited date for testing
+      await prefs.remove('lastVisitedWeekKey');
+    }
   }
-
-}
-
-  
 
   // NEW: Check SharedPreferences to see if we've visited this week; if not, show the dialog
   Future<void> _checkWeeklyNotification() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // 1) Determine current year-week, e.g. "2023-W36"
     final now = DateTime.now();
     final currentWeekKey = _yearWeekString(now);
@@ -358,614 +356,614 @@ Widget build(BuildContext context) {
     final formattedDiff = diff.toStringAsFixed(1);
 
     String message;
-if (diff == 0) {
-  message = "You're maintaining consistency! Keep up the good work this week!";
-} else if (diff > 0) {
-  message = "Amazing progress! Your task completion increased by $sign$formattedDiff% compared to last week. Keep it up!";
-} else {
-  message = "Don't worry! Your task completion decreased by $sign$formattedDiff% compared to last week. Take it one step at a time—you’ve got this!";
-}
-
+    if (diff == 0) {
+      message =
+          "You're maintaining consistency! Keep up the good work this week!";
+    } else if (diff > 0) {
+      message =
+          "Amazing progress! Your task completion increased by $sign$formattedDiff% compared to last week. Keep it up!";
+    } else {
+      message =
+          "Don't worry! Your task completion decreased by $sign$formattedDiff% compared to last week. Take it one step at a time—you’ve got this!";
+    }
 
     // Actually show the alert
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-  showDialog(
-    
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        title: const Text(
-          'Weekly Task Completion Rate',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(fontSize: 16),
-        ),
-        backgroundColor: const Color(0xFFF5F7F8), // Adjust as needed
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)),
-                borderRadius: BorderRadius.circular(8.0),
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            title: const Text(
+              'Weekly Task Completion Rate',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(fontSize: 16),
+            ),
+            backgroundColor: const Color(0xFFF5F7F8), // Adjust as needed
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: Color(0xFF79A3B7)),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Color(0xFF79A3B7)),
+                ),
               ),
-            ),
-            child: const Text(
-              'OK',
-              style: TextStyle(color: Color(0xFF79A3B7)),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       );
-    },
-  );
-});
-
+    });
   }
 
-
   Widget _buildSegmentControl() {
-  return Container(
-    width: double.infinity, // Full width of the parent
-    decoration: BoxDecoration(
-      color: Colors.white, // or any other background color you prefer
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 1,
-          offset: Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        _buildSegment("Time", isSelected: selectedSegment == "Time"),
-        _buildSegment("Task", isSelected: selectedSegment == "Task"),
-      ],
-    ),
-  );
-}
-
-
-Widget _buildDateNavigation(String currentDate) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      // Left Arrow
-      Container(
-        width: 50, // Fixed width for the arrow box
-        height: 40, // Match height of the dropdown box
-        decoration: BoxDecoration(
-          color: const Color(0xFFDDE2E4), // Background color of the arrow box
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: const Color(0xFF79A3B7), // Border color
-            width: 1,
+    return Container(
+      width: double.infinity, // Full width of the parent
+      decoration: BoxDecoration(
+        color: Colors.white, // or any other background color you prefer
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 1,
+            offset: Offset(0, 2),
           ),
-        ),
-        child: IconButton(
-          onPressed: () {
-            setState(() {
-              periodOffset -= 1;
-              getCurrentDate(selectedTime, periodOffset);
-            });
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          padding: EdgeInsets.zero, // Remove extra padding from IconButton
-          constraints: const BoxConstraints(), // Remove default constraints
-        ),
+        ],
       ),
+      child: Row(
+        children: [
+          _buildSegment("Time", isSelected: selectedSegment == "Time"),
+          _buildSegment("Task", isSelected: selectedSegment == "Task"),
+        ],
+      ),
+    );
+  }
 
-      const SizedBox(width: 8), // Space between the arrow and the dropdown box
-
-      /// PopupMenuButton styled to look like a fixed-width dropdown menu
-      PopupMenuButton<String>(
-        color: Colors.white, // Background color of the popup menu
-        child: Container(
-          width: 250, // Fixed width for the dropdown box
-          height: 40, // Match height of the arrow boxes
-          padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget _buildDateNavigation(String currentDate) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Left Arrow
+        Container(
+          width: 50, // Fixed width for the arrow box
+          height: 40, // Match height of the dropdown box
           decoration: BoxDecoration(
-            color: const Color(0xFFDDE2E4), // Dropdown button background color
+            color: const Color(0xFFDDE2E4), // Background color of the arrow box
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: const Color(0xFF79A3B7), // Border color for dropdown button
+              color: const Color(0xFF79A3B7), // Border color
               width: 1,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center, // Center the text and icon
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  currentDate,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                periodOffset -= 1;
+                getCurrentDate(selectedTime, periodOffset);
+              });
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            padding: EdgeInsets.zero, // Remove extra padding from IconButton
+            constraints: const BoxConstraints(), // Remove default constraints
+          ),
+        ),
+
+        const SizedBox(
+            width: 8), // Space between the arrow and the dropdown box
+
+        /// PopupMenuButton styled to look like a fixed-width dropdown menu
+        PopupMenuButton<String>(
+          color: Colors.white, // Background color of the popup menu
+          child: Container(
+            width: 250, // Fixed width for the dropdown box
+            height: 40, // Match height of the arrow boxes
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color:
+                  const Color(0xFFDDE2E4), // Dropdown button background color
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color:
+                    const Color(0xFF79A3B7), // Border color for dropdown button
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // Center the text and icon
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    currentDate,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis, // Handles text overflow
                   ),
-                  overflow: TextOverflow.ellipsis, // Handles text overflow
                 ),
-              ),
-              const SizedBox(width: 8), // Space between text and dropdown icon
-              const Icon(
-                Icons.arrow_drop_down, // Dropdown arrow
-                color: Colors.black,
-              ),
-            ],
+                const SizedBox(
+                    width: 8), // Space between text and dropdown icon
+                const Icon(
+                  Icons.arrow_drop_down, // Dropdown arrow
+                  color: Colors.black,
+                ),
+              ],
+            ),
           ),
-        ),
-        initialValue: selectedTime,
-        onSelected: (String value) {
-          setState(() {
-            selectedTime = value;
-            periodOffset = 0;
-            getCurrentDate(selectedTime, periodOffset);
-          });
-        },
-        itemBuilder: (BuildContext context) {
-          return labels.map((String label) {
-            return PopupMenuItem<String>(
-              value: label,
-              child: Text(label),
-            );
-          }).toList();
-        },
-      ),
-
-      const SizedBox(width: 8), // Space between the dropdown box and the arrow
-
-      // Right Arrow
-      Container(
-        width: 50, // Fixed width for the arrow box
-        height: 40, // Match height of the dropdown box
-        decoration: BoxDecoration(
-          color: const Color(0xFFDDE2E4), // Background color of the arrow box
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: const Color(0xFF79A3B7), // Border color
-            width: 1,
-          ),
-        ),
-        child: IconButton(
-          onPressed: () {
+          initialValue: selectedTime,
+          onSelected: (String value) {
             setState(() {
-              periodOffset += 1;
+              selectedTime = value;
+              periodOffset = 0;
               getCurrentDate(selectedTime, periodOffset);
             });
           },
-          icon: const Icon(Icons.arrow_forward, color: Colors.black),
-          padding: EdgeInsets.zero, // Remove extra padding from IconButton
-          constraints: const BoxConstraints(), // Remove default constraints
+          itemBuilder: (BuildContext context) {
+            return labels.map((String label) {
+              return PopupMenuItem<String>(
+                value: label,
+                child: Text(label),
+              );
+            }).toList();
+          },
         ),
-      ),
-    ],
-  );
-}
 
+        const SizedBox(
+            width: 8), // Space between the dropdown box and the arrow
 
-
- Widget _buildTaskSummaryCards() {
-  // Present the total number of tasks/time
-  final currentDate = DateTime.now().add(Duration(days: periodOffset));
-
-  return FutureBuilder<Map<String, int>>(
-    future: countTasksByStatus(selectedTime, currentDate),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (snapshot.hasError) {
-        return const Center(child: Text("Error loading task counts"));
-      }
-
-      final counts =
-          snapshot.data ?? {'uncompleted': 0, 'pending': 0, 'completed': 0};
-
-      // Generate Task cards based on selectedSegment
-      return selectedSegment == "Task"
-          ? Center(
-              child: _buildCombinedTaskCard(context, counts),
-            )
-          : selectedSegment == "Time"
-              ? _buildTotalTimeCard()
-              : const SizedBox.shrink();
-    },
-  );
-}
-
-Widget _buildCombinedTaskCard(BuildContext context, Map<String, int> counts) {
-  return Container(
-    width: MediaQuery.of(context).size.width ,
-    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
-    decoration: BoxDecoration(
-      color:  Color(0xFFF9F9F9), // ✅ Changed to match other cards
-      borderRadius: BorderRadius.circular(15),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 4, // ✅ Increased to match other cards
-          offset: Offset(0, 3), // ✅ More pronounced shadow
-        ),
-      ],
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        // Completed Task
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Completed Tasks",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              counts['completed'].toString(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
-        // Pending Task
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Pending Tasks",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              counts['pending'].toString(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-
-
-Widget _buildTotalTimeCard() {
-  return FutureBuilder<double>(
-    future: _fetchSpentTimeByPeriod(selectedTime),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (snapshot.hasError) {
-        return Center(
-          child: Text(
-            "Error: ${snapshot.error}",
-            style: const TextStyle(color: Colors.red),
-          ),
-        );
-      }
-
-      final double totalSeconds = snapshot.data ?? 0.0;
-      final int hours = totalSeconds ~/ 3600;
-      final int leftover = (totalSeconds % 3600).toInt();
-      final int minutes = leftover ~/ 60;
-      final int seconds = leftover % 60;
-
-      return Center(
-        child: Container(
-          width: MediaQuery.of(context).size.width ,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+        // Right Arrow
+        Container(
+          width: 50, // Fixed width for the arrow box
+          height: 40, // Match height of the dropdown box
           decoration: BoxDecoration(
-            color:  Color(0xFFF9F9F9), // ✅ Standardized color
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 4, // ✅ Increased to match other cards
-                offset: Offset(0, 3), // ✅ Consistent shadow
-              ),
-            ],
+            color: const Color(0xFFDDE2E4), // Background color of the arrow box
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: const Color(0xFF79A3B7), // Border color
+              width: 1,
+            ),
           ),
-          child: Column(
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                periodOffset += 1;
+                getCurrentDate(selectedTime, periodOffset);
+              });
+            },
+            icon: const Icon(Icons.arrow_forward, color: Colors.black),
+            padding: EdgeInsets.zero, // Remove extra padding from IconButton
+            constraints: const BoxConstraints(), // Remove default constraints
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskSummaryCards() {
+    // Present the total number of tasks/time
+    final currentDate = DateTime.now().add(Duration(days: periodOffset));
+
+    return FutureBuilder<Map<String, int>>(
+      future: countTasksByStatus(selectedTime, currentDate),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(child: Text("Error loading task counts"));
+        }
+
+        final counts =
+            snapshot.data ?? {'uncompleted': 0, 'pending': 0, 'completed': 0};
+
+        // Generate Task cards based on selectedSegment
+        return selectedSegment == "Task"
+            ? Center(
+                child: _buildCombinedTaskCard(context, counts),
+              )
+            : selectedSegment == "Time"
+                ? _buildTotalTimeCard()
+                : const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildCombinedTaskCard(BuildContext context, Map<String, int> counts) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+      decoration: BoxDecoration(
+        color: Color(0xFFF9F9F9), // ✅ Changed to match other cards
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 4, // ✅ Increased to match other cards
+            offset: Offset(0, 3), // ✅ More pronounced shadow
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Completed Task
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Time Spent",
+                "Completed Tasks",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Hours
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Hours",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        hours.toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Minutes
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Minutes",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        minutes.toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Seconds
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Seconds",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        seconds.toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              const SizedBox(height: 4),
+              Text(
+                counts['completed'].toString(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
               ),
             ],
           ),
-        ),
-      );
-    },
-  );
-}
-
-
-  /// Calculates how many consecutive days (ending with the latest date)
-/// are present in [streakDates].
-int _calculateCurrentStreak(List<DateTime> streakDates) {
-  if (streakDates.isEmpty) return 0;
-
-  // Sort dates in ascending order
-  streakDates.sort((a, b) => a.compareTo(b));
-
-  // Start streak at 1 (since we have at least one date)
-  int streak = 1;
-
-  // Compare each date with the next-later one (starting from the end)
-  for (int i = streakDates.length - 2; i >= 0; i--) {
-    final currentDay = DateTime(streakDates[i].year, streakDates[i].month, streakDates[i].day);
-    final nextDay = DateTime(streakDates[i + 1].year, streakDates[i + 1].month, streakDates[i + 1].day);
-
-    // If the difference is exactly 1 day, increment the streak
-    if (nextDay.difference(currentDay).inDays == 1) {
-      streak++;
-    } else {
-      // As soon as we find a gap, we stop (current streak is broken)
-      break;
-    }
+          // Pending Task
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Pending Tasks",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                counts['pending'].toString(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  return streak;
-}
+  Widget _buildTotalTimeCard() {
+    return FutureBuilder<double>(
+      future: _fetchSpentTimeByPeriod(selectedTime),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-  /// Helper method to build the CleanCalendar widget for streaks, wrapped in a styled card
-  bool _expanded = false; // Tracks if the calendar is expanded
-
-Widget _buildStreakCalendar() {
-  return FutureBuilder<List<DateTime>>(
-    future: _fetchStreakDates(), // Your method to get streakDates
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (snapshot.hasError) {
-        return const Center(child: Text("Error loading streak dates"));
-      }
-
-      // 1) Get the streak dates
-      final List<DateTime> streakDates = snapshot.data ?? [];
-
-      // 2) Calculate current streak
-      final int currentStreak = _calculateCurrentStreak(streakDates);
-
-      // 3) Check if today's date is in the streakDates (ignoring time)
-      final DateTime today = DateTime.now();
-      final bool isTodayInStreak = streakDates.any((date) =>
-          date.year == today.year &&
-          date.month == today.month &&
-          date.day == today.day);
-
-      // 4) Return a single card (Container) holding everything
-      return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9F9F9),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Error: ${snapshot.error}",
+              style: const TextStyle(color: Colors.red),
             ),
-          ],
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ---- Top row: Current streak & arrow/flame on the right ----
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _expanded = !_expanded; // Toggle expansion
-                });
-              },
-              child: Row(
-                children: [
-                  // Left side: "Current Streak" and the count
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          );
+        }
+
+        final double totalSeconds = snapshot.data ?? 0.0;
+        final int hours = totalSeconds ~/ 3600;
+        final int leftover = (totalSeconds % 3600).toInt();
+        final int minutes = leftover ~/ 60;
+        final int seconds = leftover % 60;
+
+        return Center(
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 22),
+            decoration: BoxDecoration(
+              color: Color(0xFFF9F9F9), // ✅ Standardized color
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4, // ✅ Increased to match other cards
+                  offset: Offset(0, 3), // ✅ Consistent shadow
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Time Spent",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Hours
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          "Current Streak",
+                          "Hours",
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "$currentStreak Day${currentStreak == 1 ? '' : 's'}",
+                          hours.toString(),
                           style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  // Right side: Column with arrow on top, flame on bottom
-                  Column(
-                    children: [
-                      Icon(
-                        _expanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        size: 28,
-                      ),
-                      const SizedBox(height: 8),
-                      Icon(
-                        Icons.whatshot,
-                        size: 90, 
-                        color: isTodayInStreak ? Colors.orange : Colors.grey,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    // Minutes
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "Minutes",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          minutes.toString(),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Seconds
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "Seconds",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          seconds.toString(),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+        );
+      },
+    );
+  }
 
-            // ---- If expanded, show the streak calendar below ----
-            if (_expanded) ...[
-              const SizedBox(height: 16),
-              /*const Text(
+  /// Calculates how many consecutive days (ending with the latest date)
+  /// are present in [streakDates].
+  int _calculateCurrentStreak(List<DateTime> streakDates) {
+    if (streakDates.isEmpty) return 0;
+
+    // Sort dates in ascending order
+    streakDates.sort((a, b) => a.compareTo(b));
+
+    // Start streak at 1 (since we have at least one date)
+    int streak = 1;
+
+    // Compare each date with the next-later one (starting from the end)
+    for (int i = streakDates.length - 2; i >= 0; i--) {
+      final currentDay = DateTime(
+          streakDates[i].year, streakDates[i].month, streakDates[i].day);
+      final nextDay = DateTime(streakDates[i + 1].year,
+          streakDates[i + 1].month, streakDates[i + 1].day);
+
+      // If the difference is exactly 1 day, increment the streak
+      if (nextDay.difference(currentDay).inDays == 1) {
+        streak++;
+      } else {
+        // As soon as we find a gap, we stop (current streak is broken)
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /// Helper method to build the CleanCalendar widget for streaks, wrapped in a styled card
+  bool _expanded = false; // Tracks if the calendar is expanded
+
+  Widget _buildStreakCalendar() {
+    return FutureBuilder<List<DateTime>>(
+      future: _fetchStreakDates(), // Your method to get streakDates
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(child: Text("Error loading streak dates"));
+        }
+
+        // 1) Get the streak dates
+        final List<DateTime> streakDates = snapshot.data ?? [];
+
+        // 2) Calculate current streak
+        final int currentStreak = _calculateCurrentStreak(streakDates);
+
+        // 3) Check if today's date is in the streakDates (ignoring time)
+        final DateTime today = DateTime.now();
+        final bool isTodayInStreak = streakDates.any((date) =>
+            date.year == today.year &&
+            date.month == today.month &&
+            date.day == today.day);
+
+        // 4) Return a single card (Container) holding everything
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F9F9),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ---- Top row: Current streak & arrow/flame on the right ----
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _expanded = !_expanded; // Toggle expansion
+                  });
+                },
+                child: Row(
+                  children: [
+                    // Left side: "Current Streak" and the count
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Current Streak",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "$currentStreak Day${currentStreak == 1 ? '' : 's'}",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Right side: Column with arrow on top, flame on bottom
+                    Column(
+                      children: [
+                        Icon(
+                          _expanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          size: 28,
+                        ),
+                        const SizedBox(height: 8),
+                        Icon(
+                          Icons.whatshot,
+                          size: 90,
+                          color: isTodayInStreak ? Colors.orange : Colors.grey,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // ---- If expanded, show the streak calendar below ----
+              if (_expanded) ...[
+                const SizedBox(height: 16),
+                /*const Text(
                 "Streak Calendar",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),*/
-              CleanCalendar(
-                // Pass streak dates
-                datesForStreaks: streakDates,
+                CleanCalendar(
+                  // Pass streak dates
+                  datesForStreaks: streakDates,
 
-                // Conditionally set the calendar view
-                datePickerCalendarView:
-                    (selectedTime == "Daily" || selectedTime == "Weekly")
-                        ? DatePickerCalendarView.weekView
-                        : DatePickerCalendarView.monthView,
+                  // Conditionally set the calendar view
+                  datePickerCalendarView:
+                      (selectedTime == "Daily" || selectedTime == "Weekly")
+                          ? DatePickerCalendarView.weekView
+                          : DatePickerCalendarView.monthView,
 
-                // Current date style
-                currentDateProperties: DatesProperties(
-                  datesDecoration: DatesDecoration(
-                    datesBorderRadius: 1000,
-                    datesBackgroundColor: Colors.transparent,
-                    datesBorderColor: Colors.red, // highlight current date
-                    datesTextColor: Colors.black,
+                  // Current date style
+                  currentDateProperties: DatesProperties(
+                    datesDecoration: DatesDecoration(
+                      datesBorderRadius: 1000,
+                      datesBackgroundColor: Colors.transparent,
+                      datesBorderColor: Colors.red, // highlight current date
+                      datesTextColor: Colors.black,
+                    ),
+                  ),
+
+                  // General style for other dates
+                  generalDatesProperties: DatesProperties(
+                    datesDecoration: DatesDecoration(
+                      datesBorderRadius: 1000,
+                      datesBackgroundColor: Colors.grey[200],
+                      datesBorderColor:
+                          const Color.fromARGB(255, 205, 203, 203),
+                      datesTextColor: Colors.black,
+                    ),
+                  ),
+
+                  // Style for streak dates
+                  streakDatesProperties: DatesProperties(
+                    datesDecoration: DatesDecoration(
+                      datesBorderRadius: 1000,
+                      datesBackgroundColor: const Color(0xFF79A3B7),
+                      datesBorderColor: const Color.fromARGB(255, 91, 126, 142),
+                      datesTextColor: Colors.white,
+                    ),
+                  ),
+
+                  // Leading/trailing dates style
+                  leadingTrailingDatesProperties: DatesProperties(
+                    datesDecoration: DatesDecoration(
+                      datesBorderRadius: 1000,
+                      datesBackgroundColor: Colors.transparent,
+                      datesBorderColor: Colors.transparent,
+                    ),
                   ),
                 ),
-
-                // General style for other dates
-                generalDatesProperties: DatesProperties(
-                  datesDecoration: DatesDecoration(
-                    datesBorderRadius: 1000,
-                    datesBackgroundColor: Colors.grey[200],
-                    datesBorderColor: const Color.fromARGB(255, 205, 203, 203),
-                    datesTextColor: Colors.black,
-                  ),
-                ),
-
-                // Style for streak dates
-                streakDatesProperties: DatesProperties(
-                  datesDecoration: DatesDecoration(
-                    datesBorderRadius: 1000,
-                    datesBackgroundColor: const Color(0xFF79A3B7),
-                    datesBorderColor: const Color.fromARGB(255, 91, 126, 142),
-                    datesTextColor: Colors.white,
-                  ),
-                ),
-
-                // Leading/trailing dates style
-                leadingTrailingDatesProperties: DatesProperties(
-                  datesDecoration: DatesDecoration(
-                    datesBorderRadius: 1000,
-                    datesBackgroundColor: Colors.transparent,
-                    datesBorderColor: Colors.transparent,
-                  ),
-                ),
-              ),
+              ],
             ],
-          ],
-        ),
-      );
-    },
-  );
-}
-
-
+          ),
+        );
+      },
+    );
+  }
 
   Future<List<DateTime>> _fetchStreakDates() async {
     // Fetch the current user
@@ -1083,118 +1081,115 @@ Widget _buildStreakCalendar() {
     return series;
   }
 
+  Widget _buildLevelSection() {
+    User? firebaseUser = FirebaseAuth.instance.currentUser;
 
+    if (firebaseUser == null) {
+      return const Center(
+        child: Text("Please log in to see your progress."),
+      );
+    }
 
-Widget _buildLevelSection() {
-  
-  User? firebaseUser = FirebaseAuth.instance.currentUser;
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('User')
+          .doc(firebaseUser.uid)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-  if (firebaseUser == null) {
-    return const Center(
-      child: Text("Please log in to see your progress."),
+        if (snapshot.hasError) {
+          return const Center(child: Text("Error fetching user data."));
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const Center(child: Text("User data not found."));
+        }
+
+        // Retrieve points and level from Firestore
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        int points = data.containsKey('point') ? data['point'] : 0;
+
+        int level = data.containsKey('level') ? data['level'] : 1;
+
+        final String levelString = level.toString().padLeft(2, '0');
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          decoration: BoxDecoration(
+            color: Color(0xFFF9F9F9),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 2,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ✅ Title "Achievement Level"
+
+              const Text(
+                "Achievement Level",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // ✅ Row: Badge on the left, Centered Level text on the right
+              Row(
+                children: [
+                  // Badge (left)
+                  InkWell(
+                    onTap: () {
+                      // Navigate to AllBadgesPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AllBadgesPage(userLevel: level),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.transparent,
+                      backgroundImage: AssetImage(
+                        'assets/images/lvl_Badges/lvl_$levelString.png',
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Centered Level Text (right)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'Level $level',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
-
-  return FutureBuilder<DocumentSnapshot>(
-    future: FirebaseFirestore.instance.collection('User').doc(firebaseUser.uid).get(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (snapshot.hasError) {
-        return const Center(child: Text("Error fetching user data."));
-      }
-
-      if (!snapshot.hasData || !snapshot.data!.exists) {
-        return const Center(child: Text("User data not found."));
-      }
-
-      // Retrieve points and level from Firestore
-      final data = snapshot.data!.data() as Map<String, dynamic>;
-      int points = data.containsKey('point') ? data['point'] : 0;
-
-      int level = data.containsKey('level') ? data['level'] : 1;
-
-      final String levelString = level.toString().padLeft(2, '0');
-
-      return Container(
-        
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-        decoration: BoxDecoration(
-          color: Color(0xFFF9F9F9),
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 2,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          
-          crossAxisAlignment: CrossAxisAlignment.start,
-          
-          children: [
-            // ✅ Title "Achievement Level"
-            
-            const Text(
-              "Achievement Level",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // ✅ Row: Badge on the left, Centered Level text on the right
-            Row(
-              children: [
-                // Badge (left)
-                InkWell(
-                  onTap: () {
-                    // Navigate to AllBadgesPage
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AllBadgesPage(userLevel: level),
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.transparent,
-                    backgroundImage: AssetImage(
-                      'assets/images/lvl_Badges/lvl_$levelString.png',
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // Centered Level Text (right)
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'Level $level',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
 
 // Helper function to get all periods (even those without tasks)
   Widget _buildTaskCompletionSection() {
@@ -1795,9 +1790,9 @@ Widget _buildLevelSection() {
       });
     } catch (e) {
       if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
+        setState(() {
+          isLoading = false;
+        });
       }
     }
   }
@@ -2081,7 +2076,6 @@ Widget _buildLevelSection() {
       return {};
     }
   }
-  
 
   Future<Map<String, int>> countTasksByStatus(
       String selectedTime, DateTime currentDate) async {
@@ -2448,11 +2442,10 @@ class _DropdownUnderWidgetState extends State<DropdownUnderWidget> {
   }
 }
 
-
 class SingleBadgePage extends StatelessWidget {
-  final int badgeLevel;       // Which badge level is this (1..10, etc.)
-  final bool isUnlocked;      // Whether the user has reached this level
-  final int userLevel;        // The user's current level
+  final int badgeLevel; // Which badge level is this (1..10, etc.)
+  final bool isUnlocked; // Whether the user has reached this level
+  final int userLevel; // The user's current level
 
   const SingleBadgePage({
     Key? key,
@@ -2492,7 +2485,7 @@ class SingleBadgePage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: const Color(0xFFEAEFF0),
         elevation: 0,
-          automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Column(
@@ -2530,6 +2523,7 @@ class SingleBadgePage extends StatelessWidget {
     );
   }
 }
+
 /// Returns the total points required to *be* at [targetLevel].
 /// - Level 1 means 0 points spent so far.
 /// - Level 2 means you must have spent 100 points so far.
@@ -2550,7 +2544,6 @@ int getPointsRequiredForLevel(int targetLevel) {
   return totalPoints;
 }
 
-
 class AllBadgesPage extends StatelessWidget {
   final int userLevel; // The user's current level
 
@@ -2559,247 +2552,259 @@ class AllBadgesPage extends StatelessWidget {
     required this.userLevel,
   }) : super(key: key);
 
-  static const int maxLevel = 12; 
+  static const int maxLevel = 12;
 
   @override
-Widget build(BuildContext context) {
-  // Paths for current level badge image
-  final String currentBadgePath =
-      'assets/images/lvl_Badges/lvl_${userLevel.toString().padLeft(2, '0')}.png';
+  Widget build(BuildContext context) {
+    // Paths for current level badge image
+    final String currentBadgePath =
+        'assets/images/lvl_Badges/lvl_${userLevel.toString().padLeft(2, '0')}.png';
 
-  return Scaffold(
-    backgroundColor: const Color(0xFFF5F5F5),
-    appBar: AppBar(
-  title: const Text(
-    'My Badges',
-    style: TextStyle(
-      color: Colors.black,
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-  centerTitle: true,
-  backgroundColor: const Color(0xFFEAEFF0),
-  elevation: 0,
-  automaticallyImplyLeading: false,
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.help_outline, color: Colors.black),
-      onPressed: () {
-        _showPointRulesDialog(context);
-      },
-    ),
-  ],
-),
-
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-
-          // ✅ Large Current Level Badge (Not Sticky)
-          Center(
-            child: Image.asset(
-              currentBadgePath,
-              width: 150, // Large size
-              height: 150,
-              fit: BoxFit.contain,
-            ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text(
+          'My Badges',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-
-          const SizedBox(height: 16),
-
-          // ✅ Level Progress Bar with Remaining Points
-FutureBuilder<DocumentSnapshot>(
-  future: FirebaseFirestore.instance
-      .collection('User')
-      .doc(FirebaseAuth.instance.currentUser?.uid)
-      .get(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const CircularProgressIndicator();
-    }
-
-    if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-      return const Center(child: Text("Error loading points."));
-    }
-
-    // Retrieve current points and level from Firestore
-    int currentPoints = snapshot.data!['point'] ?? 0;
-    int userLevel = snapshot.data!['level'] ?? 1;
-
-    // Get required points for next level
-    int nextLevelPoints = getPointsRequiredForLevel(userLevel + 1);
-    int pointsForCurrentLevel = getPointsRequiredForLevel(userLevel);
-    int pointsToNext = nextLevelPoints - currentPoints;
-    double progress = (currentPoints.toDouble() / nextLevelPoints).clamp(0.0, 1.0);
-
-    return Column(
-      children: [
-        Text(
-          "Level $userLevel",
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
-
-        // Progress Bar
-        Stack(
-          children: [
-            Container(
-              height: 20,
-              width: 300,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            FractionallySizedBox(
-              widthFactor: progress,
-              child: Container(
-                height: 20,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF79A3B7),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-
-        // Displaying Points Information
-        Text(
-          '$currentPoints / $nextLevelPoints points',
-          style: const TextStyle(fontSize: 14),
-        ),
-        Text(
-          '${pointsToNext > 0 ? pointsToNext : 0} points remaining to next level',
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-      ],
-    );
-  },
-),
-
-
-          const SizedBox(height: 24),
-
-          // ✅ Badge Grid Below (Remains Scrollable)
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(), // Prevents nested scrolling
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, // 3 badges per row
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            itemCount: maxLevel,
-            itemBuilder: (context, index) {
-              final levelIndex = index + 1;
-              final bool isUnlocked = userLevel >= levelIndex;
-
-              // Paths for each badge
-              final unlockedBadgePath =
-                  'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}.png';
-              final lockedBadgePath =
-                  'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}_locked.png';
-
-              return InkWell(
-                onTap: () {
-                  // Navigate to SingleBadgePage
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SingleBadgePage(
-                        badgeLevel: levelIndex,
-                        isUnlocked: isUnlocked,
-                        userLevel: userLevel,
-                      ),
-                    ),
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      child: Image.asset(
-                        isUnlocked ? unlockedBadgePath : lockedBadgePath,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Level $levelIndex',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isUnlocked ? Colors.black : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              );
+        centerTitle: true,
+        backgroundColor: const Color(0xFFEAEFF0),
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.black),
+            onPressed: () {
+              _showPointRulesDialog(context);
             },
           ),
         ],
       ),
-    ),
-  );
-}
-void _showPointRulesDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0), // ✅ Matches second dialog
-        ),
-        title: const Text(
-          "How to Earn Points",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color(0xFFF5F7F8), // ✅ Matches second dialog
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text("✔️ You earn points by completing tasks.", style: TextStyle(fontSize: 16)),
-            Text("✔️ Task completion date may increase or decrease your points.", style: TextStyle(fontSize: 16)),
-            Text("✔️ You earn more points by completing higher-priority tasks.", style: TextStyle(fontSize: 16)),
-            Text("✔️ Using the timer feature gives you extra points.", style: TextStyle(fontSize: 16)),
-            Text("✔️ You get additional points for dividing your tasks.", style: TextStyle(fontSize: 16)),
-            SizedBox(height: 10),
-            Text(
-              "Keep completing tasks to level up and unlock new badges!",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            const SizedBox(height: 20),
+
+            // ✅ Large Current Level Badge (Not Sticky)
+            Center(
+              child: Image.asset(
+                currentBadgePath,
+                width: 150, // Large size
+                height: 150,
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ✅ Level Progress Bar with Remaining Points
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('User')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+
+                if (snapshot.hasError ||
+                    !snapshot.hasData ||
+                    !snapshot.data!.exists) {
+                  return const Center(child: Text("Error loading points."));
+                }
+
+                // Retrieve current points and level from Firestore
+                int currentPoints = snapshot.data!['point'] ?? 0;
+                int userLevel = snapshot.data!['level'] ?? 1;
+
+                // Get required points for next level
+                int nextLevelPoints = getPointsRequiredForLevel(userLevel + 1);
+                int pointsForCurrentLevel =
+                    getPointsRequiredForLevel(userLevel);
+                int pointsToNext = nextLevelPoints - currentPoints;
+                double progress = (currentPoints.toDouble() / nextLevelPoints)
+                    .clamp(0.0, 1.0);
+
+                return Column(
+                  children: [
+                    Text(
+                      "Level $userLevel",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Progress Bar
+                    Stack(
+                      children: [
+                        Container(
+                          height: 20,
+                          width: 300,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: progress,
+                          child: Container(
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF79A3B7),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+
+                    // Displaying Points Information
+                    Text(
+                      '$currentPoints / $nextLevelPoints points',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    Text(
+                      '${pointsToNext > 0 ? pointsToNext : 0} points remaining to next level',
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
+            // ✅ Badge Grid Below (Remains Scrollable)
+            GridView.builder(
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(), // Prevents nested scrolling
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3, // 3 badges per row
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: maxLevel,
+              itemBuilder: (context, index) {
+                final levelIndex = index + 1;
+                final bool isUnlocked = userLevel >= levelIndex;
+
+                // Paths for each badge
+                final unlockedBadgePath =
+                    'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}.png';
+                final lockedBadgePath =
+                    'assets/images/lvl_Badges/lvl_${levelIndex.toString().padLeft(2, '0')}_locked.png';
+
+                return InkWell(
+                  onTap: () {
+                    // Navigate to SingleBadgePage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SingleBadgePage(
+                          badgeLevel: levelIndex,
+                          isUnlocked: isUnlocked,
+                          userLevel: userLevel,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Expanded(
+                        child: Image.asset(
+                          isUnlocked ? unlockedBadgePath : lockedBadgePath,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Level $levelIndex',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isUnlocked ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // ✅ Close the dialog
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white, // ✅ Matches second dialog
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(color: Color(0xFF79A3B7)), // ✅ Matches second dialog
-                borderRadius: BorderRadius.circular(8.0),
+      ),
+    );
+  }
+
+  void _showPointRulesDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(16.0), // ✅ Matches second dialog
+          ),
+          title: const Text(
+            "How to Earn Points",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: const Color(0xFFF5F7F8), // ✅ Matches second dialog
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("✔️ You earn points by completing tasks.",
+                  style: TextStyle(fontSize: 16)),
+              Text(
+                  "✔️ Task completion date may increase or decrease your points.",
+                  style: TextStyle(fontSize: 16)),
+              Text(
+                  "✔️ You earn more points by completing higher-priority tasks.",
+                  style: TextStyle(fontSize: 16)),
+              Text("✔️ Using the timer feature gives you extra points.",
+                  style: TextStyle(fontSize: 16)),
+              Text("✔️ You get additional points for dividing your tasks.",
+                  style: TextStyle(fontSize: 16)),
+              SizedBox(height: 10),
+              Text(
+                "Keep completing tasks to level up and unlock new badges!",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ✅ Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white, // ✅ Matches second dialog
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(
+                      color: Color(0xFF79A3B7)), // ✅ Matches second dialog
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'OK',
+                style: TextStyle(
+                    color: Color(0xFF79A3B7)), // ✅ Matches second dialog
               ),
             ),
-            child: const Text(
-              'OK',
-              style: TextStyle(color: Color(0xFF79A3B7)), // ✅ Matches second dialog
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-
-
+          ],
+        );
+      },
+    );
+  }
 }

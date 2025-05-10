@@ -19,7 +19,6 @@ import 'package:flutter_application/Classes/Category';
 import 'package:flutter_application/models/DailyMessageManager';
 import 'dart:math'; // Import for random selection
 
-
 class TaskPage extends StatefulWidget {
   const TaskPage({Key? key}) : super(key: key);
   @override
@@ -50,168 +49,162 @@ class TaskPageState extends State<TaskPage> {
     super.dispose();
   }
 
-List<String> mainTaskMessages = [
-  "Great job, [User]! 👏",
-  "Awesome work, [User]! 🚀",
-  "You're making progress, [User]! ✅",
-  "[User], you're unstoppable! 💪",
-  "Wow, [User]! Keep it up! 🔥",
-  "Mission accomplished, [User]! 🎯",
-  "[User], you nailed it! 👊",
-  "Another win for you, [User]! 🏆",
-  "[User], proud of you! 🌟",
-  "One step closer, [User]! 🚶‍♂️",
-  "[User], you're on fire! 🔥",
-  "Success feels great, right, [User]? 😃",
-  "You did amazing, [User]! 🎉",
-  "Crushing it, [User]! 💥",
-  "Boom! Task done, [User]! 🎯",
-  "Keep shining, [User]! ✨",
-  "Big win today, [User]! 🎊",
-  "Nothing can stop you now, [User]! 💪",
-  "Winning mindset, [User]! 🧠",
-  "[User], keep building momentum! 🔄",
-  "You're on the right path, [User]! ➡️",
-  "Legendary effort, [User]! 🦸",
-  "Hard work pays off, [User]! 💰",
-  "[User], you’re proving your strength! 💪",
-  "Another step forward, [User]! 👣",
-  "Momentum is on your side, [User]! 🏎️",
-  "You're creating success, [User]! 🌱",
-  "One step at a time, [User]! 🚶",
-  "Small wins lead to big success, [User]! 🏆",
-  "Fantastic achievement, [User]! 🎯"
-];
+  List<String> mainTaskMessages = [
+    "Great job, [User]! 👏",
+    "Awesome work, [User]! 🚀",
+    "You're making progress, [User]! ✅",
+    "[User], you're unstoppable! 💪",
+    "Wow, [User]! Keep it up! 🔥",
+    "Mission accomplished, [User]! 🎯",
+    "[User], you nailed it! 👊",
+    "Another win for you, [User]! 🏆",
+    "[User], proud of you! 🌟",
+    "One step closer, [User]! 🚶‍♂️",
+    "[User], you're on fire! 🔥",
+    "Success feels great, right, [User]? 😃",
+    "You did amazing, [User]! 🎉",
+    "Crushing it, [User]! 💥",
+    "Boom! Task done, [User]! 🎯",
+    "Keep shining, [User]! ✨",
+    "Big win today, [User]! 🎊",
+    "Nothing can stop you now, [User]! 💪",
+    "Winning mindset, [User]! 🧠",
+    "[User], keep building momentum! 🔄",
+    "You're on the right path, [User]! ➡️",
+    "Legendary effort, [User]! 🦸",
+    "Hard work pays off, [User]! 💰",
+    "[User], you’re proving your strength! 💪",
+    "Another step forward, [User]! 👣",
+    "Momentum is on your side, [User]! 🏎️",
+    "You're creating success, [User]! 🌱",
+    "One step at a time, [User]! 🚶",
+    "Small wins lead to big success, [User]! 🏆",
+    "Fantastic achievement, [User]! 🎯"
+  ];
 
+  List<String> subTaskMessages = [
+    "Nice move, [User]! ✅",
+    "One step at a time, [User]! 👣",
+    "Good progress, [User]! 📈",
+    "That’s the way, [User]! 👍",
+    "Keep going, [User]! 🔥",
+    "Step by step, [User]! 🚶",
+    "Another piece done, [User]! 🧩",
+    "You're doing great, [User]! 💪",
+    "Bit by bit, you got this, [User]! 🔄",
+    "Chipping away at success, [User]! 🔨",
+    "Just keep pushing, [User]! ⏳",
+    "Small wins matter, [User]! 🏆",
+    "You’re on track, [User]! 🚆",
+    "Great effort, [User]! 💥",
+    "Task by task, you’re winning, [User]! 🎯",
+    "Building success, [User]! 🏗️",
+    "Your progress is visible, [User]! 👀",
+    "You're focused, [User]! 🎯",
+    "Moving forward, [User]! ➡️",
+    "You got this, [User]! 💪",
+    "Making it happen, [User]! 🌟",
+    "Another win added, [User]! ✅",
+    "Steady progress, [User]! 🚶‍♂️",
+    "Stay consistent, [User]! 🔄",
+    "Keep stacking wins, [User]! 🏆",
+    "You're in control, [User]! 🎮",
+    "Little by little, you win, [User]! 🏅",
+    "Break it down, crush it, [User]! 💥",
+    "Momentum is everything, [User]! 🔄",
+    "Your effort matters, [User]! 💯"
+  ];
 
-List<String> subTaskMessages = [
-  "Nice move, [User]! ✅",
-  "One step at a time, [User]! 👣",
-  "Good progress, [User]! 📈",
-  "That’s the way, [User]! 👍",
-  "Keep going, [User]! 🔥",
-  "Step by step, [User]! 🚶",
-  "Another piece done, [User]! 🧩",
-  "You're doing great, [User]! 💪",
-  "Bit by bit, you got this, [User]! 🔄",
-  "Chipping away at success, [User]! 🔨",
-  "Just keep pushing, [User]! ⏳",
-  "Small wins matter, [User]! 🏆",
-  "You’re on track, [User]! 🚆",
-  "Great effort, [User]! 💥",
-  "Task by task, you’re winning, [User]! 🎯",
-  "Building success, [User]! 🏗️",
-  "Your progress is visible, [User]! 👀",
-  "You're focused, [User]! 🎯",
-  "Moving forward, [User]! ➡️",
-  "You got this, [User]! 💪",
-  "Making it happen, [User]! 🌟",
-  "Another win added, [User]! ✅",
-  "Steady progress, [User]! 🚶‍♂️",
-  "Stay consistent, [User]! 🔄",
-  "Keep stacking wins, [User]! 🏆",
-  "You're in control, [User]! 🎮",
-  "Little by little, you win, [User]! 🏅",
-  "Break it down, crush it, [User]! 💥",
-  "Momentum is everything, [User]! 🔄",
-  "Your effort matters, [User]! 💯"
-];
+  String getRandomMessage(List<String> messages, String userName) {
+    final random = Random();
+    String message = messages[random.nextInt(messages.length)];
+    return message.replaceAll("[User]", userName);
+  }
 
+  String userName = "";
 
-String getRandomMessage(List<String> messages, String userName) {
-  final random = Random();
-  String message = messages[random.nextInt(messages.length)];
-  return message.replaceAll("[User]", userName);
-}
+  void fetchUserName() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('User') //
+          .doc(user.uid)
+          .get();
 
-String userName = ""; 
-
-void fetchUserName() async {
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance
-        .collection('User') // 
-        .doc(user.uid)
-        .get();
-
-    if (userDoc.exists && userDoc.data() != null) {
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-      setState(() {
-     String fullName = userData['name'] ?? "Champion"; // استرجاع الاسم الكامل
-        userName = fullName.split(" ")[0]; // أخذ الاسم الأول فقط
-              });
-    } else {
-      setState(() {
-        userName = "Champion";
-      });
+      if (userDoc.exists && userDoc.data() != null) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          String fullName =
+              userData['name'] ?? "Champion"; // استرجاع الاسم الكامل
+          userName = fullName.split(" ")[0]; // أخذ الاسم الأول فقط
+        });
+      } else {
+        setState(() {
+          userName = "Champion";
+        });
+      }
     }
   }
-}
 
-
-void showMotivationalMessage(String message) {
-  OverlayState? overlayState = Overlay.of(context);
-  OverlayEntry overlayEntry = OverlayEntry(
-    builder: (context) => Positioned(
-      top: 50, // ✅ أعلى الشاشة
-      left: 20,
-      right: 20,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF24AB79), // ✅ لون قوي ومشجع
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10,
-                spreadRadius: 2,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+  void showMotivationalMessage(String message) {
+    OverlayState? overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: 50, // ✅ أعلى الشاشة
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF24AB79), // ✅ لون قوي ومشجع
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                  offset: Offset(0, 4),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
 
-  overlayState.insert(overlayEntry);
+    overlayState.insert(overlayEntry);
 
-  // ✅ اهتزاز بسيط عند ظهور الرسالة
-  HapticFeedback.mediumImpact();
+    // ✅ اهتزاز بسيط عند ظهور الرسالة
+    HapticFeedback.mediumImpact();
 
-  // ✅ إزالة الرسالة بعد 3 ثوانٍ
-  Future.delayed(Duration(seconds: 4), () {
-    overlayEntry.remove();
-  });
-}
-
-
-
+    // ✅ إزالة الرسالة بعد 3 ثوانٍ
+    Future.delayed(Duration(seconds: 4), () {
+      overlayEntry.remove();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-     fetchUserName();
+    fetchUserName();
     _fetchUserID();
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -515,7 +508,6 @@ void showMotivationalMessage(String message) {
   }
 
   void showSortDialog() {
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -856,9 +848,9 @@ void showMotivationalMessage(String message) {
       await task.updateCompletionStatus(2);
       await NotificationHandler.cancelNotification(task.taskID);
 
-        String message = getRandomMessage(mainTaskMessages, userName);
+      String message = getRandomMessage(mainTaskMessages, userName);
 
-    showMotivationalMessage(message);
+      showMotivationalMessage(message);
     } else {
       for (var subtask in taskData['subtasks']) {
         setState(() {
@@ -897,9 +889,9 @@ void showMotivationalMessage(String message) {
     if (newSubtaskCompletionStatus) {
       await NotificationHandler.cancelNotification(subtask['id']);
 
-        String message = getRandomMessage(subTaskMessages, userName);
+      String message = getRandomMessage(subTaskMessages, userName);
 
-    showMotivationalMessage(message);
+      showMotivationalMessage(message);
     }
 
     bool allSubtasksComplete =
@@ -1066,7 +1058,7 @@ void showMotivationalMessage(String message) {
                       ],
                     ),
                   ),
-                   const PopupMenuDivider(), 
+                  const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'sort',
                     child: Row(
@@ -1083,7 +1075,7 @@ void showMotivationalMessage(String message) {
                       ],
                     ),
                   ),
-                   const PopupMenuDivider(), 
+                  const PopupMenuDivider(),
                   PopupMenuItem<String>(
                     value: 'categorize',
                     child: Row(
@@ -1770,12 +1762,10 @@ class TaskCard extends StatelessWidget {
   }) : super(key: key);
 
   void showDeleteConfirmationDialog(
-    
       BuildContext context, Map<String, dynamic> subtask) {
-        Image.asset('images/lvl_Badges/lvl_01.png');
+    Image.asset('images/lvl_Badges/lvl_01.png');
 
     showDialog(
-      
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

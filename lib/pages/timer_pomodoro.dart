@@ -12,7 +12,6 @@ import 'package:device_apps/device_apps.dart';
 //import 'package:flutter_application/services/notification_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class AppBlocker {
   static const platform = MethodChannel('app_blocker_channel');
 }
@@ -27,8 +26,8 @@ Future<void> requestAccessibilityPermission() async {
 }
 
 class TimerPomodoro extends StatefulWidget {
-  final String taskId; 
-  final String taskName; 
+  final String taskId;
+  final String taskName;
   final String subTaskID;
   final String subTaskName;
   final int focusMinutes;
@@ -39,19 +38,18 @@ class TimerPomodoro extends StatefulWidget {
   String selectedSound;
   String selectedSoundText;
 
-  TimerPomodoro({
-    required this.taskId,
-    required this.taskName,
-    required this.subTaskID,
-    required this.subTaskName,
-    required this.focusMinutes,
-    required this.shortBreakMinutes,
-    required this.longBreakMinutes,
-    required this.rounds,
-    required this.page,
-    required this.selectedSound,
-    required this.selectedSoundText
-  });
+  TimerPomodoro(
+      {required this.taskId,
+      required this.taskName,
+      required this.subTaskID,
+      required this.subTaskName,
+      required this.focusMinutes,
+      required this.shortBreakMinutes,
+      required this.longBreakMinutes,
+      required this.rounds,
+      required this.page,
+      required this.selectedSound,
+      required this.selectedSoundText});
 
   @override
   _TimerPageState createState() => _TimerPageState();
@@ -87,8 +85,7 @@ class _TimerPageState extends State<TimerPomodoro> {
   String firstString = '';
   bool _isSoundOn = true;
   String selectedSound = 'none';
-   // A list of available sounds
-  
+  // A list of available sounds
 
   List<String> soundOptions = [
     'None',
@@ -105,7 +102,6 @@ class _TimerPageState extends State<TimerPomodoro> {
   int userLevel = 1;
   String? userID;
 
-  
   // Helper function to format time as mm:ss
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
@@ -116,57 +112,59 @@ class _TimerPageState extends State<TimerPomodoro> {
   // Helper function to add leading zeros
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
 
-static const platform = MethodChannel('app_blocker_channel');
+  static const platform = MethodChannel('app_blocker_channel');
 
-void _blockApps() async {
-  if (blockedApps.isEmpty) {
-    print("Blocked Apps list is empty.");
-    return;
+  void _blockApps() async {
+    if (blockedApps.isEmpty) {
+      print("Blocked Apps list is empty.");
+      return;
+    }
+
+    List<String> blockedPackages = blockedApps.entries
+        .where((entry) => entry.value == true)
+        .map((entry) => entry.key)
+        .toList();
+
+    print("Blocked Apps being sent to native layer: $blockedPackages");
+
+    try {
+      await platform
+          .invokeMethod('startBlocking', {"blockedApps": blockedPackages});
+      print("Blocking initiated successfully.");
+    } catch (e) {
+      print("Error while blocking apps: $e");
+    }
   }
 
-  List<String> blockedPackages = blockedApps.entries
-      .where((entry) => entry.value == true)
-      .map((entry) => entry.key)
-      .toList();
-
-  print("Blocked Apps being sent to native layer: $blockedPackages");
-
-  try {
-    await platform.invokeMethod('startBlocking', {"blockedApps": blockedPackages});
-    print("Blocking initiated successfully.");
-  } catch (e) {
-    print("Error while blocking apps: $e");
+  Future<void> _unblockApps() async {
+    try {
+      await platform
+          .invokeMethod('stopBlocking'); // إلغاء الحظر باستخدام MethodChannel
+      print("Apps unblocked successfully.");
+    } catch (e) {
+      print("Error while unblocking apps: $e");
+    }
   }
-}
 
-Future<void> _unblockApps() async {
-  try {
-    await platform.invokeMethod('stopBlocking'); // إلغاء الحظر باستخدام MethodChannel
-    print("Apps unblocked successfully.");
-  } catch (e) {
-    print("Error while unblocking apps: $e");
+  Future<void> _saveBlockedApps() async {
+    final prefs = await SharedPreferences.getInstance();
+    String jsonString = json.encode(blockedApps);
+    await prefs.setString('blockedApps', jsonString);
+    print("Blocked Apps saved successfully: $blockedApps");
   }
-}
 
-
-Future<void> _saveBlockedApps() async {
-  final prefs = await SharedPreferences.getInstance();
-  String jsonString = json.encode(blockedApps);
-  await prefs.setString('blockedApps', jsonString);
-  print("Blocked Apps saved successfully: $blockedApps");
-}
-
-
-Future<bool> checkAccessibilityPermission() async {
-  try {
-    final bool hasPermission = await AppBlocker.platform.invokeMethod('checkPermission');
-    return hasPermission;
-  } catch (e) {
-    print("Error checking accessibility permission: $e");
-    return false;
+  Future<bool> checkAccessibilityPermission() async {
+    try {
+      final bool hasPermission =
+          await AppBlocker.platform.invokeMethod('checkPermission');
+      return hasPermission;
+    } catch (e) {
+      print("Error checking accessibility permission: $e");
+      return false;
+    }
   }
-}
- String _getSoundPath(String sound) {
+
+  String _getSoundPath(String sound) {
     switch (sound) {
       case 'Nature Morning':
         return 'sounds/nature-morning.mp3';
@@ -186,7 +184,8 @@ Future<bool> checkAccessibilityPermission() async {
         return ''; // If no valid sound is selected, return an empty path
     }
   }
- void _toggleSound() {
+
+  void _toggleSound() {
     setState(() {
       _isSoundOn = !_isSoundOn; // Toggle the sound state
     });
@@ -198,137 +197,140 @@ Future<bool> checkAccessibilityPermission() async {
       _audioPlayer.stop();
     }
   }
-  
-   void _showSoundMenu(BuildContext context) {
-    
+
+  void _showSoundMenu(BuildContext context) {
     showDialog(
-     context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Colors.white, 
-        title: Text(
-          '               Select Sound',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF545454), 
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            '               Select Sound',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF545454),
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min, // Prevent column from taking unnecessary space
-          children: soundOptions.map((sound) {
-            bool isSelected = selectedSound == sound; // Check if this sound is the selected one
+          content: Column(
+            mainAxisSize: MainAxisSize
+                .min, // Prevent column from taking unnecessary space
+            children: soundOptions.map((sound) {
+              bool isSelected = selectedSound ==
+                  sound; // Check if this sound is the selected one
 
-            return TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white, // Button background color
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15), // Padding inside each button
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8), // Rounded corners for buttons
+              return TextButton(
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.white, // Button background color
+                  padding: EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 15), // Padding inside each button
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(8), // Rounded corners for buttons
+                  ),
+                  elevation: 0, // Remove shadow
                 ),
-                elevation: 0, // Remove shadow
-              ),
-              onPressed: () {
-                setState(() {
-                  selectedSound = sound;
-                  _isSoundOn = true;
-                });
-                widget.selectedSound = _getSoundPath(sound);
-                _playSelectedSound();
-                Navigator.of(context).pop(); // Close the dialog after selection
-              },
-              child: Row(
-                children: [
-                  Radio<String>(
-                    value: sound,
-                    groupValue: widget.selectedSoundText, // Group value determines which one is selected
-                    onChanged: (String? value) {
-                      setState(() {
-                        widget.selectedSoundText = value!;
-                        _isSoundOn = true;
-                      });
-                      if (value!=null){
-                      widget.selectedSound = _getSoundPath(value);
-                      _playSelectedSound();
-                      Navigator.of(context).pop(); // Close dialog after selecting
-                    }},
-                  ),
-                  Text(
-                    sound,
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF545454), // Dark gray color for the text
+                onPressed: () {
+                  setState(() {
+                    selectedSound = sound;
+                    _isSoundOn = true;
+                  });
+                  widget.selectedSound = _getSoundPath(sound);
+                  _playSelectedSound();
+                  Navigator.of(context)
+                      .pop(); // Close the dialog after selection
+                },
+                child: Row(
+                  children: [
+                    Radio<String>(
+                      value: sound,
+                      groupValue: widget
+                          .selectedSoundText, // Group value determines which one is selected
+                      onChanged: (String? value) {
+                        setState(() {
+                          widget.selectedSoundText = value!;
+                          _isSoundOn = true;
+                        });
+                        if (value != null) {
+                          widget.selectedSound = _getSoundPath(value);
+                          _playSelectedSound();
+                          Navigator.of(context)
+                              .pop(); // Close dialog after selecting
+                        }
+                      },
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      );
-    },
-  );
-   
+                    Text(
+                      sound,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color:
+                            Color(0xFF545454), // Dark gray color for the text
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
   }
 
-   // Function to play the selected sound
+  // Function to play the selected sound
   void _playSelectedSound() async {
-     if (widget.selectedSound.isNotEmpty) {
-       // هذه طبعتها للتحقق من عمل الصوت
-    print("Playing sound...:");
-    try {
-      await _audioPlayer.play(AssetSource(widget.selectedSound)); // Use AssetSource instead of string path
+    if (widget.selectedSound.isNotEmpty) {
+      // هذه طبعتها للتحقق من عمل الصوت
+      print("Playing sound...:");
+      try {
+        await _audioPlayer.play(AssetSource(
+            widget.selectedSound)); // Use AssetSource instead of string path
         print("Sound played.");
-    } catch (e) {
-      print("Error playing sound: $e");
-     }
-  }
-  else {
-    if (widget.selectedSound.isEmpty){
-       _audioPlayer.stop();
-
+      } catch (e) {
+        print("Error playing sound: $e");
+      }
+    } else {
+      if (widget.selectedSound.isEmpty) {
+        _audioPlayer.stop();
+      }
     }
   }
-  }
-
 
   // Start the timer
   Future<void> _startTimer() async {
-
-     if (blockedApps.isEmpty) {
-    await _loadBlockedApps(); // تحميل التطبيقات المحظورة إذا كانت فارغة
-  }
-
-      final hasPermission = await checkAccessibilityPermission();
-
-  if (!hasPermission) {
-    await requestAccessibilityPermission();
-    final newPermission = await checkAccessibilityPermission();
-    if (newPermission) {
-      if (_isFocusTime) {
-      _blockApps();
-    } else {
-      _unblockApps();
+    if (blockedApps.isEmpty) {
+      await _loadBlockedApps(); // تحميل التطبيقات المحظورة إذا كانت فارغة
     }
+
+    final hasPermission = await checkAccessibilityPermission();
+
+    if (!hasPermission) {
+      await requestAccessibilityPermission();
+      final newPermission = await checkAccessibilityPermission();
+      if (newPermission) {
+        if (_isFocusTime) {
+          _blockApps();
+        } else {
+          _unblockApps();
+        }
+      } else {
+        print("Accessibility permission denied.");
+      }
     } else {
-      print("Accessibility permission denied.");
+      _blockApps(); // إذا كانت الأذونات موجودة، استدعِ دالة الحظر مباشرةً
     }
-  } else {
-    _blockApps(); // إذا كانت الأذونات موجودة، استدعِ دالة الحظر مباشرةً
-  }
 
+    print("Blocked Apps before starting timer: $blockedApps");
 
-  print("Blocked Apps before starting timer: $blockedApps");
-
-    
     if (mounted) {
       setState(() {
         _isRunning = true;
-        userLeft=false;
-        _pause?.cancel(); 
+        userLeft = false;
+        _pause?.cancel();
         if (_isFocusTime) {
           // Set focus time when starting
           if (_elapsedTime == 0) {
@@ -378,12 +380,12 @@ Future<bool> checkAccessibilityPermission() async {
         _stopTimer(); // Stop the timer when it reaches zero
       }
     });
-    }
+  }
 
   // Stop the timer
   void _stopTimer() {
     _timer?.cancel();
-     _unblockApps(); 
+    _unblockApps();
 
     if (mounted) {
       setState(() {
@@ -392,16 +394,15 @@ Future<bool> checkAccessibilityPermission() async {
     }
 
     _playEndSound();
-   
+
     // After focus time ends, switch to break time
     if (_isFocusTime) {
       if (mounted) {
         setState(() {
           _isFocusTime = false; // Switch to break time
         });
-         _unblockApps(); 
+        _unblockApps();
       }
-
     } else {
       // After break time, check if we need to switch to long break or back to focus time
       if (_completedRounds < widget.rounds - 1) {
@@ -413,7 +414,7 @@ Future<bool> checkAccessibilityPermission() async {
             displayshow = true; // Ensure the "LONG BREAK" text shows first
           });
         }
-         _blockApps();
+        _blockApps();
         _completedRounds++; // Increment completed rounds after short break
       } else {
         // Before transitioning to long break, show dialog
@@ -424,7 +425,6 @@ Future<bool> checkAccessibilityPermission() async {
       }
     }
   }
-  
 
   @override
   void dispose() {
@@ -487,12 +487,12 @@ Future<bool> checkAccessibilityPermission() async {
         );
       },
     );
-ElevatedButton(
-  onPressed: () async {
-    await requestAccessibilityPermission();
-  },
-  child: Text("Enable Accessibility Permission"),
-);
+    ElevatedButton(
+      onPressed: () async {
+        await requestAccessibilityPermission();
+      },
+      child: Text("Enable Accessibility Permission"),
+    );
 
     // Wait for 2 seconds, close the dialog, and navigate to the task page
     Future.delayed(Duration(seconds: 2), () {
@@ -660,7 +660,7 @@ ElevatedButton(
                   ),
                 ),
                 onPressed: () async {
-                    await _unblockApps();
+                  await _unblockApps();
 
                   // Update task completion status in Firestore
                   await _updateTaskCompletionStatus(
@@ -670,7 +670,6 @@ ElevatedButton(
 
                   // Reset rounds and timer if needed
                   _completedRounds = 0;
-                  
 
                   // After showing the congrats dialog, navigate back to the TaskPage
                   Future.delayed(Duration(seconds: 2), () {
@@ -761,13 +760,13 @@ ElevatedButton(
   }
 
   // Reset the timer
-  Future<void>  _resetTimer() async {
-    if (mounted){
-    setState(() {
-      _elapsedTime = widget.focusMinutes * 60;
-      _timerText = _formatTime(_elapsedTime);
-      _isRunning = false;
-    });
+  Future<void> _resetTimer() async {
+    if (mounted) {
+      setState(() {
+        _elapsedTime = widget.focusMinutes * 60;
+        _timerText = _formatTime(_elapsedTime);
+        _isRunning = false;
+      });
     }
     if (_isTimerInitialized) {
       _timer?.cancel();
@@ -791,27 +790,26 @@ ElevatedButton(
 
     _timer?.cancel(); // Just pause the timer, no reset of elapsed time
     userLeft = true;
-  //   if(userLeft){
-  //     print("pausing detected");
-  //       _pause = Timer.periodic(Duration(seconds: 1), (timer) {
-  //     setState(() {
-  //       pauseDuration = Duration(seconds: pauseDuration.inSeconds + 1);
-  //     });
+    //   if(userLeft){
+    //     print("pausing detected");
+    //       _pause = Timer.periodic(Duration(seconds: 1), (timer) {
+    //     setState(() {
+    //       pauseDuration = Duration(seconds: pauseDuration.inSeconds + 1);
+    //     });
 
-  //     // 10 minutes then show notification
-  //     if (pauseDuration.inSeconds >= 10) {
-  //       print("Notification to be sent"); // added this just to debug
-  //       //_schedulePauseReminder();  // Schedule a reminder notification
-  //       print("Notification sent"); // added this just to debug
-  //       _pause?.cancel();  // Stop the timer once the notification is sent
-  //     }
-  //   });
-  // }
-      
-    }
+    //     // 10 minutes then show notification
+    //     if (pauseDuration.inSeconds >= 10) {
+    //       print("Notification to be sent"); // added this just to debug
+    //       //_schedulePauseReminder();  // Schedule a reminder notification
+    //       print("Notification sent"); // added this just to debug
+    //       _pause?.cancel();  // Stop the timer once the notification is sent
+    //     }
+    //   });
+    // }
+  }
 
-/////////// paused too long reminder/ notifications/////////////// make sure to un-note the function name in any other code line 
-///(لإعادة إضافة الفنكشن : عن طريق مسح علامة الملاحطة من جانب اسمها في أي جزء من الأسطر)
+/////////// paused too long reminder/ notifications/////////////// make sure to un-note the function name in any other code line
+  ///(لإعادة إضافة الفنكشن : عن طريق مسح علامة الملاحطة من جانب اسمها في أي جزء من الأسطر)
 // Future<void> _schedulePauseReminder() async {
 //   // Schedule a reminder notification after 10 minutes of consecutive pause
 //   await NotificationHandler.schedulePauseReminder('pause_reminder');
@@ -852,87 +850,22 @@ ElevatedButton(
   }
 
 // Function to update Firestore when task is completed
- Future<void> _updateTaskCompletionStatus(String taskId, String subTaskID) async {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-  DateTime? completionDate = DateTime.now(); // Capture completion timestamp
+  Future<void> _updateTaskCompletionStatus(
+      String taskId, String subTaskID) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DateTime? completionDate = DateTime.now(); // Capture completion timestamp
 
-  if (taskId == subTaskID) {
-    // ✅ Mark Task as Completed
-    await firestore.collection('Task').doc(taskId).update({
-      'completionStatus': 2,
-      'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
-    });
-
-
-    // ✅ Assign Task Points
-    DocumentSnapshot taskDoc = await firestore.collection('Task').doc(taskId).get();
-    if (taskDoc.exists) {
-      Task task = Task(
-        taskID: taskId,
-        title: taskDoc['title'],
-        scheduledDate: (taskDoc['scheduledDate'] as Timestamp).toDate(),
-        priority: taskDoc['priority'],
-        reminder: [],
-        timer: DateTime.now(),
-        note: taskDoc['note'],
-        completionStatus: 2,
-        userID: taskDoc['userID'],
-      );
-      await assignTaskPoints(task);
-    }
-
-    QuerySnapshot subtasksSnapshot = await firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: taskId)
-        .get();
-
-    for (var subtaskDoc in subtasksSnapshot.docs) {
-      await subtaskDoc.reference.update({
-        'completionStatus': 1,
-        'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
+    if (taskId == subTaskID) {
+      // ✅ Mark Task as Completed
+      await firestore.collection('Task').doc(taskId).update({
+        'completionStatus': 2,
+        'completionDate':
+            Timestamp.fromDate(completionDate), // ✅ Add completion date
       });
-    }
-  } else {
-    // ✅ Update Subtask Completion Status
-    await firestore.collection('SubTask').doc(subTaskID).update({
-      'completionStatus': 1,
-      'completionDate': Timestamp.fromDate(completionDate), // ✅ Add completion date
-    });
 
-    QuerySnapshot subtasksSnapshot = await firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: taskId)
-        .get();
-
-    // ✅ Check if all subtasks are completed
-    bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
-      var data = doc.data() as Map<String, dynamic>?;
-      return data != null && data['completionStatus'] == 1;
-    });
-
-    bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
-      var data = doc.data() as Map<String, dynamic>?;
-      return data != null && data['completionStatus'] == 1;
-    });
-
-    int newTaskStatus;
-    if (allSubtasksComplete) {
-      newTaskStatus = 2;
-    } else if (anySubtaskComplete) {
-      newTaskStatus = 1;
-    } else {
-      newTaskStatus = 0;
-    }
-
-    await firestore.collection('Task').doc(taskId).update({
-      'completionStatus': newTaskStatus,
-      if (newTaskStatus == 2) 'completionDate': Timestamp.fromDate(completionDate),
-    });
-
-    // ✅ Assign Subtask Points
-    DocumentSnapshot subtaskDoc = await firestore.collection('SubTask').doc(subTaskID).get();
-    if (subtaskDoc.exists) {
-      DocumentSnapshot taskDoc = await firestore.collection('Task').doc(taskId).get();
+      // ✅ Assign Task Points
+      DocumentSnapshot taskDoc =
+          await firestore.collection('Task').doc(taskId).get();
       if (taskDoc.exists) {
         Task task = Task(
           taskID: taskId,
@@ -942,235 +875,306 @@ ElevatedButton(
           reminder: [],
           timer: DateTime.now(),
           note: taskDoc['note'],
-          completionStatus: newTaskStatus,
+          completionStatus: 2,
           userID: taskDoc['userID'],
         );
-
-        SubTask subTask = SubTask(
-          subTaskID: subTaskID,
-          taskID: taskId,
-          title: subtaskDoc['title'],
-          completionStatus: 1,
-        );
-
-        await assignSubtaskPoints(task, subTask);
+        await assignTaskPoints(task);
       }
-    }
-  }
 
-  // ✅ Update User Level
-  await updateLevel();
-}
+      QuerySnapshot subtasksSnapshot = await firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: taskId)
+          .get();
 
-Future<void> assignTaskPoints(Task task) async {
-  if (userID == null) return;
-
-  try {
-    print("🔹 Starting assignTaskPoints for Task: ${task.taskID}");
-
-    double taskPoints = 10.0;
-    int priority = task.priority;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int subtaskCount = subtasksSnapshot.docs.length;
-    if(subtaskCount>0){
-      // ✅ Count only **incomplete subtasks before completion**
-    int incompleteSubtasks = subtasksSnapshot.docs
-        .where((doc) =>
-            doc['completionStatus'] == null || doc['completionStatus'] != 1)
-        .length;
-
-    if (incompleteSubtasks > 0) {
-      double subtaskPoints = taskPoints / subtaskCount;
-      int awardedSubtaskPoints = (subtaskPoints * incompleteSubtasks).round();
-      newPoints += awardedSubtaskPoints;
-      print("✅ Added points for remaining incomplete subtasks: +$awardedSubtaskPoints");
-
-      // ✅ Ensure no points are lost due to rounding
-      int expectedTotal = (subtaskPoints * subtaskCount).round();
-      int actualTotal = awardedSubtaskPoints +
-          (subtaskCount - incompleteSubtasks) * subtaskPoints.round();
-
-      if (actualTotal < expectedTotal) {
-        int roundingFix = expectedTotal - actualTotal;
-        newPoints += roundingFix;
-        print("🛠 Fix applied: Adjusted for rounding error by adding +$roundingFix");
+      for (var subtaskDoc in subtasksSnapshot.docs) {
+        await subtaskDoc.reference.update({
+          'completionStatus': 1,
+          'completionDate':
+              Timestamp.fromDate(completionDate), // ✅ Add completion date
+        });
       }
-        newPoints += 2;
-
-    }
-    }else {
-      // ✅ If no subtasks exist, award full task points
-      newPoints += taskPoints.toInt();
-      print("✅ No subtasks found. Awarded full task points: +${taskPoints.toInt()}");
-    }
-    
-
-    newPoints += (priority - 1); // Priority bonus
-
-    // ✅ Fetch completion date & scheduled date
-    DocumentSnapshot taskSnapshot =
-        await _firestore.collection('Task').doc(task.taskID).get();
-
-    if (taskSnapshot.exists && taskSnapshot['completionDate'] != null) {
-      DateTime completionDate =
-          (taskSnapshot['completionDate'] as Timestamp).toDate();
-      DateTime scheduledDate = task.scheduledDate;
-
-      // ✅ Only compare date (not time)
-      DateTime normalizedScheduledDate =
-          DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
-      DateTime normalizedCompletionDate =
-          DateTime(completionDate.year, completionDate.month, completionDate.day);
-
-      int dayDifference =
-          normalizedScheduledDate.difference(normalizedCompletionDate).inDays;
-
-      print("📅 Scheduled Date: $normalizedScheduledDate");
-      print("✅ Completion Date: $normalizedCompletionDate");
-      print("📊 Day Difference: $dayDifference");
-
-      if (dayDifference > 0) {
-        newPoints += dayDifference; // Add 1 point per early day
-        print("✅ Task completed EARLY! +$dayDifference points");
-      } else if (dayDifference < 0) {
-        int maxPenalty = newPoints > -dayDifference ? -dayDifference : newPoints;
-        newPoints -= maxPenalty; // Subtract 1 point per late day
-        print("⚠ Task completed LATE! -$maxPenalty points");
-      }
-    }
-
-    // ✅ Ensure points never drop below 0
-    if (newPoints < 0) newPoints = 0;
-
-    await _firestore.runTransaction((transaction) async {
-      DocumentReference userRef = _firestore.collection('User').doc(userID);
-      transaction.update(userRef, {'point': newPoints});
-    });
-
-    setState(() {
-      userPoints = newPoints;
-    });
-
-    await updateLevel();
-  } catch (e) {
-    print("Error in assignTaskPoints: $e");
-  }
-}
-
-
-Future<void> assignSubtaskPoints(Task task, SubTask subtask) async {
-  if (userID == null) return;
-
-  try {
-    double taskPoints = 10.0;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int totalSubtasks = subtasksSnapshot.docs.length;
-
-    if (totalSubtasks > 0) {
-      double subtaskPoints = taskPoints / totalSubtasks;
-      newPoints += subtaskPoints.toInt();
-
-      bool allSubtasksCompleted = subtasksSnapshot.docs.every(
-          (doc) => doc['completionStatus'] != null && doc['completionStatus'] == 1);
-
-      // Fetch the parent task
-DocumentSnapshot taskSnapshot = await _firestore
-    .collection('Task')
-    .doc(task.taskID)
-    .get();
-
-  int taskCompletionStatus = taskSnapshot['completionStatus'];
-//if (allSubtasksCompleted && taskCompletionStatus != 2)
-  // Apply condition
-  if (allSubtasksCompleted ) {
-     if(totalSubtasks % 2 ==0)
-        newPoints += 2;
-      else
-        newPoints += 3;
-    //newPoints += 2;
-  }
-
     } else {
-      newPoints += taskPoints.toInt();
-    }
+      // ✅ Update Subtask Completion Status
+      await firestore.collection('SubTask').doc(subTaskID).update({
+        'completionStatus': 1,
+        'completionDate':
+            Timestamp.fromDate(completionDate), // ✅ Add completion date
+      });
 
-    // Check completion date against scheduled date
-    DocumentSnapshot subtaskSnapshot =
-        await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
-    if (subtaskSnapshot.exists && subtaskSnapshot['completionDate'] != null) {
-      DateTime completionDate =
-          (subtaskSnapshot['completionDate'] as Timestamp).toDate();
-      DateTime scheduledDate = task.scheduledDate;
+      QuerySnapshot subtasksSnapshot = await firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: taskId)
+          .get();
 
-      int dayDifference = scheduledDate.difference(completionDate).inDays;
-      if (dayDifference > 0) {
-        newPoints += dayDifference; // Add 1 point per early day
-      } else if (dayDifference < 0) {
-        newPoints -= dayDifference.abs(); // Subtract 1 point per late day
-        if (newPoints < 0) newPoints = 0; // Ensure lowest score remains 0
+      // ✅ Check if all subtasks are completed
+      bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) {
+        var data = doc.data() as Map<String, dynamic>?;
+        return data != null && data['completionStatus'] == 1;
+      });
+
+      bool anySubtaskComplete = subtasksSnapshot.docs.any((doc) {
+        var data = doc.data() as Map<String, dynamic>?;
+        return data != null && data['completionStatus'] == 1;
+      });
+
+      int newTaskStatus;
+      if (allSubtasksComplete) {
+        newTaskStatus = 2;
+      } else if (anySubtaskComplete) {
+        newTaskStatus = 1;
+      } else {
+        newTaskStatus = 0;
+      }
+
+      await firestore.collection('Task').doc(taskId).update({
+        'completionStatus': newTaskStatus,
+        if (newTaskStatus == 2)
+          'completionDate': Timestamp.fromDate(completionDate),
+      });
+
+      // ✅ Assign Subtask Points
+      DocumentSnapshot subtaskDoc =
+          await firestore.collection('SubTask').doc(subTaskID).get();
+      if (subtaskDoc.exists) {
+        DocumentSnapshot taskDoc =
+            await firestore.collection('Task').doc(taskId).get();
+        if (taskDoc.exists) {
+          Task task = Task(
+            taskID: taskId,
+            title: taskDoc['title'],
+            scheduledDate: (taskDoc['scheduledDate'] as Timestamp).toDate(),
+            priority: taskDoc['priority'],
+            reminder: [],
+            timer: DateTime.now(),
+            note: taskDoc['note'],
+            completionStatus: newTaskStatus,
+            userID: taskDoc['userID'],
+          );
+
+          SubTask subTask = SubTask(
+            subTaskID: subTaskID,
+            taskID: taskId,
+            title: subtaskDoc['title'],
+            completionStatus: 1,
+          );
+
+          await assignSubtaskPoints(task, subTask);
+        }
       }
     }
 
-    await _firestore.collection('User').doc(userID).update({'point': newPoints});
-
-    setState(() {
-      userPoints = newPoints;
-    });
-
+    // ✅ Update User Level
     await updateLevel();
-  } catch (e) {
-    print("Error in assignSubtaskPoints: $e");
   }
-}
 
+  Future<void> assignTaskPoints(Task task) async {
+    if (userID == null) return;
 
-Future<void> updateLevel() async {
-  if (userID == null) return;
+    try {
+      print("🔹 Starting assignTaskPoints for Task: ${task.taskID}");
 
-  try {
-    int newLevel = 1;
-    int pointsRequired = 100;
-    int accumulatedPoints = 0;
+      double taskPoints = 10.0;
+      int priority = task.priority;
+      int newPoints = userPoints;
 
-    while (userPoints >= accumulatedPoints + pointsRequired) {
-      accumulatedPoints += pointsRequired;
-      pointsRequired += 50;
-      newLevel++;
-    }
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
 
-    // ✅ Only update Firestore if the level has changed
-    if (newLevel != userLevel) {
+      int subtaskCount = subtasksSnapshot.docs.length;
+      if (subtaskCount > 0) {
+        // ✅ Count only **incomplete subtasks before completion**
+        int incompleteSubtasks = subtasksSnapshot.docs
+            .where((doc) =>
+                doc['completionStatus'] == null || doc['completionStatus'] != 1)
+            .length;
+
+        if (incompleteSubtasks > 0) {
+          double subtaskPoints = taskPoints / subtaskCount;
+          int awardedSubtaskPoints =
+              (subtaskPoints * incompleteSubtasks).round();
+          newPoints += awardedSubtaskPoints;
+          print(
+              "✅ Added points for remaining incomplete subtasks: +$awardedSubtaskPoints");
+
+          // ✅ Ensure no points are lost due to rounding
+          int expectedTotal = (subtaskPoints * subtaskCount).round();
+          int actualTotal = awardedSubtaskPoints +
+              (subtaskCount - incompleteSubtasks) * subtaskPoints.round();
+
+          if (actualTotal < expectedTotal) {
+            int roundingFix = expectedTotal - actualTotal;
+            newPoints += roundingFix;
+            print(
+                "🛠 Fix applied: Adjusted for rounding error by adding +$roundingFix");
+          }
+          newPoints += 2;
+        }
+      } else {
+        // ✅ If no subtasks exist, award full task points
+        newPoints += taskPoints.toInt();
+        print(
+            "✅ No subtasks found. Awarded full task points: +${taskPoints.toInt()}");
+      }
+
+      newPoints += (priority - 1); // Priority bonus
+
+      // ✅ Fetch completion date & scheduled date
+      DocumentSnapshot taskSnapshot =
+          await _firestore.collection('Task').doc(task.taskID).get();
+
+      if (taskSnapshot.exists && taskSnapshot['completionDate'] != null) {
+        DateTime completionDate =
+            (taskSnapshot['completionDate'] as Timestamp).toDate();
+        DateTime scheduledDate = task.scheduledDate;
+
+        // ✅ Only compare date (not time)
+        DateTime normalizedScheduledDate = DateTime(
+            scheduledDate.year, scheduledDate.month, scheduledDate.day);
+        DateTime normalizedCompletionDate = DateTime(
+            completionDate.year, completionDate.month, completionDate.day);
+
+        int dayDifference =
+            normalizedScheduledDate.difference(normalizedCompletionDate).inDays;
+
+        print("📅 Scheduled Date: $normalizedScheduledDate");
+        print("✅ Completion Date: $normalizedCompletionDate");
+        print("📊 Day Difference: $dayDifference");
+
+        if (dayDifference > 0) {
+          newPoints += dayDifference; // Add 1 point per early day
+          print("✅ Task completed EARLY! +$dayDifference points");
+        } else if (dayDifference < 0) {
+          int maxPenalty =
+              newPoints > -dayDifference ? -dayDifference : newPoints;
+          newPoints -= maxPenalty; // Subtract 1 point per late day
+          print("⚠ Task completed LATE! -$maxPenalty points");
+        }
+      }
+
+      // ✅ Ensure points never drop below 0
+      if (newPoints < 0) newPoints = 0;
+
       await _firestore.runTransaction((transaction) async {
         DocumentReference userRef = _firestore.collection('User').doc(userID);
-        transaction.update(userRef, {'level': newLevel});
+        transaction.update(userRef, {'point': newPoints});
       });
 
       setState(() {
-        userLevel = newLevel;
+        userPoints = newPoints;
       });
 
-      print("🎉 Level Up! New Level: $newLevel");
-    } else {
-      print("ℹ️ Level remains the same: $newLevel");
+      await updateLevel();
+    } catch (e) {
+      print("Error in assignTaskPoints: $e");
     }
-  } catch (e) {
-    print("Error in updateLevel: $e");
   }
-}
 
+  Future<void> assignSubtaskPoints(Task task, SubTask subtask) async {
+    if (userID == null) return;
 
+    try {
+      double taskPoints = 10.0;
+      int newPoints = userPoints;
+
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
+
+      int totalSubtasks = subtasksSnapshot.docs.length;
+
+      if (totalSubtasks > 0) {
+        double subtaskPoints = taskPoints / totalSubtasks;
+        newPoints += subtaskPoints.toInt();
+
+        bool allSubtasksCompleted = subtasksSnapshot.docs.every((doc) =>
+            doc['completionStatus'] != null && doc['completionStatus'] == 1);
+
+        // Fetch the parent task
+        DocumentSnapshot taskSnapshot =
+            await _firestore.collection('Task').doc(task.taskID).get();
+
+        int taskCompletionStatus = taskSnapshot['completionStatus'];
+//if (allSubtasksCompleted && taskCompletionStatus != 2)
+        // Apply condition
+        if (allSubtasksCompleted) {
+          if (totalSubtasks % 2 == 0)
+            newPoints += 2;
+          else
+            newPoints += 3;
+          //newPoints += 2;
+        }
+      } else {
+        newPoints += taskPoints.toInt();
+      }
+
+      // Check completion date against scheduled date
+      DocumentSnapshot subtaskSnapshot =
+          await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
+      if (subtaskSnapshot.exists && subtaskSnapshot['completionDate'] != null) {
+        DateTime completionDate =
+            (subtaskSnapshot['completionDate'] as Timestamp).toDate();
+        DateTime scheduledDate = task.scheduledDate;
+
+        int dayDifference = scheduledDate.difference(completionDate).inDays;
+        if (dayDifference > 0) {
+          newPoints += dayDifference; // Add 1 point per early day
+        } else if (dayDifference < 0) {
+          newPoints -= dayDifference.abs(); // Subtract 1 point per late day
+          if (newPoints < 0) newPoints = 0; // Ensure lowest score remains 0
+        }
+      }
+
+      await _firestore
+          .collection('User')
+          .doc(userID)
+          .update({'point': newPoints});
+
+      setState(() {
+        userPoints = newPoints;
+      });
+
+      await updateLevel();
+    } catch (e) {
+      print("Error in assignSubtaskPoints: $e");
+    }
+  }
+
+  Future<void> updateLevel() async {
+    if (userID == null) return;
+
+    try {
+      int newLevel = 1;
+      int pointsRequired = 100;
+      int accumulatedPoints = 0;
+
+      while (userPoints >= accumulatedPoints + pointsRequired) {
+        accumulatedPoints += pointsRequired;
+        pointsRequired += 50;
+        newLevel++;
+      }
+
+      // ✅ Only update Firestore if the level has changed
+      if (newLevel != userLevel) {
+        await _firestore.runTransaction((transaction) async {
+          DocumentReference userRef = _firestore.collection('User').doc(userID);
+          transaction.update(userRef, {'level': newLevel});
+        });
+
+        setState(() {
+          userLevel = newLevel;
+        });
+
+        print("🎉 Level Up! New Level: $newLevel");
+      } else {
+        print("ℹ️ Level remains the same: $newLevel");
+      }
+    } catch (e) {
+      print("Error in updateLevel: $e");
+    }
+  }
 
   Future<void> _updateTasktimerStatus(String taskId) async {
     try {
@@ -1235,35 +1239,32 @@ Future<void> updateLevel() async {
   @override
   void initState() {
     super.initState();
-     _loadBlockedApps(); // تحميل قائمة التطبيقات المحظورة
+    _loadBlockedApps(); // تحميل قائمة التطبيقات المحظورة
     // Initialize the timer with the selected focus time
     _elapsedTime = widget.focusMinutes * 60;
     _timerText = _formatTime(_elapsedTime);
     _audioPlayer = AudioPlayer();
     _playSelectedSound();
-    
-
   }
 
   Future<void> _loadBlockedApps() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? jsonString = prefs.getString('blockedApps');
-  if (jsonString != null) {
-    try {
-      Map<String, dynamic> jsonMap = json.decode(jsonString);
-      setState(() {
-        blockedApps = jsonMap.map((key, value) => MapEntry(key, value as bool));
-      });
-      print("Loaded Blocked Apps: $blockedApps");
-    } catch (e) {
-      print("Error decoding blocked apps: $e");
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('blockedApps');
+    if (jsonString != null) {
+      try {
+        Map<String, dynamic> jsonMap = json.decode(jsonString);
+        setState(() {
+          blockedApps =
+              jsonMap.map((key, value) => MapEntry(key, value as bool));
+        });
+        print("Loaded Blocked Apps: $blockedApps");
+      } catch (e) {
+        print("Error decoding blocked apps: $e");
+      }
+    } else {
+      print("No blocked apps found in preferences.");
     }
-  } else {
-    print("No blocked apps found in preferences.");
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -1281,7 +1282,9 @@ Future<void> updateLevel() async {
         elevation: 0,
         backgroundColor: backgroundColor,
         title: Padding(
-          padding: EdgeInsets.only(top: 7.0,),
+          padding: EdgeInsets.only(
+            top: 7.0,
+          ),
           child: Text(
             widget.taskId == widget.subTaskID
                 ? widget
@@ -1304,29 +1307,31 @@ Future<void> updateLevel() async {
                 _toggleRadioButton, // Toggle radio button state when clicked
           ),
         ),
-         actions: [
+        actions: [
           Padding(
-      padding: EdgeInsets.only(right: 7.0), // Add 7 padding to the right
-       child: PopupMenuTheme(
-          data: PopupMenuThemeData(
-            color: Colors.white, // Set the background color of the menu to white
-          ),
-          child: GestureDetector(
-            onLongPress: () {
-              _showSoundMenu(context); // Show the sound menu on long press
-            },
-            child: IconButton(
-              icon: Icon(
-                _isSoundOn && widget.selectedSound != '' 
-                    ? Icons.volume_up 
-                    : Icons.volume_off,
-                color: Colors.white,
+            padding: EdgeInsets.only(right: 7.0), // Add 7 padding to the right
+            child: PopupMenuTheme(
+              data: PopupMenuThemeData(
+                color: Colors
+                    .white, // Set the background color of the menu to white
               ),
-              onPressed: _toggleSound, // Regular press to toggle sound
+              child: GestureDetector(
+                onLongPress: () {
+                  _showSoundMenu(context); // Show the sound menu on long press
+                },
+                child: IconButton(
+                  icon: Icon(
+                    _isSoundOn && widget.selectedSound != ''
+                        ? Icons.volume_up
+                        : Icons.volume_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: _toggleSound, // Regular press to toggle sound
+                ),
+              ),
             ),
           ),
-        ),
-      ),  ],
+        ],
       ),
       body: Center(
         child: Column(
@@ -1430,13 +1435,11 @@ Future<void> updateLevel() async {
               children: [
                 // Quit button with icon and rounded corners
                 ElevatedButton.icon(
-                  onPressed:
-                       () async {
-                          await _updateTasktimerStatus(widget.taskId);
-                           _unblockApps(); 
-                          _showEncouragementDialog(); // Show encouragement message before quitting
-                        }
-                      , // Disable if timer is not running
+                  onPressed: () async {
+                    await _updateTasktimerStatus(widget.taskId);
+                    _unblockApps();
+                    _showEncouragementDialog(); // Show encouragement message before quitting
+                  }, // Disable if timer is not running
                   icon: Icon(
                     Icons.cancel_outlined, // Cancel icon for "Quit"
                     size: 18,
@@ -1458,37 +1461,34 @@ Future<void> updateLevel() async {
 
                 // Done button with icon and rounded corners
                 ElevatedButton.icon(
-                  onPressed:
-                       () async {
-                          await _unblockApps(); 
+                  onPressed: () async {
+                    await _unblockApps();
 
-                          // Mark the task as done when "Done" button is pressed
-                          await _updateTaskCompletionStatus(widget.taskId,
-                              widget.subTaskID); // Update Firestore
-                          await _updateTasktimerStatus(widget.taskId);
-                          _resetTimer();
-                          // Dismiss any open dialogs (e.g., completion dialog or other dialogs)
-                          // Navigator.of(context).pop(); // Close the current dialog (such as completion dialog)
-                          _showCongratsDialog();
-                          // Reset rounds and navigate to TaskPage
-                          _completedRounds = 0;
-                          Future.delayed(Duration(seconds: 2), () {
-                            if (widget.page == "1") {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => TaskPage()),
-                              );
-                            } else if (widget.page == "2") {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CalendarPage()),
-                              );
-                            }
-                          });
-                        }
-                      , // Disable if the timer is not running
+                    // Mark the task as done when "Done" button is pressed
+                    await _updateTaskCompletionStatus(
+                        widget.taskId, widget.subTaskID); // Update Firestore
+                    await _updateTasktimerStatus(widget.taskId);
+                    _resetTimer();
+                    // Dismiss any open dialogs (e.g., completion dialog or other dialogs)
+                    // Navigator.of(context).pop(); // Close the current dialog (such as completion dialog)
+                    _showCongratsDialog();
+                    // Reset rounds and navigate to TaskPage
+                    _completedRounds = 0;
+                    Future.delayed(Duration(seconds: 2), () {
+                      if (widget.page == "1") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => TaskPage()),
+                        );
+                      } else if (widget.page == "2") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CalendarPage()),
+                        );
+                      }
+                    });
+                  }, // Disable if the timer is not running
                   icon: Icon(
                     Icons.check_circle_outline, // Checkmark icon for "Done"
                     size: 18,

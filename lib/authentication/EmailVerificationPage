@@ -199,7 +199,6 @@ Future<void> _saveUserData(User user) async {
     final docRef =
         FirebaseFirestore.instance.collection('User').doc(user.uid);
 
-    // تحقق مما إذا كان المستند موجودًا
     final docSnapshot = await docRef.get();
     if (!docSnapshot.exists) {
       await docRef.set({

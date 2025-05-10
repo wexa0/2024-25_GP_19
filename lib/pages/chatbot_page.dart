@@ -15,9 +15,6 @@ import 'dart:async';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_application/services/notification_handler.dart';
 
-
-
-
 class ChatbotpageWidget extends StatefulWidget {
   const ChatbotpageWidget({super.key});
 
@@ -50,35 +47,35 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
   Map<String, bool> showAllTasksByDate = {};
 ///////////////////////////
 // ----ADD task feature variables section----//
-final TextEditingController taskTitleController = TextEditingController();
-final TextEditingController taskNoteController = TextEditingController();
+  final TextEditingController taskTitleController = TextEditingController();
+  final TextEditingController taskNoteController = TextEditingController();
   DateTime? taskselectedDate;
   TimeOfDay? selectedTime;
   String selectedPriorityLabel = 'Normal'; // default
-String? selectedPriority;
-Color darkGray = Color(0xFF545454);
-Color priorityIconColor = Color(0xFF3B7292);
-TextEditingController subtaskController = TextEditingController();
-Color darkBlue = Color(0xFF104A73);
-List<String> subtasks = [];
+  String? selectedPriority;
+  Color darkGray = Color(0xFF545454);
+  Color priorityIconColor = Color(0xFF3B7292);
+  TextEditingController subtaskController = TextEditingController();
+  Color darkBlue = Color(0xFF104A73);
+  List<String> subtasks = [];
   Color lightBlue = Color(0xFF79A3B7);
   Color lightestBlue = Color(0xFFC7D9E1);
   Color lightGray = Color(0xFFF5F7F8);
-    Color mediumBlue = Color(0xFF3B7292);
-DateTime selectedDateforSubtask = DateTime.now();
+  Color mediumBlue = Color(0xFF3B7292);
+  DateTime selectedDateforSubtask = DateTime.now();
   List<String> categories = [];
-    TextEditingController categoryController = TextEditingController();
+  TextEditingController categoryController = TextEditingController();
   String selectedCategory = '';
   User? _user = FirebaseAuth.instance.currentUser;
   List<String> hardcodedCategories = [];
-bool showOptionalFields = false;
-bool taskFieldsLocked = false;
-DateTime ReminderselectedDate = DateTime.now();
-TimeOfDay reminderSelectedTime = TimeOfDay.now();
-bool _TaskDataInitialized = false;
-String? _lastInitTaskTimestamp;
-Map<String, Map<String, dynamic>> tasksAddData = {};
-Map<String, Widget> taskExtraContent = {};
+  bool showOptionalFields = false;
+  bool taskFieldsLocked = false;
+  DateTime ReminderselectedDate = DateTime.now();
+  TimeOfDay reminderSelectedTime = TimeOfDay.now();
+  bool _TaskDataInitialized = false;
+  String? _lastInitTaskTimestamp;
+  Map<String, Map<String, dynamic>> tasksAddData = {};
+  Map<String, Widget> taskExtraContent = {};
 ///////////
   Future<void> pickOneDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -94,7 +91,7 @@ Map<String, Widget> taskExtraContent = {};
       });
     }
   }
-  
+
   void _showCategoryEditDialog() {
     List<String> tempCategories = List.from(categories);
     List<Map<String, String>> renamedCategories = [];
@@ -307,6 +304,7 @@ Map<String, Widget> taskExtraContent = {};
       firstCategoryFocusNode.requestFocus();
     });
   }
+
   Future<void> sendSelectedDates() async {
     for (final date in selectedDates) {
       final formatted = DateFormat('yyyy-MM-dd').format(date);
@@ -344,7 +342,8 @@ Map<String, Widget> taskExtraContent = {};
 
     return tasksStatus;
   }
-int _getPriorityValue() {
+
+  int _getPriorityValue() {
     switch (selectedPriority) {
       case 'Urgent':
         return 4;
@@ -358,6 +357,7 @@ int _getPriorityValue() {
         return 2;
     }
   }
+
   Widget _priorityFlag(String label, Color color) {
     return Column(
       children: [
@@ -367,7 +367,6 @@ int _getPriorityValue() {
             setState(() {
               selectedPriority = label;
               priorityIconColor = color;
-
             });
           },
         ),
@@ -383,7 +382,7 @@ int _getPriorityValue() {
       ],
     );
   }
-  
+
   Widget _buildReminderSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -398,13 +397,13 @@ int _getPriorityValue() {
                   // Icon(Icons.notifications, color: mediumBlue),
                   // SizedBox(width: 8),
                   Text(
-  '⏰ Reminder:',
-  style: const TextStyle(
-    fontWeight: FontWeight.bold, // 💪 Same as Priority
-    fontSize: 14, // 📏 Same size
-    color: Colors.black87, // 🎨 Same color
-  ),
-),
+                    '⏰ Reminder:',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold, // 💪 Same as Priority
+                      fontSize: 14, // 📏 Same size
+                      color: Colors.black87, // 🎨 Same color
+                    ),
+                  ),
                 ],
               ),
               Switch(
@@ -504,7 +503,6 @@ int _getPriorityValue() {
     );
   }
 
-  
   void _pickCustomReminderTime() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -568,21 +566,20 @@ int _getPriorityValue() {
           reminderSelectedTime.minute,
         );
 
-       if (selectedReminder.isAfter(taskDateTime)) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    _showTopNotification(
-      "Custom reminder time cannot be after the scheduled task time. Please select a valid time.",
-    );
-    setState(() {
-      customReminderDateTime = null;
-    });
-  });
-} else {
-  setState(() {
-    customReminderDateTime = selectedReminder;
-  });
-}
-
+        if (selectedReminder.isAfter(taskDateTime)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showTopNotification(
+              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.",
+            );
+            setState(() {
+              customReminderDateTime = null;
+            });
+          });
+        } else {
+          setState(() {
+            customReminderDateTime = selectedReminder;
+          });
+        }
       }
     }
   }
@@ -1211,18 +1208,16 @@ int _getPriorityValue() {
       return false;
     }
   }
-  
-  
+
   Future<User?> _getCurrentUser() async {
     if (_user == null) {
       _user = FirebaseAuth.instance.currentUser;
-      if (_user == null) {
-      }
+      if (_user == null) {}
     }
     return _user;
   }
 
-    Future<void> _saveChangesToDatabase(
+  Future<void> _saveChangesToDatabase(
       List<String> addedCategories,
       List<Map<String, String>> renamedCategories,
       List<String> deletedCategories) async {
@@ -1279,7 +1274,7 @@ int _getPriorityValue() {
       _showTopNotification('Failed to fetch categories: $e');
     }
   }
-  
+
   Future<void> addCategory(String categoryName) async {
     User? currentUser = await _getCurrentUser();
     if (currentUser == null) return;
@@ -1427,210 +1422,211 @@ int _getPriorityValue() {
         ) ??
         false;
   }
-List<String> subtasksToAdd = [];
 
-Widget _buildSubtaskSection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (subtasks.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: Text(
-            'Subtasks',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: darkGray,
+  List<String> subtasksToAdd = [];
+
+  Widget _buildSubtaskSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (subtasks.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Text(
+              'Subtasks',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: darkGray,
+              ),
             ),
           ),
-        ),
-      ...subtasks.map((subtask) {
-        final TextEditingController subtaskEditingController =
-            TextEditingController(text: subtask);
+        ...subtasks.map((subtask) {
+          final TextEditingController subtaskEditingController =
+              TextEditingController(text: subtask);
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
-          child: Slidable(
-            key: ValueKey(subtask),
-            endActionPane: ActionPane(
-              motion: const ScrollMotion(),
-              children: [
-                CustomSlidableAction(
-                  onPressed: (_) {
-                    setState(() {
-                      subtasks.remove(subtask);
-                      _showTopNotification("✅ Subtask deleted successfully!");
-                      subtaskReminders.remove(subtask);
-                    });
-                  },
-                  backgroundColor: const Color(0xFFC2C2C2),
-                  child: const Icon(
-                    Icons.delete,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            child: Container( 
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: Offset(0, 1),
+          return Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+            child: Slidable(
+              key: ValueKey(subtask),
+              endActionPane: ActionPane(
+                motion: const ScrollMotion(),
+                children: [
+                  CustomSlidableAction(
+                    onPressed: (_) {
+                      setState(() {
+                        subtasks.remove(subtask);
+                        _showTopNotification("✅ Subtask deleted successfully!");
+                        subtaskReminders.remove(subtask);
+                      });
+                    },
+                    backgroundColor: const Color(0xFFC2C2C2),
+                    child: const Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
                 ),
-                title: TextField(
-                  controller: subtaskEditingController,
-                  onChanged: (newValue) {
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  title: TextField(
+                    controller: subtaskEditingController,
+                    onChanged: (newValue) {
+                      setState(() {
+                        final index = subtasks.indexOf(subtask);
+                        if (index != -1) {
+                          subtasks[index] = newValue;
+                        }
+                      });
+                    },
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                      color: darkGray,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: subtaskReminders[subtask] != null
+                          ? mediumBlue
+                          : Colors.grey,
+                    ),
+                    onPressed: () async {
+                      _pickSubtaskReminderTime(subtask);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: TextField(
+            controller: subtaskController,
+            decoration: InputDecoration(
+              labelText: 'Add sub tasks',
+              labelStyle: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: darkBlue,
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: darkBlue, width: 2.0),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
+                onPressed: () {
+                  if (subtasks.length >= 10) {
+                    _showTopNotification(
+                        '🚫 You can only add up to 10 subtasks.');
+                    return;
+                  }
+
+                  if (subtaskController.text.isNotEmpty) {
                     setState(() {
-                      final index = subtasks.indexOf(subtask);
-                      if (index != -1) {
-                        subtasks[index] = newValue;
-                      }
+                      subtasks.add(subtaskController.text);
+                      subtaskReminders[subtaskController.text] = null;
+                      subtaskController.clear();
                     });
-                  },
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14,
-                    color: darkGray,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                  ),
-                ),
-                trailing: IconButton(
-                  icon: Icon(
-                    Icons.notifications,
-                    color: subtaskReminders[subtask] != null
-                        ? mediumBlue
-                        : Colors.grey,
-                  ),
-                  onPressed: () async {
-                    _pickSubtaskReminderTime(subtask);
-                  },
-                ),
+                  }
+                },
               ),
             ),
           ),
-        );
-      }).toList(),
+        ),
+      ],
+    );
+  }
 
-    
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: TextField(
-          controller: subtaskController,
-          decoration: InputDecoration(
-            labelText: 'Add sub tasks',
-            labelStyle: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: darkBlue,
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: darkBlue, width: 2.0),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(Icons.add, color: Color.fromARGB(255, 79, 79, 79)),
-              onPressed: () {
-                if (subtasks.length >= 10) {
-                  _showTopNotification('🚫 You can only add up to 10 subtasks.');
-                  return;
-                }
-
-                if (subtaskController.text.isNotEmpty) {
+  Widget _buildCategorySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 0),
+          child: Row(
+            children: [
+              Text(
+                '🏷️ Category:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              Spacer(),
+              IconButton(
+                icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
+                onPressed: () {
+                  _showCategoryEditDialog();
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Wrap(
+            spacing: 6.0,
+            runSpacing: 6.0,
+            children: categories.map((category) {
+              return ChoiceChip(
+                label: Text(
+                  category,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                selected: selectedCategory == category,
+                selectedColor: const Color(0xFF2C678E),
+                backgroundColor: Colors.grey[200],
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                onSelected: (bool selected) {
                   setState(() {
-                    subtasks.add(subtaskController.text);
-                    subtaskReminders[subtaskController.text] = null;
-                    subtaskController.clear();
+                    selectedCategory = selected ? category : '';
                   });
-                }
-              },
-            ),
+                },
+              );
+            }).toList(),
           ),
         ),
-      ),
-    ],
-  );
-}
-Widget _buildCategorySection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 0),
-        child: Row(
-          children: [
-            Text(
-              '🏷️ Category:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Colors.black87,
-              ),
-            ),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.edit, color: Color(0xFF3B7292)),
-              onPressed: () {
-                _showCategoryEditDialog(); 
-              },
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 8),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Wrap(
-          spacing: 6.0,
-          runSpacing: 6.0,
-          children: categories.map((category) {
-            return ChoiceChip(
-              label: Text(
-                category,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-              selected: selectedCategory == category,
-              selectedColor: const Color(0xFF2C678E),
-              backgroundColor: Colors.grey[200],
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              onSelected: (bool selected) {
-                setState(() {
-                  selectedCategory = selected ? category : ''; 
-                });
-              },
-            );
-          }).toList(),
-        ),
-      ),
-    ],
-  );
-}
-
+      ],
+    );
+  }
 
   Map<String, Map<String, dynamic>?> subtaskReminders = {};
 
@@ -1863,387 +1859,408 @@ Widget _buildCategorySection() {
       },
     );
   }
+
   Future<void> _updateTaskTitleInFirestore(Map<String, dynamic> msgData) async {
-  try {
-    final timestamp = msgData['timestamp'];
+    try {
+      final timestamp = msgData['timestamp'];
 
-    // هنا نحدث اسم التايل عشان نسمح بالايديت
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('ChatBot')
-        .where('timestamp', isEqualTo: timestamp)
-        .get();
+      // هنا نحدث اسم التايل عشان نسمح بالايديت
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('ChatBot')
+          .where('timestamp', isEqualTo: timestamp)
+          .get();
 
-    if (snapshot.docs.isNotEmpty) {
-      // نجعل الاسم pulled 
-      for (var doc in snapshot.docs) {
-        await doc.reference.update({
-          'title': 'pulled', 
-        });
-      }
-      print("Task title updated successfully.");
-    } else {
-      print("No task found with the provided timestamp.");
-    }
-  } catch (e) {
-    print("Error updating task in Firestore: $e");
-  }
-}
-     String? _currentTaskTimestamp ;
-
-Widget buildTaskInputSection(Map<String, dynamic> msgData) {
-    final currentTaskTimestamp = msgData['timestamp'].toString();
-      if ( _currentTaskTimestamp != msgData['timestamp'].toString() ) {
-  _TaskDataInitialized = false; }
-
-  if (msgData["title"] !='pulled') {
-
-  // Initialize task data
-  if (msgData["title"] != null) {
-    taskTitleController.text = msgData["title"];
-  }
-  if (msgData["date"] != null) {
-    taskselectedDate = DateTime.tryParse(msgData["date"]);
-  }
-  if (msgData["time"] != null) {
-    final timeParts = msgData["time"].split(":");
-    if (timeParts.length == 2) {
-      selectedTime = TimeOfDay(
-        hour: int.parse(timeParts[0]),
-        minute: int.parse(timeParts[1]),
-      );
-    }
-  }
-  if (msgData['subtasks'] != null) {
-  subtasks = List<String>.from(msgData['subtasks'].take(10)); // فقط 10 subtasks
-}
-  if (msgData['note'] != null) {
-  taskNoteController.text = msgData["note"];
-}
-  //_TaskDataInitialized = true; 
-  _currentTaskTimestamp = currentTaskTimestamp;
-  _updateTaskTitleInFirestore(msgData);
-
-  // currentTaskTimestamp = msgData['timestamp'].toString();  // Track the timestamp for comparison
-}
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // 📝 Task Name
-      const Text("📝 Task Name:", style: TextStyle(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 6),
-      TextField(
-        controller: taskTitleController,
-        style: const TextStyle(fontSize: 14),
-        decoration: InputDecoration(
-          hintText: 'Type task title',
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.85),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16.0),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        onChanged: (value) {
-          setState(() {
-           // تعديل i will take user input for task title and allow him/her to edit it
-            // taskTitleController.text = value;
-            
-            taskTitleController.selection = TextSelection.fromPosition(
-              TextPosition(offset: value.length),
-            );
+      if (snapshot.docs.isNotEmpty) {
+        // نجعل الاسم pulled
+        for (var doc in snapshot.docs) {
+          await doc.reference.update({
+            'title': 'pulled',
           });
-        },
-      ),
-      const SizedBox(height: 16),
+        }
+        print("Task title updated successfully.");
+      } else {
+        print("No task found with the provided timestamp.");
+      }
+    } catch (e) {
+      print("Error updating task in Firestore: $e");
+    }
+  }
 
-      // Date & Time الوقت والتاريخ
-      const Text("📅 Date & ⏰ Time:", style: TextStyle(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 6),
-      Row(
-        children: [
-          // Date Picker اختيار التاريخ
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C678E),
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              onPressed: () async {
-                DateTime? date = await showDatePicker(
-                  context: context,
-                  initialDate: taskselectedDate ?? DateTime.now(),
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime(2100),
-                );
-                if (date != null) {
-                  setState(() {
-                    taskselectedDate = date; 
-                  });
-                }
-              },
-              child: Text(
-                taskselectedDate == null
-                    ? '📅 Pick Date'
-                    : '📅 ${DateFormat('yyyy-MM-dd').format(taskselectedDate!)}',
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+  String? _currentTaskTimestamp;
 
-          // Time Picker اختيار الوقت
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C678E),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              onPressed: () async {
-                TimeOfDay? time = await showTimePicker(
-                  context: context,
-                  initialTime: selectedTime ?? TimeOfDay.now(),
-                );
-                if (time != null) {
-                  setState(() {
-                    selectedTime = time; 
-                  });
-                }
-              },
-              child: Text(
-                selectedTime == null
-                    ? '⏰ Pick Time'
-                    : '⏰ ${selectedTime!.format(context)}',
-                style: const TextStyle(color: Colors.white, fontSize: 13),
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget buildTaskInputSection(Map<String, dynamic> msgData) {
+    final currentTaskTimestamp = msgData['timestamp'].toString();
+    if (_currentTaskTimestamp != msgData['timestamp'].toString()) {
+      _TaskDataInitialized = false;
+    }
 
-const SizedBox(height: 3),
-TextButton.icon(
-      onPressed: () {
-        setState(() {
-          showOptionalFields = !showOptionalFields;
-          
-        });
-      },
-      icon: Icon(
-        showOptionalFields ? Icons.remove_circle_outline : Icons.add_circle_outline,
-        color: const Color(0xFF2C678E),
-      ),
-      label: Text(
-        showOptionalFields ? "Hide Optional Fields" : "Add Optional Fields",
-        style: const TextStyle(
-          color: Color(0xFF2C678E),
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
+    if (msgData["title"] != 'pulled') {
+      // Initialize task data
+      if (msgData["title"] != null) {
+        taskTitleController.text = msgData["title"];
+      }
+      if (msgData["date"] != null) {
+        taskselectedDate = DateTime.tryParse(msgData["date"]);
+      }
+      if (msgData["time"] != null) {
+        final timeParts = msgData["time"].split(":");
+        if (timeParts.length == 2) {
+          selectedTime = TimeOfDay(
+            hour: int.parse(timeParts[0]),
+            minute: int.parse(timeParts[1]),
+          );
+        }
+      }
+      if (msgData['subtasks'] != null) {
+        subtasks =
+            List<String>.from(msgData['subtasks'].take(10)); // فقط 10 subtasks
+      }
+      if (msgData['note'] != null) {
+        taskNoteController.text = msgData["note"];
+      }
+      //_TaskDataInitialized = true;
+      _currentTaskTimestamp = currentTaskTimestamp;
+      _updateTaskTitleInFirestore(msgData);
 
-    if (showOptionalFields) ...[
-      
-      const SizedBox(height: 6),
-
-      // Subtasks قسم البتاسكس
-      const Text("📌 Subtasks:", style: TextStyle(fontWeight: FontWeight.bold)),
-      const SizedBox(height: 0),
-    _buildSubtaskSection(),
-      const SizedBox(height: 16),
-       _buildCategorySection(),
-       const SizedBox(height: 6),
-    //  Priority
-    Row(
-  children: [
-    Icon(Icons.flag, color: priorityIconColor),
-    const SizedBox(width: 8), 
-    const Text(
-      "Priority:",
-      style: TextStyle(fontWeight: FontWeight.bold),
-    ),
-  ],
-),
-    const SizedBox(height: 4),
-    Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      // currentTaskTimestamp = msgData['timestamp'].toString();  // Track the timestamp for comparison
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _priorityFlag('Urgent', Colors.red),
-        _priorityFlag('High', Colors.orange),
-        _priorityFlag('Medium', Colors.blue),
-        _priorityFlag('Low', Colors.grey),
-      ],
-    ),
-    const SizedBox(height: 12),
-    _buildReminderSection(),
-    const SizedBox(height: 12),
-      //  Note الملاحظات
-     const Text("🗒️ Note:", style: TextStyle(fontWeight: FontWeight.bold)),
-Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: TextField(
-          controller: taskNoteController,
-          maxLines: 3,
+        // 📝 Task Name
+        const Text("📝 Task Name:",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: taskTitleController,
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
-            hintText: 'Add a note',
+            hintText: 'Type task title',
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             filled: true,
-            fillColor: Colors.white.withOpacity(0.8),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            fillColor: Colors.white.withOpacity(0.85),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16.0),
               borderSide: BorderSide.none,
             ),
           ),
-          onChanged: (newValue) {
+          onChanged: (value) {
             setState(() {
-        
-              taskNoteController.text = newValue;
+              // تعديل i will take user input for task title and allow him/her to edit it
+              // taskTitleController.text = value;
+
+              taskTitleController.selection = TextSelection.fromPosition(
+                TextPosition(offset: value.length),
+              );
             });
           },
         ),
-      ), ],
-    const SizedBox(height: 6),
+        const SizedBox(height: 16),
 
- // Add Button
-Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    const SizedBox(width: 2),
+        // Date & Time الوقت والتاريخ
+        const Text("📅 Date & ⏰ Time:",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            // Date Picker اختيار التاريخ
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C678E),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () async {
+                  DateTime? date = await showDatePicker(
+                    context: context,
+                    initialDate: taskselectedDate ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (date != null) {
+                    setState(() {
+                      taskselectedDate = date;
+                    });
+                  }
+                },
+                child: Text(
+                  taskselectedDate == null
+                      ? '📅 Pick Date'
+                      : '📅 ${DateFormat('yyyy-MM-dd').format(taskselectedDate!)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
 
-    // Add Button للحفظ
-    ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF79A3B7),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+            // Time Picker اختيار الوقت
+            Expanded(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C678E),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () async {
+                  TimeOfDay? time = await showTimePicker(
+                    context: context,
+                    initialTime: selectedTime ?? TimeOfDay.now(),
+                  );
+                  if (time != null) {
+                    setState(() {
+                      selectedTime = time;
+                    });
+                  }
+                },
+                child: Text(
+                  selectedTime == null
+                      ? '⏰ Pick Time'
+                      : '⏰ ${selectedTime!.format(context)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
-onPressed: () async {
-  if (taskTitleController.text.trim().isEmpty) {
-    _showTopNotification("Please enter a task name ✏️");
-    return;
+
+        const SizedBox(height: 3),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {
+              showOptionalFields = !showOptionalFields;
+            });
+          },
+          icon: Icon(
+            showOptionalFields
+                ? Icons.remove_circle_outline
+                : Icons.add_circle_outline,
+            color: const Color(0xFF2C678E),
+          ),
+          label: Text(
+            showOptionalFields ? "Hide Optional Fields" : "Add Optional Fields",
+            style: const TextStyle(
+              color: Color(0xFF2C678E),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
+        if (showOptionalFields) ...[
+          const SizedBox(height: 6),
+
+          // Subtasks قسم البتاسكس
+          const Text("📌 Subtasks:",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 0),
+          _buildSubtaskSection(),
+          const SizedBox(height: 16),
+          _buildCategorySection(),
+          const SizedBox(height: 6),
+          //  Priority
+          Row(
+            children: [
+              Icon(Icons.flag, color: priorityIconColor),
+              const SizedBox(width: 8),
+              const Text(
+                "Priority:",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _priorityFlag('Urgent', Colors.red),
+              _priorityFlag('High', Colors.orange),
+              _priorityFlag('Medium', Colors.blue),
+              _priorityFlag('Low', Colors.grey),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildReminderSection(),
+          const SizedBox(height: 12),
+          //  Note الملاحظات
+          const Text("🗒️ Note:",
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              controller: taskNoteController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Add a note',
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (newValue) {
+                setState(() {
+                  taskNoteController.text = newValue;
+                });
+              },
+            ),
+          ),
+        ],
+        const SizedBox(height: 6),
+
+        // Add Button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 2),
+
+            // Add Button للحفظ
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF79A3B7),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () async {
+                if (taskTitleController.text.trim().isEmpty) {
+                  _showTopNotification("Please enter a task name ✏️");
+                  return;
+                }
+
+                if (taskselectedDate == null || selectedTime == null) {
+                  _showTopNotification(
+                      "Please select both a date and time 📅⏰");
+                  return;
+                }
+
+                final DateTime taskDateTime = DateTime(
+                  taskselectedDate!.year,
+                  taskselectedDate!.month,
+                  taskselectedDate!.day,
+                  selectedTime!.hour,
+                  selectedTime!.minute,
+                );
+
+                try {
+                  User? currentUser = await _getCurrentUser();
+                  if (currentUser == null) {
+                    _showTopNotification("User not logged in 🔒");
+                    return;
+                  }
+                  QuerySnapshot existingTasksSnapshot = await FirebaseFirestore
+                      .instance
+                      .collection('Task')
+                      .where('title',
+                          isEqualTo: taskTitleController.text.trim())
+                      .where('scheduledDate',
+                          isEqualTo: Timestamp.fromDate(taskDateTime))
+                      .where('userID',
+                          isEqualTo: currentUser
+                              .uid) // Optional: check for the user ID
+                      .get();
+
+                  if (existingTasksSnapshot.docs.isNotEmpty) {
+                    // If task already exists with same title, date, and time امنعها من الحفظ
+                    _showTopNotification(
+                        "Task already exists with this title, date, and time ⚠️");
+                    return;
+                  }
+
+                  // Create new Task document
+                  DocumentReference taskRef =
+                      FirebaseFirestore.instance.collection('Task').doc();
+                  String taskId = taskRef.id;
+
+                  await taskRef.set({
+                    'completionStatus': 0,
+                    'scheduledDate': Timestamp.fromDate(taskDateTime),
+                    'note': taskNoteController.text.trim(),
+                    'priority': _getPriorityValue(),
+                    'reminder': null,
+                    'timer': '',
+                    'title': taskTitleController.text.trim(),
+                    'userID': currentUser.uid,
+                    'category': selectedCategory,
+                  });
+
+                  //Save subtasks
+                  for (String subtask in subtasks) {
+                    if (subtask.trim().isEmpty) continue;
+
+                    DocumentReference subtaskRef =
+                        FirebaseFirestore.instance.collection('SubTask').doc();
+
+                    await subtaskRef.set({
+                      'completionStatus': 0,
+                      'taskID': taskRef.id,
+                      'timer': '',
+                      'title': subtask.trim(),
+                      'reminder': null,
+                    });
+                  }
+
+                  // TASK SAVED SUCCESSFULLY
+
+                  List<String> missingHints = [];
+                  String finalHint = "";
+
+                  if (_getPriorityValue() == 0) {
+                    missingHints.add(
+                        "⚡ Try setting a **priority** next time to stay on track with what’s urgent!");
+                  } else if (taskNoteController.text.trim().isEmpty) {
+                    missingHints.add(
+                        "📝 A short **note** can help your future self remember the details easily.");
+                  } else if (selectedReminderOption == null &&
+                      customReminderDateTime == null) {
+                    missingHints.add(
+                        "⏰ Adding a **reminder** is super helpful — especially when things slip your mind!");
+                  } else {
+                    missingHints.add(
+                        "🎯 You're all set! Great job organizing your task! 💪");
+                  }
+
+                  String successMessage =
+                      "✅ Task **\"${taskTitleController.text.trim()}\"** has been added successfully! 🎉\n"
+                      "You can find it anytime in your **Tasks Page** or the **Calendar** 📅.";
+
+                  String finalMessage =
+                      "$successMessage\n\n💡 **Hint:**\n${missingHints.first}";
+
+                  await FirebaseFirestore.instance.collection("ChatBot").add({
+                    "userID": currentUser.uid,
+                    "response": finalMessage,
+                    "timestamp": Timestamp.now(),
+                  });
+
+                  _showTopNotification("Task added successfully! ✅");
+                } catch (e) {
+                  // TASK SAVED SUCCESSFULLY في الحالة الأخرى
+                  _showTopNotification("Failed to save task 😢: $e");
+                }
+              },
+              child: const Text(
+                '                      Save                       ',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
-  if (taskselectedDate == null || selectedTime == null) {
-    _showTopNotification("Please select both a date and time 📅⏰");
-    return;
-  }
-
-  final DateTime taskDateTime = DateTime(
-    taskselectedDate!.year,
-    taskselectedDate!.month,
-    taskselectedDate!.day,
-    selectedTime!.hour,
-    selectedTime!.minute,
-  );
-
-  try {
-    User? currentUser = await _getCurrentUser();
-    if (currentUser == null) {
-      _showTopNotification("User not logged in 🔒");
-      return;
-    }
-QuerySnapshot existingTasksSnapshot = await FirebaseFirestore.instance
-          .collection('Task')
-          .where('title', isEqualTo: taskTitleController.text.trim())
-          .where('scheduledDate', isEqualTo: Timestamp.fromDate(taskDateTime))
-          .where('userID', isEqualTo: currentUser.uid) // Optional: check for the user ID
-          .get();
-
-      if (existingTasksSnapshot.docs.isNotEmpty) {
-        // If task already exists with same title, date, and time امنعها من الحفظ
-        _showTopNotification("Task already exists with this title, date, and time ⚠️");
-        return;
-      }
-
-    // Create new Task document
-    DocumentReference taskRef = FirebaseFirestore.instance.collection('Task').doc();
-    String taskId = taskRef.id;
-
-    await taskRef.set({
-      'completionStatus': 0,
-      'scheduledDate': Timestamp.fromDate(taskDateTime),
-      'note': taskNoteController.text.trim(),
-      'priority': _getPriorityValue(),
-      'reminder': null,
-      'timer': '',
-      'title': taskTitleController.text.trim(),
-      'userID': currentUser.uid,
-      'category': selectedCategory,
-    });
-
-    //Save subtasks
-    for (String subtask in subtasks) {
-      if (subtask.trim().isEmpty) continue;
-
-      DocumentReference subtaskRef =
-          FirebaseFirestore.instance.collection('SubTask').doc();
-
-      await subtaskRef.set({
-        'completionStatus': 0,
-        'taskID': taskRef.id,
-        'timer': '',
-        'title': subtask.trim(),
-        'reminder': null,
-      });
-    }
-
-   // TASK SAVED SUCCESSFULLY
-
-List<String> missingHints = [];
-String finalHint = "";
-
-
-if (_getPriorityValue() == 0) {
-  missingHints.add("⚡ Try setting a **priority** next time to stay on track with what’s urgent!");
-} else if (taskNoteController.text.trim().isEmpty) {
-  missingHints.add("📝 A short **note** can help your future self remember the details easily.");
-} else if (selectedReminderOption == null && customReminderDateTime == null) {
-  missingHints.add("⏰ Adding a **reminder** is super helpful — especially when things slip your mind!");
-} else {
-  missingHints.add("🎯 You're all set! Great job organizing your task! 💪");
-}
-
-String successMessage = "✅ Task **\"${taskTitleController.text.trim()}\"** has been added successfully! 🎉\n"
-    "You can find it anytime in your **Tasks Page** or the **Calendar** 📅.";
-
-String finalMessage = "$successMessage\n\n💡 **Hint:**\n${missingHints.first}";
-
-await FirebaseFirestore.instance.collection("ChatBot").add({
-  "userID": currentUser.uid,
-  "response": finalMessage,
-  "timestamp": Timestamp.now(),
-});
-
-
-_showTopNotification("Task added successfully! ✅");
-
-
-
-  } catch (e) {
-     // TASK SAVED SUCCESSFULLY في الحالة الأخرى
-    _showTopNotification("Failed to save task 😢: $e");
-  }
-},
-
-      child: const Text(
-        '                      Save                       ',
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-  ],
-),
-    
-  ],
-); }
-  
   Future<DateTime?> _pickCustomSubtaskReminderTime(String subtask) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -2306,6 +2323,7 @@ _showTopNotification("Task added successfully! ✅");
     }
     return null;
   }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -2613,16 +2631,16 @@ _showTopNotification("Task added successfully! ✅");
                         }
 
                         lastMessageDate = messageDate;
-                        if (msgData["message"] != null && msgData["message"].toString().trim().isNotEmpty) {
-  var doc;
-  messageWidgets.add(_buildChatBubble(
-    message: msgData["message"],
-    isUser: true,
-    screenWidth: MediaQuery.of(context).size.width,
-    doc:doc,
-  ));
-}
-
+                        if (msgData["message"] != null &&
+                            msgData["message"].toString().trim().isNotEmpty) {
+                          var doc;
+                          messageWidgets.add(_buildChatBubble(
+                            message: msgData["message"],
+                            isUser: true,
+                            screenWidth: MediaQuery.of(context).size.width,
+                            doc: doc,
+                          ));
+                        }
 
                         if (response == null || response.isEmpty) {
                           var doc;
@@ -2632,7 +2650,7 @@ _showTopNotification("Task added successfully! ✅");
                               isUser: false,
                               isLoading: true,
                               screenWidth: MediaQuery.of(context).size.width,
-                              doc:doc,
+                              doc: doc,
                             ),
                           );
                         } else if (isValidUtf16(response)) {
@@ -2726,9 +2744,9 @@ _showTopNotification("Task added successfully! ✅");
                               ),
                             );
                           }
-if (actionSuggestion == "addition") {
-    extraContent = buildTaskInputSection(msgData);
- }
+                          if (actionSuggestion == "addition") {
+                            extraContent = buildTaskInputSection(msgData);
+                          }
                           if (actionSuggestion == "openCalendar") {
                             extraContent = GestureDetector(
                               onTap: () {
@@ -2775,7 +2793,7 @@ if (actionSuggestion == "addition") {
                                   "⚠️ Sorry, the message contains invalid characters and can't be displayed.",
                               isUser: false,
                               screenWidth: MediaQuery.of(context).size.width,
-                              doc:doc,
+                              doc: doc,
                             ),
                           );
                         }
@@ -3056,63 +3074,65 @@ if (actionSuggestion == "addition") {
       );
     }
 
-    
 // handle breakdown task
-if (isBot && actionType == "Breakdown Task" && (doc.data() as Map<String, dynamic>?)?['show_breakdown_form'] == true) {
-  return Align(
-    alignment: Alignment.centerLeft,
-    child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEEF6FA),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
-      child: handleBreakdownTaskInput(
-        onSubmit: (taskName, estimatedTime) async {
-          await doc.reference.update({
-  'userMessage': {
-    'task_name': taskName,
-    'estimated_time': estimatedTime,
-  },
-  'actionType': 'Breakdown Task',
-  'show_breakdown_form': false,
-  'response': 'pending_submission',
-  'message': "Please break down the task '${taskName}' which will take about ${estimatedTime}.", // ✅ SMART NEW MESSAGE
-});
+    if (isBot &&
+        actionType == "Breakdown Task" &&
+        (doc.data() as Map<String, dynamic>?)?['show_breakdown_form'] == true) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEEF6FA),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
+          child: handleBreakdownTaskInput(
+            onSubmit: (taskName, estimatedTime) async {
+              await doc.reference.update({
+                'userMessage': {
+                  'task_name': taskName,
+                  'estimated_time': estimatedTime,
+                },
+                'actionType': 'Breakdown Task',
+                'show_breakdown_form': false,
+                'response': 'pending_submission',
+                'message':
+                    "Please break down the task '${taskName}' which will take about ${estimatedTime}.", // ✅ SMART NEW MESSAGE
+              });
 
-          await Future.delayed(Duration(seconds: 1));
-          print("✅ Form submitted: taskName = $taskName, estimatedTime = $estimatedTime");
-        },
-      ),
-    ),
-  );
-}
+              await Future.delayed(Duration(seconds: 1));
+              print(
+                  "✅ Form submitted: taskName = $taskName, estimatedTime = $estimatedTime");
+            },
+          ),
+        ),
+      );
+    }
 
-if (isBot) {
-  final response = (doc.data() as Map<String, dynamic>?)?['response'] ?? '';
+    if (isBot) {
+      final response = (doc.data() as Map<String, dynamic>?)?['response'] ?? '';
 
-  if (response == 'pending_submission') {
-    // 🚫 Don't render anything while waiting
-    return const SizedBox.shrink();
-  }
+      if (response == 'pending_submission') {
+        // 🚫 Don't render anything while waiting
+        return const SizedBox.shrink();
+      }
 
-  // ✅ Otherwise, show the breakdown response
-  return Align(
-    alignment: Alignment.centerLeft,
-    child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE0F7FA),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(response),
-    ),
-  );
-}
-
+      // ✅ Otherwise, show the breakdown response
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE0F7FA),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Text(response),
+        ),
+      );
+    }
 
     // 🔁 Handle grouped task responses (View My Schedule)
     if (isBot && isTaskList) {
@@ -3212,7 +3232,8 @@ $taskDetails
                     Padding(
                       padding: const EdgeInsets.all(13),
                       child: SelectableText.rich(
-  TextSpan(children: _parseBoldText(cleanDetails(details))),
+                        TextSpan(
+                            children: _parseBoldText(cleanDetails(details))),
                         style: const TextStyle(
                             fontSize: 14, color: Color(0xFF455A64)),
                       ),
@@ -3791,63 +3812,59 @@ $taskDetails
     );
   }
 
-  
-Widget handleBreakdownTaskInput({
-  required Function(String taskName, String estimatedTime) onSubmit,
-}) {
-  final TextEditingController taskController = TextEditingController();
-  final TextEditingController timeController = TextEditingController();
+  Widget handleBreakdownTaskInput({
+    required Function(String taskName, String estimatedTime) onSubmit,
+  }) {
+    final TextEditingController taskController = TextEditingController();
+    final TextEditingController timeController = TextEditingController();
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        "Let's break down a task!",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF2C3E50),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Let's break down a task!",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
+          ),
         ),
-      ),
-      const SizedBox(height: 12),
-
-      TextField(
-        controller: taskController,
-        decoration: const InputDecoration(
-          labelText: 'What do you want to break down?',
-          border: OutlineInputBorder(),
+        const SizedBox(height: 12),
+        TextField(
+          controller: taskController,
+          decoration: const InputDecoration(
+            labelText: 'What do you want to break down?',
+            border: OutlineInputBorder(),
+          ),
         ),
-      ),
-      const SizedBox(height: 12),
-
-      TextField(
-        controller: timeController,
-        decoration: const InputDecoration(
-          labelText: 'Estimated time (e.g. 2 hours)',
-          border: OutlineInputBorder(),
+        const SizedBox(height: 12),
+        TextField(
+          controller: timeController,
+          decoration: const InputDecoration(
+            labelText: 'Estimated time (e.g. 2 hours)',
+            border: OutlineInputBorder(),
+          ),
         ),
-      ),
-      const SizedBox(height: 16),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.centerRight,
+          child: ElevatedButton(
+            onPressed: () {
+              final taskName = taskController.text.trim();
+              final estimatedTime = timeController.text.trim();
 
-      Align(
-        alignment: Alignment.centerRight,
-        child: ElevatedButton(
-          onPressed: () {
-            final taskName = taskController.text.trim();
-            final estimatedTime = timeController.text.trim();
-
-            if (taskName.isNotEmpty && estimatedTime.isNotEmpty) {
-              onSubmit(taskName, estimatedTime);
-              taskController.clear();
-              timeController.clear();
-            }
-          },
-          child: const Text("Break Down"),
+              if (taskName.isNotEmpty && estimatedTime.isNotEmpty) {
+                onSubmit(taskName, estimatedTime);
+                taskController.clear();
+                timeController.clear();
+              }
+            },
+            child: const Text("Break Down"),
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Future<void> deleteTaskById(String taskId) async {
     final firestore = FirebaseFirestore.instance;
@@ -4047,20 +4064,22 @@ Widget handleBreakdownTaskInput({
       );
     });
   }
-String cleanDetails(String details) {
-  final lines = details.split('\n');
-  final filteredLines = lines.where((line) =>
-      !line.contains("🔥 It's today!") &&
-      !line.contains("Start small, stay consistent") &&
-      !line.contains("🧐 Only one task") &&
-      !line.contains("✨ Nice and light schedule!") &&
-      !line.contains("📅 Wow! Looking at your whole month?") &&
-      !line.contains("👏 You're doing amazing organizing") &&
-      !line.contains("Don't forget to celebrate") &&
-      !line.contains("Keep balancing between focus and rest")
-  ).toList();
-  return filteredLines.join('\n');
-}
+
+  String cleanDetails(String details) {
+    final lines = details.split('\n');
+    final filteredLines = lines
+        .where((line) =>
+            !line.contains("🔥 It's today!") &&
+            !line.contains("Start small, stay consistent") &&
+            !line.contains("🧐 Only one task") &&
+            !line.contains("✨ Nice and light schedule!") &&
+            !line.contains("📅 Wow! Looking at your whole month?") &&
+            !line.contains("👏 You're doing amazing organizing") &&
+            !line.contains("Don't forget to celebrate") &&
+            !line.contains("Keep balancing between focus and rest"))
+        .toList();
+    return filteredLines.join('\n');
+  }
 
   @override
   void dispose() {

@@ -28,14 +28,14 @@ void initState() {
 
 Future<void> _initializeApp() async {
   setState(() {
-      isLoading = true; // عرض شاشة التحميل
+      isLoading = true; 
     });
-  await _loadBlockedApps(); // تحميل التطبيقات المحظورة
-  await _loadApps(); // تحميل التطبيقات المثبتة
-  await _loadBlockAllAppsState(); // تحميل حالة blockAllApps
-  checkAndRequestPermission(); // التحقق من الأذونات
+  await _loadBlockedApps(); 
+  await _loadApps(); 
+  await _loadBlockAllAppsState(); 
+  checkAndRequestPermission(); 
   setState(() {
-      isLoading = false; // إخفاء شاشة التحميل
+      isLoading = false; 
     });
   print("Initialization completed.");
 }
@@ -52,7 +52,7 @@ Future<void> _initializeApp() async {
   Future<void> _loadBlockAllAppsState() async {
   final prefs = await SharedPreferences.getInstance();
   setState(() {
-    blockAllApps = prefs.getBool('blockAllApps') ?? false; // الحالة الافتراضية false
+    blockAllApps = prefs.getBool('blockAllApps') ?? false; 
   });
 }
 
@@ -82,7 +82,6 @@ Future<void> _loadBlockedApps() async {
   final prefs = await SharedPreferences.getInstance();
   String? jsonString = prefs.getString('blockedApps');
 
-  // تحقق إذا كانت البيانات موجودة
   print("Loaded JSON String: $jsonString");
 
   if (jsonString != null) {
@@ -284,7 +283,6 @@ void _blockApps() async {
             ),
           ), 
 
-          // العنوان "Block Specific App"
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Align(
@@ -296,7 +294,6 @@ void _blockApps() async {
             ),
           ),
 
-          // قائمة التطبيقات
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),

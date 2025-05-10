@@ -15,8 +15,7 @@ class TimerSelectionPage extends StatefulWidget {
       required this.subTaskID,
       required this.subTaskName,
       required this.taskName,
-      required this.page
-      });
+      required this.page});
 
   @override
   _TimerSelectionPageState createState() => _TimerSelectionPageState();
@@ -28,10 +27,10 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
   int _longBreakMinutes = 30; // Default long break time in minutes
   int _rounds = 4; // Default rounds (Pomodoro sessions)
   bool _loading = true; // Flag to indicate whether preferences are being loaded
-  bool _isSaved = false; // this to toggle the color of text after pressing on it
+  bool _isSaved =
+      false; // this to toggle the color of text after pressing on it
   Map<String, bool> blockedApps = {};
   String selectedSound = 'None';
-  
 
   List<String> soundOptions = [
     'None',
@@ -143,7 +142,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
     if (_loading) {
       return; // Prevent opening the bottom sheet if data is still loading
     }
-  
+
     // Ensure the context is valid and use the proper context
     showModalBottomSheet(
       context: context,
@@ -528,8 +527,7 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                   ),
                   _buildMiddleTimeBlock("Short Break", _shortBreakMinutes),
                   Divider(
-                    color: Color.fromRGBO(
-                        16, 74, 115, 0.405),
+                    color: Color.fromRGBO(16, 74, 115, 0.405),
                     thickness: 0.5,
                     indent: 20,
                     endIndent: 20,
@@ -537,11 +535,10 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
                   ),
                   _buildMiddleTimeBlock("Long Break", _longBreakMinutes),
                   Divider(
-                    color: Color.fromRGBO(
-                        16, 74, 115, 1),
-                    thickness: 0.5, 
-                    indent: 20, 
-                    endIndent: 20, 
+                    color: Color.fromRGBO(16, 74, 115, 1),
+                    thickness: 0.5,
+                    indent: 20,
+                    endIndent: 20,
                     height: 0,
                   ),
                   _buildBottomTimeBlock("Rounds", _rounds),
@@ -552,92 +549,91 @@ class _TimerSelectionPageState extends State<TimerSelectionPage> {
               height: 3,
             ),
 
-             Padding(
-  padding: const EdgeInsets.symmetric(vertical: 10.0),
-  child: Row(
-    children: [
-      Icon(Icons.category, color: Color(0xFF3B7292)),
-      SizedBox(width: 8),
-      Text(
-        'Current Sound option',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontFamily: 'Poppins',
-          fontSize: 16,
-          color: Color(0xFF545454),
-        ),
-      ),
-    ],
-  ),
-),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Row(
+                children: [
+                  Icon(Icons.category, color: Color(0xFF3B7292)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Current Sound option',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      color: Color(0xFF545454),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-SizedBox(height: 7),
+            SizedBox(height: 7),
 
 // Sound Picker Section
-Container(
-  padding: const EdgeInsets.all(2.0), 
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12), 
-    boxShadow: [
-      BoxShadow(
-        color: Color(0xFF3B7292).withOpacity(0.1),
-        spreadRadius: 2,
-        blurRadius: 4,
-        offset: Offset(0, 2),
-      ),
-    ], 
-  ),
-  child: Column(
-    children: soundOptions.map((String sound) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 0),
-        child: RadioListTile<String>(
-          title: Text(
-            sound,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
+            Container(
+              padding: const EdgeInsets.all(2.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF3B7292).withOpacity(0.1),
+                    spreadRadius: 2,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: soundOptions.map((String sound) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 0),
+                    child: RadioListTile<String>(
+                      title: Text(
+                        sound,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 16,
+                        ),
+                      ),
+                      value: sound,
+                      groupValue: selectedSound,
+                      onChanged: _onSoundSelectionChanged,
+                      activeColor: Color(0xFF3B7292),
+                      contentPadding: EdgeInsets.symmetric(vertical: -3),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-          value: sound,
-          groupValue: selectedSound,
-          onChanged: _onSoundSelectionChanged,
-          activeColor: Color(0xFF3B7292), 
-          contentPadding: EdgeInsets.symmetric(vertical: -3), 
-        ),
-      );
-    }).toList(),
-  ),
-),
             // Display the current selected times in blocks
             SizedBox(height: 10),
             Center(
               child: ElevatedButton(
-                onPressed:  () {
+                onPressed: () {
                   print("Selected Sound: $selectedSound");
                   String soundPath = _getSoundPath(selectedSound);
                   print("Selected Sound: $soundPath");
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TimerPomodoro(
-                            taskId: widget.taskId,
-                            taskName: widget.taskName,
-                            subTaskID: widget.subTaskID,
-                            subTaskName: widget.subTaskName,
-                            focusMinutes: _focusMinutes,
-                            shortBreakMinutes: _shortBreakMinutes,
-                            longBreakMinutes: _longBreakMinutes,
-                            rounds: _rounds,
-                            page: widget.page,
-                            selectedSound: soundPath,
-                            selectedSoundText: selectedSound,
-                            
-                          ),
-                        ),
-                      );
-                    }, // Button to open bottom sheet
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TimerPomodoro(
+                        taskId: widget.taskId,
+                        taskName: widget.taskName,
+                        subTaskID: widget.subTaskID,
+                        subTaskName: widget.subTaskName,
+                        focusMinutes: _focusMinutes,
+                        shortBreakMinutes: _shortBreakMinutes,
+                        longBreakMinutes: _longBreakMinutes,
+                        rounds: _rounds,
+                        page: widget.page,
+                        selectedSound: soundPath,
+                        selectedSoundText: selectedSound,
+                      ),
+                    ),
+                  );
+                }, // Button to open bottom sheet
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(
                       0xFF3B7292), // Use the same color as in the second button
@@ -791,7 +787,8 @@ Container(
       ),
     );
   }
-   String _getSoundPath(String sound) {
+
+  String _getSoundPath(String sound) {
     switch (sound) {
       case 'Nature Morning':
         return 'sounds/nature-morning.mp3';
@@ -812,10 +809,9 @@ Container(
     }
   }
 
- void _onSoundSelectionChanged(String? value) {
-      setState(() {
-        selectedSound = value!;
-      });
-    }
-   
+  void _onSoundSelectionChanged(String? value) {
+    setState(() {
+      selectedSound = value!;
+    });
+  }
 }

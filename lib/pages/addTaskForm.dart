@@ -340,7 +340,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
           Navigator.pop(context, true);
           _showTopNotification("Task Added successfully.");
-
         }
       } catch (e) {
         _showTopNotification('Failed to save task: $e');
@@ -402,11 +401,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
     final int notificationId = _generateNotificationId(taskId); // Unique ID
 
     // Define notification actions
-  const AndroidNotificationAction snoozeAction = AndroidNotificationAction(
-    'snooze_5', // Action ID for 5-minute snooze
-    'Snooze 5 Minutes',
-    showsUserInterface: true,
-  );
+    const AndroidNotificationAction snoozeAction = AndroidNotificationAction(
+      'snooze_5', // Action ID for 5-minute snooze
+      'Snooze 5 Minutes',
+      showsUserInterface: true,
+    );
 
     const AndroidNotificationAction markDoneAction = AndroidNotificationAction(
       'mark_done',
@@ -418,7 +417,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       'task_channel',
       'Task Reminders',
       channelDescription: 'Task reminders with customizable intervals',
-      actions: [markDoneAction,snoozeAction],
+      actions: [markDoneAction, snoozeAction],
     );
 
     final platformDetails = NotificationDetails(android: androidDetails);
@@ -515,7 +514,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
               SizedBox(height: 20),
               _buildReminderSection(),
               SizedBox(height: 20),
-
               TextField(
                 controller: notesController,
                 maxLines: 4,
@@ -613,7 +611,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     onPressed: (_) {
                       setState(() {
                         subtasks.remove(subtask);
-                         _showTopNotification("Subtask deleted successfully.");
+                        _showTopNotification("Subtask deleted successfully.");
 
                         subtaskReminders.remove(subtask);
                       });
@@ -1346,8 +1344,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   ];
   Map<String, dynamic>? selectedReminderOption;
   DateTime? customReminderDateTime;
-
-  
 
   Widget _buildReminderSection() {
     return Padding(

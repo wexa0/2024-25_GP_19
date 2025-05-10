@@ -89,21 +89,21 @@ class _SigninPageState extends State<SigninPage> {
   }
 
   void showResetPasswordPopup(BuildContext context) {
-    final TextEditingController emailController = TextEditingController(text: _emailController.text);
+    final TextEditingController emailController =
+        TextEditingController(text: _emailController.text);
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor:
-              const Color(0xFFF5F5F5), 
+          backgroundColor: const Color(0xFFF5F5F5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           title: const Text(
             'Reset Password',
             style: TextStyle(
-              color: Color.fromARGB(255, 0, 0, 0), 
+              color: Color.fromARGB(255, 0, 0, 0),
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -124,17 +124,17 @@ class _SigninPageState extends State<SigninPage> {
                 decoration: InputDecoration(
                   hintText: 'Your email',
                   filled: true,
-                  fillColor: Colors.white, 
+                  fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: Color(0xFFE6EBEF), 
+                      color: Color(0xFFE6EBEF),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
-                      color: Color(0xFF3B7292), 
+                      color: Color(0xFF3B7292),
                     ),
                   ),
                 ),

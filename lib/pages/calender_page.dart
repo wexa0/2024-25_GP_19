@@ -167,35 +167,35 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   /// Function to group tasks by date and update task indicators.
-Future<void> generateTaskIndicators() async {
-  // بناء البيانات الجديدة في متغير مؤقت
-  Map<DateTime, List<Map<String, dynamic>>> tempTaskIndicators = {};
+  Future<void> generateTaskIndicators() async {
+    // بناء البيانات الجديدة في متغير مؤقت
+    Map<DateTime, List<Map<String, dynamic>>> tempTaskIndicators = {};
 
-  // جلب جميع المهام
-  List<Map<String, dynamic>> allTasks = await fetchAllTasks();
+    // جلب جميع المهام
+    List<Map<String, dynamic>> allTasks = await fetchAllTasks();
 
-  // تنظيم المهام حسب اليوم
-  for (var task in allTasks) {
-    DateTime taskDate = DateTime(
-      task['time'].year,
-      task['time'].month,
-      task['time'].day,
-    );
+    // تنظيم المهام حسب اليوم
+    for (var task in allTasks) {
+      DateTime taskDate = DateTime(
+        task['time'].year,
+        task['time'].month,
+        task['time'].day,
+      );
 
-    if (!tempTaskIndicators.containsKey(taskDate)) {
-      tempTaskIndicators[taskDate] = [];
+      if (!tempTaskIndicators.containsKey(taskDate)) {
+        tempTaskIndicators[taskDate] = [];
+      }
+      tempTaskIndicators[taskDate]!.add(task);
     }
-    tempTaskIndicators[taskDate]!.add(task);
-  }
 
-  // تحديث البيانات دفعة واحدة في setState
-  if (mounted) {
-    setState(() {
-      _taskIndicators = tempTaskIndicators; // استبدل البيانات القديمة بالجديدة
-    });
+    // تحديث البيانات دفعة واحدة في setState
+    if (mounted) {
+      setState(() {
+        _taskIndicators =
+            tempTaskIndicators; // استبدل البيانات القديمة بالجديدة
+      });
+    }
   }
-}
-
 
   void addNewTask(Map<String, dynamic> newTask) {
     tasks.add(newTask);
@@ -261,7 +261,6 @@ Future<void> generateTaskIndicators() async {
                         Icon(Icons.sort, size: 24, color: Color(0xFF545454)),
                         SizedBox(width: 10),
                         Text('Sort          ',
-
                             style: TextStyle(
                                 fontSize: 18, color: Color(0xFF545454))),
                       ],
@@ -290,7 +289,6 @@ Future<void> generateTaskIndicators() async {
           child: Column(
             children: [
               TableCalendar(
-                
                 // for calender view.
                 firstDay: DateTime.utc(2010, 10, 16),
                 lastDay: DateTime.utc(2030, 3, 14),
@@ -310,33 +308,33 @@ Future<void> generateTaskIndicators() async {
                 onPageChanged: (focusedDay) {
                   _focusedDay = focusedDay;
                 },
-                
-  eventLoader: (day) {
-  DateTime adjustedDay = DateTime(day.year, day.month, day.day);
 
-  // التحقق من وجود المهام
-  if (_taskIndicators.containsKey(adjustedDay)) {
-    // المهام لليوم المحدد
-    List<Map<String, dynamic>> tasksForDay = _taskIndicators[adjustedDay]!;
+                eventLoader: (day) {
+                  DateTime adjustedDay = DateTime(day.year, day.month, day.day);
 
-    // التحقق من حالة المهام
-    bool allTasksComplete =
-        tasksForDay.isNotEmpty && tasksForDay.every((task) => task['completed']);
-    bool hasPendingTasks = tasksForDay.any((task) => !task['completed']);
+                  // التحقق من وجود المهام
+                  if (_taskIndicators.containsKey(adjustedDay)) {
+                    // المهام لليوم المحدد
+                    List<Map<String, dynamic>> tasksForDay =
+                        _taskIndicators[adjustedDay]!;
 
-    // إرجاع الحالة بناءً على المهام
-    if (allTasksComplete) {
-      return ['green']; // جميع المهام مكتملة
-    } else if (hasPendingTasks) {
-      return ['orange']; // بعض المهام مكتملة
-    }
-  }
+                    // التحقق من حالة المهام
+                    bool allTasksComplete = tasksForDay.isNotEmpty &&
+                        tasksForDay.every((task) => task['completed']);
+                    bool hasPendingTasks =
+                        tasksForDay.any((task) => !task['completed']);
 
-  // إذا لم يكن هناك مهام لهذا اليوم
-  return ['grey'];
-},
+                    // إرجاع الحالة بناءً على المهام
+                    if (allTasksComplete) {
+                      return ['green']; // جميع المهام مكتملة
+                    } else if (hasPendingTasks) {
+                      return ['orange']; // بعض المهام مكتملة
+                    }
+                  }
 
-
+                  // إذا لم يكن هناك مهام لهذا اليوم
+                  return ['grey'];
+                },
 
                 calendarStyle: CalendarStyle(
                   markersMaxCount: 1,
@@ -359,7 +357,6 @@ Future<void> generateTaskIndicators() async {
                   selectedTextStyle: const TextStyle(
                     color: Colors.white,
                   ),
-                  
                   defaultTextStyle: const TextStyle(
                     color: Colors.black,
                   ),
@@ -379,50 +376,50 @@ Future<void> generateTaskIndicators() async {
                     color: Color(0xFF3B7292),
                   ),
                   rightChevronIcon: const Icon(
-                          Icons.chevron_right,
-      color: Color(0xFF3B7292),
-    ),
-  ),
-  calendarBuilders: CalendarBuilders(
-    markerBuilder: (context, date, events) {
-      if (events.isEmpty) {
-         return Positioned(
-          bottom: 1,
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.grey, // لون رمادي للتواريخ بدون مهام
-              shape: BoxShape.circle,
-            ),
-          ),
-        );
-      }
+                    Icons.chevron_right,
+                    color: Color(0xFF3B7292),
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, date, events) {
+                    if (events.isEmpty) {
+                      return Positioned(
+                        bottom: 1,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.grey, // لون رمادي للتواريخ بدون مهام
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      );
+                    }
 
-      // تحديد اللون بناءً على الحدث
-      Color color;
-      if (events.contains('green')) {
-        color = Colors.green; // جميع المهام مكتملة
-      } else if (events.contains('orange')) {
-        color = Colors.orange; // بعض المهام مكتملة
-      } else {
-        color = Colors.grey; // لا توجد مهام
-      }
+                    // تحديد اللون بناءً على الحدث
+                    Color color;
+                    if (events.contains('green')) {
+                      color = Colors.green; // جميع المهام مكتملة
+                    } else if (events.contains('orange')) {
+                      color = Colors.orange; // بعض المهام مكتملة
+                    } else {
+                      color = Colors.grey; // لا توجد مهام
+                    }
 
-      return Positioned(
-        bottom: 1, // وضع النقطة أسفل التاريخ
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-      );
-    },
-  ),
-),
+                    return Positioned(
+                      bottom: 1, // وضع النقطة أسفل التاريخ
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
               if (isLoading) ...[
                 Center(
                   child: Column(
@@ -445,52 +442,46 @@ Future<void> generateTaskIndicators() async {
               ] else ...[
                 //If no tasks for today.
                 if (tasks.isEmpty && selectedCategories.first == 'All')
-                 Center(
-                      
-  child: Column(
-    
-  mainAxisSize: MainAxisSize.min,
-  children: [
-        const SizedBox(height: 20),
-
-    Image.asset(
-      'assets/images/empty_list.png',
-      width: 120,
-    ),
-    const SizedBox(height: 20),
-    Stack(
-      alignment: Alignment.center,
-      children: [      
-        Text(
-          "Nothing to Do!",
-          style: const TextStyle(
-            fontSize: 23,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF3B7292),
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 10),
-
-    Column(
-      children: [
-        Text(
-          getDayMessage(),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 17,
-            color: Color.fromARGB(255, 101, 156, 181),
-          ),
-          textAlign: TextAlign.center,
-        ),
-       
-      ],
-    ),
-    const SizedBox(height: 20),
-  ],
-)
-)
+                  Center(
+                      child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 20),
+                      Image.asset(
+                        'assets/images/empty_list.png',
+                        width: 120,
+                      ),
+                      const SizedBox(height: 20),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            "Nothing to Do!",
+                            style: const TextStyle(
+                              fontSize: 23,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF3B7292),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Column(
+                        children: [
+                          Text(
+                            getDayMessage(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                              color: Color.fromARGB(255, 101, 156, 181),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ))
                 else
                   Expanded(
                     child: (!tasks.any((task) =>
@@ -719,49 +710,44 @@ Future<void> generateTaskIndicators() async {
                               // if all tasks are completed.
                               if (areAllTasksCompleted() &&
                                   selectedCategories.contains('All'))
-                                 Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-         Image.asset(
-      'assets/images/done.png',
-      width: 140,
-    ),
-     
-        const SizedBox(height: 20),
-        Text(
-          "Congratulations!",
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 23,
-            fontWeight: FontWeight.w700,
-            color:const Color(0xFF24AB79),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Text(
-            getDayMessage(),
-           style: TextStyle(
-            fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF546E7A), 
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(height: 30),
-
-       
-      ],
-    ),
-  ),
-
-
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/done.png',
+                                        width: 140,
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Text(
+                                        "Congratulations!",
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 23,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF24AB79),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20.0),
+                                        child: Text(
+                                          getDayMessage(),
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF546E7A),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 30),
+                                    ],
+                                  ),
+                                ),
 
                               // Show Completed Tasks section if all tasks completed.
                               if (tasks.any((task) =>
@@ -1490,13 +1476,11 @@ Future<void> generateTaskIndicators() async {
     setState(() {});
   }
 
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int userPoints = 0;
   int userLevel = 1;
 
-
-
-Future<void> fetchUserData() async {
+  Future<void> fetchUserData() async {
     if (userID == null) return;
 
     try {
@@ -1520,542 +1504,540 @@ Future<void> fetchUserData() async {
     }
   }
 
-    Future<void> toggleTaskCompletion(Map<String, dynamic> taskData) async {
-  if (userID == null) return;
+  Future<void> toggleTaskCompletion(Map<String, dynamic> taskData) async {
+    if (userID == null) return;
 
-  Task task = Task.fromMap(taskData);
-  bool newTaskCompletionStatus = !taskData['completed'];
+    Task task = Task.fromMap(taskData);
+    bool newTaskCompletionStatus = !taskData['completed'];
 
-  setState(() {
-    taskData['completed'] = newTaskCompletionStatus;
-    selectedCompletionMessage = null;
-  });
-
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-  DateTime? completionDate = newTaskCompletionStatus ? DateTime.now() : null;
-
-  List<Future<void>> updates = [];
-
-  try {
-    if (newTaskCompletionStatus) {
-      
-
-      // ✅ Now update the parent task with completion date
-      await firestore.collection('Task').doc(task.taskID).update({
-        'completionStatus': 2,
-        'completionDate': completionDate, // Store completion date
-      });
-
-      await assignTaskPoints(task);
-
-      // ✅ Mark all subtasks as completed & store completion date
-      for (var subtask in taskData['subtasks']) {
-        setState(() {
-          subtask['completed'] = true;
-        });
-
-        updates.add(
-          firestore.collection('SubTask').doc(subtask['id']).update({
-            'completionStatus': 1,
-            'completionDate': completionDate, // Store completion date
-          }),
-        );
-      }
-
-      await Future.wait(updates); // ✅ Ensure all subtasks update first
-    } else {
-      // ✅ Mark all subtasks as uncompleted & remove completion date
-      for (var subtask in taskData['subtasks']) {
-        setState(() {
-          subtask['completed'] = false;
-        });
-
-        updates.add(
-          firestore.collection('SubTask').doc(subtask['id']).update({
-            'completionStatus': 0,
-            'completionDate': FieldValue.delete(), // Remove completion date
-          }),
-        );
-      }
-
-      await Future.wait(updates); // ✅ Ensure all subtasks update first
-
-      // ✅ Now update the parent task & remove completion date
-      await firestore.collection('Task').doc(task.taskID).update({
-        'completionStatus': 0,
-        'completionDate': FieldValue.delete(), // Remove completion date
-      });
-
-      await subtractTaskPoints(task);
-    }
-
-    // ✅ Ensure notifications are canceled **after** Firestore updates
-    try {
-      for (var subtask in taskData['subtasks']) {
-        await NotificationHandler.cancelNotification(subtask['id']);
-      }
-      await NotificationHandler.cancelNotification(task.taskID);
-    } catch (e) {
-      print("Error canceling notifications: $e");
-    }
-  } catch (e) {
-    print("Error updating task completion: $e");
-  }
-
-  if (mounted) {
-    setState(() {});
-  }
-}
-
-
-Future<void> updateLevel() async {
-  if (userID == null) return;
-
-  try {
-    int newLevel = 1;
-    int pointsRequired = 100;
-    int accumulatedPoints = 0;
-
-    while (userPoints >= accumulatedPoints + pointsRequired) {
-      accumulatedPoints += pointsRequired;
-      pointsRequired += 50;
-      newLevel++;
-    }
-
-    // ✅ Only update Firestore if the level has changed
-    if (newLevel != userLevel) {
-      await _firestore.runTransaction((transaction) async {
-        DocumentReference userRef = _firestore.collection('User').doc(userID);
-        transaction.update(userRef, {'level': newLevel});
-      });
-
-      setState(() {
-        userLevel = newLevel;
-      });
-
-      print("🎉 Level Up! New Level: $newLevel");
-    } else {
-      print("ℹ️ Level remains the same: $newLevel");
-    }
-  } catch (e) {
-    print("Error in updateLevel: $e");
-  }
-}
-
-
-
-
-  Future<void> toggleSubtaskCompletion(
-    Map<String, dynamic> task, Map<String, dynamic> subtask) async {
-  if (userID == null) return;
-
-  bool newSubtaskCompletionStatus = !subtask['completed'];
-
-  setState(() {
-    subtask['completed'] = newSubtaskCompletionStatus;
-  });
-
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-  DateTime? completionDate = newSubtaskCompletionStatus ? DateTime.now() : null;
-
-  try {
-    // ✅ Update subtask completion status **before** canceling notifications
-    await firestore.collection('SubTask').doc(subtask['id']).update({
-      'completionStatus': newSubtaskCompletionStatus ? 1 : 0,
-      'completionDate':
-          newSubtaskCompletionStatus ? completionDate : FieldValue.delete(),
+    setState(() {
+      taskData['completed'] = newTaskCompletionStatus;
+      selectedCompletionMessage = null;
     });
 
-    // Convert task Map to Task object
-    Task updatedTask = Task.fromMap(task);
-    SubTask updatedSubtask = SubTask(
-      subTaskID: subtask['id'],
-      taskID: task['id'],
-      title: subtask['title'],
-      completionStatus: newSubtaskCompletionStatus ? 1 : 0,
-    );
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DateTime? completionDate = newTaskCompletionStatus ? DateTime.now() : null;
 
-    // ✅ Process points before canceling notifications
-    if (newSubtaskCompletionStatus) {
-      await assignSubtaskPoints(updatedTask, updatedSubtask);
-    } else {
-      await subtractSubtaskPoints(updatedTask, updatedSubtask);
-    }
+    List<Future<void>> updates = [];
 
-    // ✅ Fetch all subtasks for this task
-    QuerySnapshot subtasksSnapshot = await firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task['id'])
-        .get();
+    try {
+      if (newTaskCompletionStatus) {
+        // ✅ Now update the parent task with completion date
+        await firestore.collection('Task').doc(task.taskID).update({
+          'completionStatus': 2,
+          'completionDate': completionDate, // Store completion date
+        });
 
-    bool allSubtasksComplete = subtasksSnapshot.docs.every(
-        (doc) => doc['completionStatus'] != null && doc['completionStatus'] == 1);
-    bool anySubtaskIncomplete = subtasksSnapshot.docs.any(
-        (doc) => doc['completionStatus'] != null && doc['completionStatus'] == 0);
+        await assignTaskPoints(task);
 
-    int newTaskStatus;
-    if (allSubtasksComplete) {
-      // ✅ If all subtasks are complete, mark the parent task as complete
-      newTaskStatus = 2;
-      task['completed'] = true;
-      await firestore.collection('Task').doc(task['id']).update({
-        'completionStatus': 2,
-        'completionDate': completionDate, // Store completion date
-      });
+        // ✅ Mark all subtasks as completed & store completion date
+        for (var subtask in taskData['subtasks']) {
+          setState(() {
+            subtask['completed'] = true;
+          });
 
-      await assignTaskPoints(updatedTask);
-    } else if (anySubtaskIncomplete) {
-      // ✅ If any subtask is incomplete, mark the task as in-progress
-      newTaskStatus = 1;
-      task['completed'] = false;
-      await firestore.collection('Task').doc(task['id']).update({
-        'completionStatus': 1,
-        'completionDate': FieldValue.delete(), // Remove completion date
-      });
-    } else {
-      // ✅ If no subtasks are completed, mark the task as not completed
-      newTaskStatus = 0;
-      task['completed'] = false;
-      await firestore.collection('Task').doc(task['id']).update({
-        'completionStatus': 0,
-        'completionDate': FieldValue.delete(), // Remove completion date
-      });
+          updates.add(
+            firestore.collection('SubTask').doc(subtask['id']).update({
+              'completionStatus': 1,
+              'completionDate': completionDate, // Store completion date
+            }),
+          );
+        }
+
+        await Future.wait(updates); // ✅ Ensure all subtasks update first
+      } else {
+        // ✅ Mark all subtasks as uncompleted & remove completion date
+        for (var subtask in taskData['subtasks']) {
+          setState(() {
+            subtask['completed'] = false;
+          });
+
+          updates.add(
+            firestore.collection('SubTask').doc(subtask['id']).update({
+              'completionStatus': 0,
+              'completionDate': FieldValue.delete(), // Remove completion date
+            }),
+          );
+        }
+
+        await Future.wait(updates); // ✅ Ensure all subtasks update first
+
+        // ✅ Now update the parent task & remove completion date
+        await firestore.collection('Task').doc(task.taskID).update({
+          'completionStatus': 0,
+          'completionDate': FieldValue.delete(), // Remove completion date
+        });
+
+        await subtractTaskPoints(task);
+      }
+
+      // ✅ Ensure notifications are canceled **after** Firestore updates
+      try {
+        for (var subtask in taskData['subtasks']) {
+          await NotificationHandler.cancelNotification(subtask['id']);
+        }
+        await NotificationHandler.cancelNotification(task.taskID);
+      } catch (e) {
+        print("Error canceling notifications: $e");
+      }
+    } catch (e) {
+      print("Error updating task completion: $e");
     }
 
     if (mounted) {
       setState(() {});
     }
+  }
 
-    // ✅ Cancel notifications **AFTER** Firestore updates
+  Future<void> updateLevel() async {
+    if (userID == null) return;
+
     try {
-      if (newSubtaskCompletionStatus) {
-        await NotificationHandler.cancelNotification(subtask['id']);
+      int newLevel = 1;
+      int pointsRequired = 100;
+      int accumulatedPoints = 0;
+
+      while (userPoints >= accumulatedPoints + pointsRequired) {
+        accumulatedPoints += pointsRequired;
+        pointsRequired += 50;
+        newLevel++;
       }
-      if (allSubtasksComplete) {
-        await NotificationHandler.cancelNotification(task['id']);
+
+      // ✅ Only update Firestore if the level has changed
+      if (newLevel != userLevel) {
+        await _firestore.runTransaction((transaction) async {
+          DocumentReference userRef = _firestore.collection('User').doc(userID);
+          transaction.update(userRef, {'level': newLevel});
+        });
+
+        setState(() {
+          userLevel = newLevel;
+        });
+
+        print("🎉 Level Up! New Level: $newLevel");
+      } else {
+        print("ℹ️ Level remains the same: $newLevel");
       }
     } catch (e) {
-      print("Error canceling notifications: $e");
+      print("Error in updateLevel: $e");
     }
-  } catch (e) {
-    print("Error updating subtask completion: $e");
   }
-}
 
+  Future<void> toggleSubtaskCompletion(
+      Map<String, dynamic> task, Map<String, dynamic> subtask) async {
+    if (userID == null) return;
 
-
-
-
-Future<void> assignTaskPoints(Task task) async {
-  if (userID == null) return;
-
-  try {
-    print("🔹 Starting assignTaskPoints for Task: ${task.taskID}");
-
-    double taskPoints = 10.0;
-    int priority = task.priority;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int subtaskCount = subtasksSnapshot.docs.length;
-    if(subtaskCount>0){
-      // ✅ Count only **incomplete subtasks before completion**
-    int incompleteSubtasks = subtasksSnapshot.docs
-        .where((doc) =>
-            doc['completionStatus'] == null || doc['completionStatus'] != 1)
-        .length;
-
-    if (incompleteSubtasks > 0) {
-      double subtaskPoints = taskPoints / subtaskCount;
-      int awardedSubtaskPoints = (subtaskPoints * incompleteSubtasks).round();
-      newPoints += awardedSubtaskPoints;
-      print("✅ Added points for remaining incomplete subtasks: +$awardedSubtaskPoints");
-
-      // ✅ Ensure no points are lost due to rounding
-      int expectedTotal = (subtaskPoints * subtaskCount).round();
-      int actualTotal = awardedSubtaskPoints +
-          (subtaskCount - incompleteSubtasks) * subtaskPoints.round();
-
-      if (actualTotal < expectedTotal) {
-        int roundingFix = expectedTotal - actualTotal;
-        newPoints += roundingFix;
-        print("🛠 Fix applied: Adjusted for rounding error by adding +$roundingFix");
-      }
-        newPoints += 2;
-
-    }
-    }else {
-      // ✅ If no subtasks exist, award full task points
-      newPoints += taskPoints.toInt();
-      print("✅ No subtasks found. Awarded full task points: +${taskPoints.toInt()}");
-    }
-    
-
-    newPoints += (priority - 1); // Priority bonus
-
-    // ✅ Fetch completion date & scheduled date
-    DocumentSnapshot taskSnapshot =
-        await _firestore.collection('Task').doc(task.taskID).get();
-
-    if (taskSnapshot.exists && taskSnapshot['completionDate'] != null) {
-      DateTime completionDate =
-          (taskSnapshot['completionDate'] as Timestamp).toDate();
-      DateTime scheduledDate = task.scheduledDate;
-
-      // ✅ Only compare date (not time)
-      DateTime normalizedScheduledDate =
-          DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
-      DateTime normalizedCompletionDate =
-          DateTime(completionDate.year, completionDate.month, completionDate.day);
-
-      int dayDifference =
-          normalizedScheduledDate.difference(normalizedCompletionDate).inDays;
-
-      print("📅 Scheduled Date: $normalizedScheduledDate");
-      print("✅ Completion Date: $normalizedCompletionDate");
-      print("📊 Day Difference: $dayDifference");
-
-      if (dayDifference > 0) {
-        newPoints += dayDifference; // Add 1 point per early day
-        print("✅ Task completed EARLY! +$dayDifference points");
-      } else if (dayDifference < 0) {
-        int maxPenalty = newPoints > -dayDifference ? -dayDifference : newPoints;
-        newPoints -= maxPenalty; // Subtract 1 point per late day
-        print("⚠ Task completed LATE! -$maxPenalty points");
-      }
-    }
-
-    // ✅ Ensure points never drop below 0
-    if (newPoints < 0) newPoints = 0;
-
-    await _firestore.runTransaction((transaction) async {
-      DocumentReference userRef = _firestore.collection('User').doc(userID);
-      transaction.update(userRef, {'point': newPoints});
-    });
+    bool newSubtaskCompletionStatus = !subtask['completed'];
 
     setState(() {
-      userPoints = newPoints;
+      subtask['completed'] = newSubtaskCompletionStatus;
     });
 
-    await updateLevel();
-  } catch (e) {
-    print("Error in assignTaskPoints: $e");
-  }
-}
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DateTime? completionDate =
+        newSubtaskCompletionStatus ? DateTime.now() : null;
 
+    try {
+      // ✅ Update subtask completion status **before** canceling notifications
+      await firestore.collection('SubTask').doc(subtask['id']).update({
+        'completionStatus': newSubtaskCompletionStatus ? 1 : 0,
+        'completionDate':
+            newSubtaskCompletionStatus ? completionDate : FieldValue.delete(),
+      });
 
-Future<void> subtractTaskPoints(Task task) async {
-  if (userID == null) return;
+      // Convert task Map to Task object
+      Task updatedTask = Task.fromMap(task);
+      SubTask updatedSubtask = SubTask(
+        subTaskID: subtask['id'],
+        taskID: task['id'],
+        title: subtask['title'],
+        completionStatus: newSubtaskCompletionStatus ? 1 : 0,
+      );
 
-  try {
-    double taskPoints = 10.0;
-    int priority = task.priority;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int subtaskCount = subtasksSnapshot.docs.length;
-
-    if (subtaskCount > 0) {
-      double subtaskPoints = taskPoints / subtaskCount;
-      newPoints -= (subtaskPoints * subtaskCount).toInt();
-      newPoints -= 2;
-    } else {
-      newPoints -= taskPoints.toInt();
-    }
-
-    newPoints -= (priority - 1);
-    if (newPoints < 0) newPoints = 0;
-
-    await _firestore.runTransaction((transaction) async {
-      DocumentReference userRef = _firestore.collection('User').doc(userID);
-      transaction.update(userRef, {'point': newPoints});
-    });
-
-    setState(() {
-      userPoints = newPoints;
-    });
-
-    await updateLevel();
-  } catch (e) {
-    print("Error in subtractTaskPoints: $e");
-  }
-}
-
-Future<void> assignSubtaskPoints(Task task, SubTask subtask) async {
-  if (userID == null) return;
-
-  try {
-    double taskPoints = 10.0;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int totalSubtasks = subtasksSnapshot.docs.length;
-
-    if (totalSubtasks > 0) {
-      double subtaskPoints = taskPoints / totalSubtasks;
-      newPoints += subtaskPoints.toInt();
-
-      bool allSubtasksCompleted = subtasksSnapshot.docs.every(
-          (doc) => doc['completionStatus'] != null && doc['completionStatus'] == 1);
-
-      // Fetch the parent task
-DocumentSnapshot taskSnapshot = await _firestore
-    .collection('Task')
-    .doc(task.taskID)
-    .get();
-
-  int taskCompletionStatus = taskSnapshot['completionStatus'];
-//if (allSubtasksCompleted && taskCompletionStatus != 2)
-  // Apply condition
-  if (allSubtasksCompleted ) {
-     if(totalSubtasks % 2 ==0)
-        newPoints += 2;
-      else
-        newPoints += 3;
-    //newPoints += 2;
-  }
-
-    } else {
-      newPoints += taskPoints.toInt();
-    }
-
-    // Check completion date against scheduled date
-    DocumentSnapshot subtaskSnapshot =
-        await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
-    if (subtaskSnapshot.exists && subtaskSnapshot['completionDate'] != null) {
-      DateTime completionDate =
-          (subtaskSnapshot['completionDate'] as Timestamp).toDate();
-      DateTime scheduledDate = task.scheduledDate;
-
-      int dayDifference = scheduledDate.difference(completionDate).inDays;
-      if (dayDifference > 0) {
-        newPoints += dayDifference; // Add 1 point per early day
-      } else if (dayDifference < 0) {
-        newPoints -= dayDifference.abs(); // Subtract 1 point per late day
-        if (newPoints < 0) newPoints = 0; // Ensure lowest score remains 0
+      // ✅ Process points before canceling notifications
+      if (newSubtaskCompletionStatus) {
+        await assignSubtaskPoints(updatedTask, updatedSubtask);
+      } else {
+        await subtractSubtaskPoints(updatedTask, updatedSubtask);
       }
-    }
 
-    await _firestore.collection('User').doc(userID).update({'point': newPoints});
+      // ✅ Fetch all subtasks for this task
+      QuerySnapshot subtasksSnapshot = await firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task['id'])
+          .get();
 
-    setState(() {
-      userPoints = newPoints;
-    });
+      bool allSubtasksComplete = subtasksSnapshot.docs.every((doc) =>
+          doc['completionStatus'] != null && doc['completionStatus'] == 1);
+      bool anySubtaskIncomplete = subtasksSnapshot.docs.any((doc) =>
+          doc['completionStatus'] != null && doc['completionStatus'] == 0);
 
-    await updateLevel();
-  } catch (e) {
-    print("Error in assignSubtaskPoints: $e");
-  }
-}
+      int newTaskStatus;
+      if (allSubtasksComplete) {
+        // ✅ If all subtasks are complete, mark the parent task as complete
+        newTaskStatus = 2;
+        task['completed'] = true;
+        await firestore.collection('Task').doc(task['id']).update({
+          'completionStatus': 2,
+          'completionDate': completionDate, // Store completion date
+        });
 
-Future<void> subtractSubtaskPoints(Task task, SubTask subtask) async {
-  if (userID == null) return;
-
-  try {
-    print("🔹 Starting subtractSubtaskPoints for SubTask: ${subtask.subTaskID}");
-
-    double taskPoints = 10.0;
-    int newPoints = userPoints;
-
-    QuerySnapshot subtasksSnapshot = await _firestore
-        .collection('SubTask')
-        .where('taskID', isEqualTo: task.taskID)
-        .get();
-
-    int totalSubtasks = subtasksSnapshot.docs.length;
-
-    if (totalSubtasks > 0) {
-      double subtaskPoints = taskPoints / totalSubtasks;
-      newPoints -= subtaskPoints.toInt();
-      print("✅ Removed subtask points. New points: $newPoints");
-    } else {
-      newPoints -= taskPoints.toInt();
-      print("✅ Removed full task points. New points: $newPoints");
-    }
-
-    // ✅ Check if the full task was completed, then remove extra 2 points
-    DocumentSnapshot taskSnapshot =
-        await _firestore.collection('Task').doc(task.taskID).get();
-
-    if (taskSnapshot.exists &&
-        taskSnapshot.data().toString().contains('completionStatus')) {
-      int? taskCompletionStatus = taskSnapshot['completionStatus'];
-      if (taskCompletionStatus == 2) {
-         if(totalSubtasks % 2 ==0)
-        newPoints -= 2;
-        else
-          newPoints -= 3;
-        newPoints -= (task.priority-1);
-        print("🎯 Task was fully completed. Removed extra 2 points.");
-
-
+        await assignTaskPoints(updatedTask);
+      } else if (anySubtaskIncomplete) {
+        // ✅ If any subtask is incomplete, mark the task as in-progress
+        newTaskStatus = 1;
+        task['completed'] = false;
+        await firestore.collection('Task').doc(task['id']).update({
+          'completionStatus': 1,
+          'completionDate': FieldValue.delete(), // Remove completion date
+        });
+      } else {
+        // ✅ If no subtasks are completed, mark the task as not completed
+        newTaskStatus = 0;
+        task['completed'] = false;
+        await firestore.collection('Task').doc(task['id']).update({
+          'completionStatus': 0,
+          'completionDate': FieldValue.delete(), // Remove completion date
+        });
       }
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      // ✅ Cancel notifications **AFTER** Firestore updates
+      try {
+        if (newSubtaskCompletionStatus) {
+          await NotificationHandler.cancelNotification(subtask['id']);
+        }
+        if (allSubtasksComplete) {
+          await NotificationHandler.cancelNotification(task['id']);
+        }
+      } catch (e) {
+        print("Error canceling notifications: $e");
+      }
+    } catch (e) {
+      print("Error updating subtask completion: $e");
     }
+  }
 
-    // ✅ Fetch completion date & scheduled date
-    DocumentSnapshot subtaskSnapshot =
-        await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
+  Future<void> assignTaskPoints(Task task) async {
+    if (userID == null) return;
 
-    if (subtaskSnapshot.exists &&
-        subtaskSnapshot.data().toString().contains('completionDate')) {
-      Timestamp? completionTimestamp = subtaskSnapshot['completionDate'];
-      Timestamp? scheduledTimestamp = subtaskSnapshot['scheduledDate'];
+    try {
+      print("🔹 Starting assignTaskPoints for Task: ${task.taskID}");
 
-      if (completionTimestamp != null && scheduledTimestamp != null) {
-        DateTime scheduledDate = scheduledTimestamp.toDate();
-        DateTime completionDate = completionTimestamp.toDate();
+      double taskPoints = 10.0;
+      int priority = task.priority;
+      int newPoints = userPoints;
 
-        // ✅ Normalize both dates to midnight (00:00:00) for accurate date comparison
-        DateTime normalizedScheduledDate =
-            DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day);
-        DateTime normalizedCompletionDate =
-            DateTime(completionDate.year, completionDate.month, completionDate.day);
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
 
-        // ✅ Calculate only **full days difference**, ignoring hours/minutes
+      int subtaskCount = subtasksSnapshot.docs.length;
+      if (subtaskCount > 0) {
+        // ✅ Count only **incomplete subtasks before completion**
+        int incompleteSubtasks = subtasksSnapshot.docs
+            .where((doc) =>
+                doc['completionStatus'] == null || doc['completionStatus'] != 1)
+            .length;
+
+        if (incompleteSubtasks > 0) {
+          double subtaskPoints = taskPoints / subtaskCount;
+          int awardedSubtaskPoints =
+              (subtaskPoints * incompleteSubtasks).round();
+          newPoints += awardedSubtaskPoints;
+          print(
+              "✅ Added points for remaining incomplete subtasks: +$awardedSubtaskPoints");
+
+          // ✅ Ensure no points are lost due to rounding
+          int expectedTotal = (subtaskPoints * subtaskCount).round();
+          int actualTotal = awardedSubtaskPoints +
+              (subtaskCount - incompleteSubtasks) * subtaskPoints.round();
+
+          if (actualTotal < expectedTotal) {
+            int roundingFix = expectedTotal - actualTotal;
+            newPoints += roundingFix;
+            print(
+                "🛠 Fix applied: Adjusted for rounding error by adding +$roundingFix");
+          }
+          newPoints += 2;
+        }
+      } else {
+        // ✅ If no subtasks exist, award full task points
+        newPoints += taskPoints.toInt();
+        print(
+            "✅ No subtasks found. Awarded full task points: +${taskPoints.toInt()}");
+      }
+
+      newPoints += (priority - 1); // Priority bonus
+
+      // ✅ Fetch completion date & scheduled date
+      DocumentSnapshot taskSnapshot =
+          await _firestore.collection('Task').doc(task.taskID).get();
+
+      if (taskSnapshot.exists && taskSnapshot['completionDate'] != null) {
+        DateTime completionDate =
+            (taskSnapshot['completionDate'] as Timestamp).toDate();
+        DateTime scheduledDate = task.scheduledDate;
+
+        // ✅ Only compare date (not time)
+        DateTime normalizedScheduledDate = DateTime(
+            scheduledDate.year, scheduledDate.month, scheduledDate.day);
+        DateTime normalizedCompletionDate = DateTime(
+            completionDate.year, completionDate.month, completionDate.day);
+
         int dayDifference =
             normalizedScheduledDate.difference(normalizedCompletionDate).inDays;
 
-        print("📊 Days Difference (Ignoring Time): $dayDifference");
+        print("📅 Scheduled Date: $normalizedScheduledDate");
+        print("✅ Completion Date: $normalizedCompletionDate");
+        print("📊 Day Difference: $dayDifference");
 
         if (dayDifference > 0) {
-          newPoints -= dayDifference; // Remove previously added early completion bonus
-          print("❌ Removed early completion bonus. New points: $newPoints");
+          newPoints += dayDifference; // Add 1 point per early day
+          print("✅ Task completed EARLY! +$dayDifference points");
         } else if (dayDifference < 0) {
-          newPoints += dayDifference.abs(); // Restore previously subtracted late penalty
-          print("✅ Restored late penalty points. New points: $newPoints");
+          int maxPenalty =
+              newPoints > -dayDifference ? -dayDifference : newPoints;
+          newPoints -= maxPenalty; // Subtract 1 point per late day
+          print("⚠ Task completed LATE! -$maxPenalty points");
         }
       }
+
+      // ✅ Ensure points never drop below 0
+      if (newPoints < 0) newPoints = 0;
+
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference userRef = _firestore.collection('User').doc(userID);
+        transaction.update(userRef, {'point': newPoints});
+      });
+
+      setState(() {
+        userPoints = newPoints;
+      });
+
+      await updateLevel();
+    } catch (e) {
+      print("Error in assignTaskPoints: $e");
     }
-
-    // ✅ Ensure points never drop below 0
-    if (newPoints < 0) {
-      newPoints = 0;
-      print("⚠️ Points cannot go below zero. Reset to 0.");
-    }
-
-    // ✅ Update user points in Firestore
-    await _firestore.collection('User').doc(userID).update({'point': newPoints});
-    setState(() {
-      userPoints = newPoints;
-    });
-
-    await updateLevel();
-  } catch (e) {
-    print("Error in subtractSubtaskPoints: $e");
   }
-}
+
+  Future<void> subtractTaskPoints(Task task) async {
+    if (userID == null) return;
+
+    try {
+      double taskPoints = 10.0;
+      int priority = task.priority;
+      int newPoints = userPoints;
+
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
+
+      int subtaskCount = subtasksSnapshot.docs.length;
+
+      if (subtaskCount > 0) {
+        double subtaskPoints = taskPoints / subtaskCount;
+        newPoints -= (subtaskPoints * subtaskCount).toInt();
+        newPoints -= 2;
+      } else {
+        newPoints -= taskPoints.toInt();
+      }
+
+      newPoints -= (priority - 1);
+      if (newPoints < 0) newPoints = 0;
+
+      await _firestore.runTransaction((transaction) async {
+        DocumentReference userRef = _firestore.collection('User').doc(userID);
+        transaction.update(userRef, {'point': newPoints});
+      });
+
+      setState(() {
+        userPoints = newPoints;
+      });
+
+      await updateLevel();
+    } catch (e) {
+      print("Error in subtractTaskPoints: $e");
+    }
+  }
+
+  Future<void> assignSubtaskPoints(Task task, SubTask subtask) async {
+    if (userID == null) return;
+
+    try {
+      double taskPoints = 10.0;
+      int newPoints = userPoints;
+
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
+
+      int totalSubtasks = subtasksSnapshot.docs.length;
+
+      if (totalSubtasks > 0) {
+        double subtaskPoints = taskPoints / totalSubtasks;
+        newPoints += subtaskPoints.toInt();
+
+        bool allSubtasksCompleted = subtasksSnapshot.docs.every((doc) =>
+            doc['completionStatus'] != null && doc['completionStatus'] == 1);
+
+        // Fetch the parent task
+        DocumentSnapshot taskSnapshot =
+            await _firestore.collection('Task').doc(task.taskID).get();
+
+        int taskCompletionStatus = taskSnapshot['completionStatus'];
+//if (allSubtasksCompleted && taskCompletionStatus != 2)
+        // Apply condition
+        if (allSubtasksCompleted) {
+          if (totalSubtasks % 2 == 0)
+            newPoints += 2;
+          else
+            newPoints += 3;
+          //newPoints += 2;
+        }
+      } else {
+        newPoints += taskPoints.toInt();
+      }
+
+      // Check completion date against scheduled date
+      DocumentSnapshot subtaskSnapshot =
+          await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
+      if (subtaskSnapshot.exists && subtaskSnapshot['completionDate'] != null) {
+        DateTime completionDate =
+            (subtaskSnapshot['completionDate'] as Timestamp).toDate();
+        DateTime scheduledDate = task.scheduledDate;
+
+        int dayDifference = scheduledDate.difference(completionDate).inDays;
+        if (dayDifference > 0) {
+          newPoints += dayDifference; // Add 1 point per early day
+        } else if (dayDifference < 0) {
+          newPoints -= dayDifference.abs(); // Subtract 1 point per late day
+          if (newPoints < 0) newPoints = 0; // Ensure lowest score remains 0
+        }
+      }
+
+      await _firestore
+          .collection('User')
+          .doc(userID)
+          .update({'point': newPoints});
+
+      setState(() {
+        userPoints = newPoints;
+      });
+
+      await updateLevel();
+    } catch (e) {
+      print("Error in assignSubtaskPoints: $e");
+    }
+  }
+
+  Future<void> subtractSubtaskPoints(Task task, SubTask subtask) async {
+    if (userID == null) return;
+
+    try {
+      print(
+          "🔹 Starting subtractSubtaskPoints for SubTask: ${subtask.subTaskID}");
+
+      double taskPoints = 10.0;
+      int newPoints = userPoints;
+
+      QuerySnapshot subtasksSnapshot = await _firestore
+          .collection('SubTask')
+          .where('taskID', isEqualTo: task.taskID)
+          .get();
+
+      int totalSubtasks = subtasksSnapshot.docs.length;
+
+      if (totalSubtasks > 0) {
+        double subtaskPoints = taskPoints / totalSubtasks;
+        newPoints -= subtaskPoints.toInt();
+        print("✅ Removed subtask points. New points: $newPoints");
+      } else {
+        newPoints -= taskPoints.toInt();
+        print("✅ Removed full task points. New points: $newPoints");
+      }
+
+      // ✅ Check if the full task was completed, then remove extra 2 points
+      DocumentSnapshot taskSnapshot =
+          await _firestore.collection('Task').doc(task.taskID).get();
+
+      if (taskSnapshot.exists &&
+          taskSnapshot.data().toString().contains('completionStatus')) {
+        int? taskCompletionStatus = taskSnapshot['completionStatus'];
+        if (taskCompletionStatus == 2) {
+          if (totalSubtasks % 2 == 0)
+            newPoints -= 2;
+          else
+            newPoints -= 3;
+          newPoints -= (task.priority - 1);
+          print("🎯 Task was fully completed. Removed extra 2 points.");
+        }
+      }
+
+      // ✅ Fetch completion date & scheduled date
+      DocumentSnapshot subtaskSnapshot =
+          await _firestore.collection('SubTask').doc(subtask.subTaskID).get();
+
+      if (subtaskSnapshot.exists &&
+          subtaskSnapshot.data().toString().contains('completionDate')) {
+        Timestamp? completionTimestamp = subtaskSnapshot['completionDate'];
+        Timestamp? scheduledTimestamp = subtaskSnapshot['scheduledDate'];
+
+        if (completionTimestamp != null && scheduledTimestamp != null) {
+          DateTime scheduledDate = scheduledTimestamp.toDate();
+          DateTime completionDate = completionTimestamp.toDate();
+
+          // ✅ Normalize both dates to midnight (00:00:00) for accurate date comparison
+          DateTime normalizedScheduledDate = DateTime(
+              scheduledDate.year, scheduledDate.month, scheduledDate.day);
+          DateTime normalizedCompletionDate = DateTime(
+              completionDate.year, completionDate.month, completionDate.day);
+
+          // ✅ Calculate only **full days difference**, ignoring hours/minutes
+          int dayDifference = normalizedScheduledDate
+              .difference(normalizedCompletionDate)
+              .inDays;
+
+          print("📊 Days Difference (Ignoring Time): $dayDifference");
+
+          if (dayDifference > 0) {
+            newPoints -=
+                dayDifference; // Remove previously added early completion bonus
+            print("❌ Removed early completion bonus. New points: $newPoints");
+          } else if (dayDifference < 0) {
+            newPoints += dayDifference
+                .abs(); // Restore previously subtracted late penalty
+            print("✅ Restored late penalty points. New points: $newPoints");
+          }
+        }
+      }
+
+      // ✅ Ensure points never drop below 0
+      if (newPoints < 0) {
+        newPoints = 0;
+        print("⚠️ Points cannot go below zero. Reset to 0.");
+      }
+
+      // ✅ Update user points in Firestore
+      await _firestore
+          .collection('User')
+          .doc(userID)
+          .update({'point': newPoints});
+      setState(() {
+        userPoints = newPoints;
+      });
+
+      await updateLevel();
+    } catch (e) {
+      print("Error in subtractSubtaskPoints: $e");
+    }
+  }
 
   void showDeleteConfirmationDialog(Map<String, dynamic> task) {
     showDialog(
@@ -2317,25 +2299,26 @@ class TaskCard extends StatelessWidget {
                     ),
                     if (totalSubtasks > 0)
                       Row(
-  children: List.generate(totalSubtasks, (index) {
-    bool isCompleted = index < completedSubtasks;
+                        children: List.generate(totalSubtasks, (index) {
+                          bool isCompleted = index < completedSubtasks;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: Tooltip(
-        message: '${completedSubtasks}/${totalSubtasks} subtasks completed',
-        child: Icon(
-          Icons.circle,
-          size: 15,
-          color: isCompleted
-              ? const Color(0xFF24AB79) 
-              : Colors.grey, 
-        ),
-      ),
-    );
-  }),
-),
-
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: Tooltip(
+                              message:
+                                  '${completedSubtasks}/${totalSubtasks} subtasks completed',
+                              child: Icon(
+                                Icons.circle,
+                                size: 15,
+                                color: isCompleted
+                                    ? const Color(0xFF24AB79)
+                                    : Colors.grey,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                   ],
                 ),
                 trailing: Row(

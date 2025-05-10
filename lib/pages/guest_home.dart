@@ -11,7 +11,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application/welcome_page.dart';
 
-
 void main() async {
   runApp(MaterialApp(home: GuestHomePage()));
 }
@@ -31,7 +30,7 @@ class GuestHomePageState extends State<GuestHomePage> {
   @override
   void initState() {
     super.initState();
-     _checkUserStatus(); 
+    _checkUserStatus();
     _pages.addAll([
       GuestHomePageContent(onTabChange: onTabChange), // Pass the callback here
       TaskPage(),
@@ -40,7 +39,8 @@ class GuestHomePageState extends State<GuestHomePage> {
       GuestHomePage(),
     ]);
   }
- Future<void> _checkUserStatus() async {
+
+  Future<void> _checkUserStatus() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null && user.emailVerified) {
       // إذا كان المستخدم مسجلاً ومُوثقًا، يتم توجيهه إلى الصفحة الرئيسية
