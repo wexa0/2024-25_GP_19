@@ -22,6 +22,7 @@
 - **Framework:** Flutter (cross-platform development)
 - **Database:** Firebase
 - **Cloud Services:** Firebase for backend services
+- **Backend Integration:** Python + Firebase Admin SDK
 - **AI Model:** OpenAI GPT3.5 Turbo
 - **Version Control:** GitHub
 - **Project Management:** Jira
@@ -57,7 +58,6 @@
      ```bash
      flutter run
      ```
-
 ---
 
 ### 🛠️ Troubleshooting
