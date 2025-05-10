@@ -12,8 +12,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_application/services/notification_handler.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 
 
