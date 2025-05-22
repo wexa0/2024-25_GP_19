@@ -2633,7 +2633,8 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                         lastMessageDate = messageDate;
                         if (msgData["message"] != null &&
                             msgData["message"].toString().trim().isNotEmpty) {
-                          var doc;
+                          DocumentSnapshot doc = msg;
+
                           messageWidgets.add(_buildChatBubble(
                             message: msgData["message"],
                             isUser: true,
@@ -2643,7 +2644,8 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                         }
 
                         if (response == null || response.isEmpty) {
-                          var doc;
+                          DocumentSnapshot doc = msg;
+
                           messageWidgets.add(
                             _buildChatBubble(
                               message: "",
@@ -2774,7 +2776,8 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                             extraContent = handleDelete(response);
                           }
 
-                          var doc;
+                          DocumentSnapshot doc = msg;
+
                           messageWidgets.add(
                             _buildChatBubble(
                               message: response,
@@ -2786,7 +2789,8 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                             ),
                           );
                         } else {
-                          var doc;
+                          DocumentSnapshot doc = msg;
+
                           messageWidgets.add(
                             _buildChatBubble(
                               message:
