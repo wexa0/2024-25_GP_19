@@ -697,7 +697,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
           customReminderDateTime,
         );
         if (isReminderOn && reminderDateTime == null) {
-          throw Exception("Invalid reminder date or time.");
+          throw Exception("Please choose a reminder time that is in the future.");
         }
 
         // Save changes to Firebase
@@ -2308,7 +2308,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: selectedDate,
+      lastDate: DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -2366,17 +2366,17 @@ class _EditTaskPageState extends State<EditTaskPage> {
           selectedTime.minute,
         );
 
-        if (selectedReminder.isAfter(taskDateTime)) {
-          _showTopNotification(
-              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
-          setState(() {
-            customReminderDateTime = null;
-          });
-        } else {
+        // if (selectedReminder.isAfter(taskDateTime)) {
+        //   _showTopNotification(
+        //       "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
+        //   setState(() {
+        //     customReminderDateTime = null;
+        //   });
+        // } else {
           setState(() {
             customReminderDateTime = selectedReminder;
           });
-        }
+        // }
       }
     }
   }
@@ -2871,7 +2871,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: selectedDate,
+      lastDate:  DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(

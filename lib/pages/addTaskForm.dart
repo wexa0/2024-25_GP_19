@@ -1471,7 +1471,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: selectedDate,
+      lastDate:  DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -1529,17 +1529,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
           selectedTime.minute,
         );
 
-        if (selectedReminder.isAfter(taskDateTime)) {
-          _showTopNotification(
-              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
-          setState(() {
-            customReminderDateTime = null; // Reset invalid time
-          });
-        } else {
+        // if (selectedReminder.isAfter(taskDateTime)) {
+        //   _showTopNotification(
+        //       "Custom reminder time cannot be after the scheduled task time. Please select a valid time.");
+        //   setState(() {
+        //     customReminderDateTime = null; // Reset invalid time
+        //   });
+        // } else {
           setState(() {
             customReminderDateTime = selectedReminder;
           });
-        }
+        // }
       }
     }
   }
@@ -1770,7 +1770,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: selectedDate,
+      lastDate:  DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(

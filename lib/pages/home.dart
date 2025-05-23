@@ -11,6 +11,8 @@ import 'package:flutter_application/pages/progress_page.dart';
 import 'package:flutter_application/pages/profile_page.dart';
 import 'package:flutter_application/pages/chatbot_page.dart';
 import 'package:flutter_application/pages/task_page.dart';
+import 'package:flutter_application/services/notification_handler.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +65,28 @@ class HomePageState extends State<HomePage> {
       ProgressPage(),
       ProfilePage(),
     ]);
-  }
+
+  FirebaseFirestore.instance
+      .collection('Task')
+      .snapshots()
+      .listen((snapshot) {
+    for (var docChange in snapshot.docChanges) {
+      if (docChange.type == DocumentChangeType.modified) {
+        final data = docChange.doc.data();
+        final reminderTime = data?['reminder'];
+
+        if (reminderTime != null &&
+            DateTime.parse(reminderTime).isAfter(DateTime.now())) {
+          NotificationHandler.scheduleReminder(
+            taskId: docChange.doc.id,
+            title: data?['title'] ?? "Task Reminder",
+            reminderTime: DateTime.parse(reminderTime),
+          );
+        }
+      }
+    }
+  });
+}
 
   void onTabChange(int index) {
     setState(() {
@@ -101,6 +124,7 @@ class HomePageState extends State<HomePage> {
       print('No user is logged in.');
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {

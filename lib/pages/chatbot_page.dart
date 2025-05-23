@@ -12,8 +12,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_application/services/notification_handler.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ChatbotpageWidget extends StatefulWidget {
   const ChatbotpageWidget({super.key});
@@ -83,6 +83,22 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: darkBlue,
+            colorScheme: ColorScheme.light(
+              primary: darkBlue,
+              onPrimary: const Color(0xFFF5F7F8),
+              surface: const Color(0xFFF5F7F8),
+              onSurface: darkGray,
+              secondary: lightBlue,
+            ),
+            dialogBackgroundColor: const Color(0xFFF5F7F8),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null && !selectedDates.contains(picked)) {
@@ -508,7 +524,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: ReminderselectedDate,
+      lastDate: DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -566,21 +582,22 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
           reminderSelectedTime.minute,
         );
 
-        if (selectedReminder.isAfter(taskDateTime)) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showTopNotification(
-              "Custom reminder time cannot be after the scheduled task time. Please select a valid time.",
-            );
-            setState(() {
-              customReminderDateTime = null;
-            });
-          });
-        } else {
-          setState(() {
-            customReminderDateTime = selectedReminder;
-          });
-        }
+//        if (selectedReminder.isAfter(taskDateTime)) {
+//   WidgetsBinding.instance.addPostFrameCallback((_) {
+//     _showTopNotification(
+//       "Custom reminder time cannot be after the scheduled task time. Please select a valid time.",
+//     );
+//     setState(() {
+//       customReminderDateTime = null;
+//     });
+//   });
+// } else {
+        setState(() {
+          customReminderDateTime = selectedReminder;
+        });
       }
+
+      // }
     }
   }
 
@@ -612,6 +629,22 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                         initialDate: DateTime.now(),
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),
+                        builder: (BuildContext context, Widget? child) {
+                          return Theme(
+                            data: ThemeData.light().copyWith(
+                              primaryColor: darkBlue,
+                              colorScheme: ColorScheme.light(
+                                primary: darkBlue,
+                                onPrimary: const Color(0xFFF5F7F8),
+                                surface: const Color(0xFFF5F7F8),
+                                onSurface: darkGray,
+                                secondary: lightBlue,
+                              ),
+                              dialogBackgroundColor: const Color(0xFFF5F7F8),
+                            ),
+                            child: child!,
+                          );
+                        },
                       );
                       if (picked != null && !selectedDates.contains(picked)) {
                         setState(() {
@@ -1981,6 +2014,22 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                     initialDate: taskselectedDate ?? DateTime.now(),
                     firstDate: DateTime(2020),
                     lastDate: DateTime(2100),
+                    builder: (BuildContext context, Widget? child) {
+                      return Theme(
+                        data: ThemeData.light().copyWith(
+                          primaryColor: darkBlue,
+                          colorScheme: ColorScheme.light(
+                            primary: darkBlue,
+                            onPrimary: const Color(0xFFF5F7F8),
+                            surface: const Color(0xFFF5F7F8),
+                            onSurface: darkGray,
+                            secondary: lightBlue,
+                          ),
+                          dialogBackgroundColor: const Color(0xFFF5F7F8),
+                        ),
+                        child: child!,
+                      );
+                    },
                   );
                   if (date != null) {
                     setState(() {
@@ -2013,6 +2062,22 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                   TimeOfDay? time = await showTimePicker(
                     context: context,
                     initialTime: selectedTime ?? TimeOfDay.now(),
+                    builder: (BuildContext context, Widget? child) {
+                      return Theme(
+                        data: ThemeData.light().copyWith(
+                          primaryColor: darkBlue,
+                          colorScheme: ColorScheme.light(
+                            primary: darkBlue,
+                            onPrimary: const Color(0xFFF5F7F8),
+                            surface: const Color(0xFFF5F7F8),
+                            onSurface: darkGray,
+                            secondary: lightBlue,
+                          ),
+                          dialogBackgroundColor: const Color(0xFFF5F7F8),
+                        ),
+                        child: child!,
+                      );
+                    },
                   );
                   if (time != null) {
                     setState(() {
@@ -2266,7 +2331,7 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: selectedDateforSubtask,
+      lastDate: DateTime(2100),
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -2633,26 +2698,20 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                         lastMessageDate = messageDate;
                         if (msgData["message"] != null &&
                             msgData["message"].toString().trim().isNotEmpty) {
-                          DocumentSnapshot doc = msg;
-
                           messageWidgets.add(_buildChatBubble(
                             message: msgData["message"],
                             isUser: true,
                             screenWidth: MediaQuery.of(context).size.width,
-                            doc: doc,
                           ));
                         }
 
                         if (response == null || response.isEmpty) {
-                          DocumentSnapshot doc = msg;
-
                           messageWidgets.add(
                             _buildChatBubble(
                               message: "",
                               isUser: false,
                               isLoading: true,
                               screenWidth: MediaQuery.of(context).size.width,
-                              doc: doc,
                             ),
                           );
                         } else if (isValidUtf16(response)) {
@@ -2776,8 +2835,6 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                             extraContent = handleDelete(response);
                           }
 
-                          DocumentSnapshot doc = msg;
-
                           messageWidgets.add(
                             _buildChatBubble(
                               message: response,
@@ -2785,19 +2842,15 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
                               screenWidth: MediaQuery.of(context).size.width,
                               extraContent: extraContent,
                               actionType: actionType,
-                              doc: doc,
                             ),
                           );
                         } else {
-                          DocumentSnapshot doc = msg;
-
                           messageWidgets.add(
                             _buildChatBubble(
                               message:
                                   "⚠️ Sorry, the message contains invalid characters and can't be displayed.",
                               isUser: false,
                               screenWidth: MediaQuery.of(context).size.width,
-                              doc: doc,
                             ),
                           );
                         }
@@ -3039,7 +3092,6 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
     bool isLoading = false,
     Widget? extraContent,
     String? actionType,
-    required DocumentSnapshot doc,
   }) {
     bool isBot = !isUser && !isLoading;
     bool isTaskList = message.contains("📝 **Task Name:");
@@ -3074,66 +3126,6 @@ class _ChatbotpageWidgetState extends State<ChatbotpageWidget>
           ),
           constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
           child: handleDelete(message),
-        ),
-      );
-    }
-
-// handle breakdown task
-    if (isBot &&
-        actionType == "Breakdown Task" &&
-        (doc.data() as Map<String, dynamic>?)?['show_breakdown_form'] == true) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEF6FA),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          constraints: BoxConstraints(maxWidth: screenWidth * 0.9),
-          child: handleBreakdownTaskInput(
-            onSubmit: (taskName, estimatedTime) async {
-              await doc.reference.update({
-                'userMessage': {
-                  'task_name': taskName,
-                  'estimated_time': estimatedTime,
-                },
-                'actionType': 'Breakdown Task',
-                'show_breakdown_form': false,
-                'response': 'pending_submission',
-                'message':
-                    "Please break down the task '${taskName}' which will take about ${estimatedTime}.", // ✅ SMART NEW MESSAGE
-              });
-
-              await Future.delayed(Duration(seconds: 1));
-              print(
-                  "✅ Form submitted: taskName = $taskName, estimatedTime = $estimatedTime");
-            },
-          ),
-        ),
-      );
-    }
-
-    if (isBot) {
-      final response = (doc.data() as Map<String, dynamic>?)?['response'] ?? '';
-
-      if (response == 'pending_submission') {
-        // 🚫 Don't render anything while waiting
-        return const SizedBox.shrink();
-      }
-
-      // ✅ Otherwise, show the breakdown response
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE0F7FA),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Text(response),
         ),
       );
     }
@@ -3670,17 +3662,40 @@ $taskDetails
                                           borderRadius:
                                               BorderRadius.circular(12)),
                                       actions: [
-                                        OutlinedButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(false),
-                                          child: const Text("Cancel"),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              side:
+                                                  BorderSide(color: lightBlue),
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Cancel',
+                                            style: TextStyle(color: lightBlue),
+                                          ),
                                         ),
                                         ElevatedButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(true),
+                                          onPressed: () {
+                                            Navigator.of(context).pop(true);
+                                          },
                                           style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red),
-                                          child: const Text("Delete"),
+                                            backgroundColor: Colors.red,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Delete',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -3759,21 +3774,36 @@ $taskDetails
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12)),
                                   actions: [
-                                    OutlinedButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(false),
-                                      child: const Text(
-                                        "Cancel",
-                                        style: TextStyle(color: Colors.white),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(false);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          side: BorderSide(color: lightBlue),
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(color: lightBlue),
                                       ),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(true),
+                                      onPressed: () {
+                                        Navigator.of(context).pop(true);
+                                      },
                                       style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red),
-                                      child: const Text(
-                                        "Delete",
+                                        backgroundColor: Colors.red,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Delete',
                                         style: TextStyle(color: Colors.white),
                                       ),
                                     ),
@@ -3813,60 +3843,6 @@ $taskDetails
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: widgets,
-    );
-  }
-
-  Widget handleBreakdownTaskInput({
-    required Function(String taskName, String estimatedTime) onSubmit,
-  }) {
-    final TextEditingController taskController = TextEditingController();
-    final TextEditingController timeController = TextEditingController();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Let's break down a task!",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2C3E50),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: taskController,
-          decoration: const InputDecoration(
-            labelText: 'What do you want to break down?',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: timeController,
-          decoration: const InputDecoration(
-            labelText: 'Estimated time (e.g. 2 hours)',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: () {
-              final taskName = taskController.text.trim();
-              final estimatedTime = timeController.text.trim();
-
-              if (taskName.isNotEmpty && estimatedTime.isNotEmpty) {
-                onSubmit(taskName, estimatedTime);
-                taskController.clear();
-                timeController.clear();
-              }
-            },
-            child: const Text("Break Down"),
-          ),
-        ),
-      ],
     );
   }
 
